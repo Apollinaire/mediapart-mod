@@ -1,0 +1,13 @@
+{
+  "manifest_version": 2,
+  "name": "Mediapart: Themes",
+  "version": "0.0.1",
+  "description": "Changez les couleurs des sites Mediapart!",
+  "permissions": ["https://mediapart.fr/", "https://blogs.mediapart.fr/"],
+  "content_scripts": [
+    {
+      "matches": ["https://mediapart.fr/*", "https://blogs.mediapart.fr/*"],
+      "css": ["darktheme.css"]
+    }
+  ]
+}
