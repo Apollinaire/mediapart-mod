@@ -1,8 +1,5 @@
 var webpack = require("webpack"),
   path = require("path"),
-  fileSystem = require("fs"),
-  env = require("./utils/env"),
-  { CleanWebpackPlugin } = require("clean-webpack-plugin"),
   ExtensionReloader = require("webpack-extension-reloader"),
   CopyWebpackPlugin = require("copy-webpack-plugin"),
   WriteFilePlugin = require("write-file-webpack-plugin");
@@ -77,17 +74,10 @@ var options = {
             );
           },
         },
-        {
-          from: "src/darktheme.css",
-        },
       ],
     }),
     new WriteFilePlugin(),
   ],
 };
-
-if (env.NODE_ENV === "development") {
-  // options.devtool = "eval-cheap-source-map";
-}
 
 module.exports = options;
