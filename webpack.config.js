@@ -3,20 +3,28 @@ var webpack = require("webpack"),
   fileSystem = require("fs"),
   env = require("./utils/env"),
   { CleanWebpackPlugin } = require("clean-webpack-plugin"),
+  ExtensionReloader = require("webpack-extension-reloader"),
   CopyWebpackPlugin = require("copy-webpack-plugin"),
   WriteFilePlugin = require("write-file-webpack-plugin");
 
 var options = {
   mode: process.env.NODE_ENV || "development",
   entry: {
-    content: path.join(__dirname, "src", "darktheme.css"),
+    content: path.join(__dirname, "src", "injectTheme.js"),
+    background: path.join(__dirname, "src", "background.js"),
   },
   output: {
     path: path.join(__dirname, "build"),
-    filename: "[name].bundle.css",
+    filename: "[name].bundle.js",
   },
   module: {
     rules: [
+      {
+        test: /\.js$/,
+        use: {
+          loader: "babel-loader",
+        },
+      },
       {
         test: /\.css$/,
         use: [
@@ -30,20 +38,27 @@ var options = {
         exclude: /node_modules/,
       },
       {
-        test: new RegExp(".json$"),
+        test: /\.json$/,
         use: {
-          loader: "file-loader"
+          loader: "file-loader",
         },
         exclude: /node_modules/,
       },
     ],
   },
   resolve: {
-    extensions: [".css", ".json"],
+    extensions: [".css", ".json", ".js"],
   },
   plugins: [
     // clean the build folder
-    new CleanWebpackPlugin(),
+    // new CleanWebpackPlugin(),
+    new ExtensionReloader({
+      entries: {
+        contentScript: "content",
+        background: "background",
+      },
+      reloadPage: true,
+    }),
     // expose and write the allowed env vars on the compiled bundle
     new webpack.EnvironmentPlugin(["NODE_ENV"]),
     new CopyWebpackPlugin({
