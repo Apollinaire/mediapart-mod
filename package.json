@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node utils/build.js",
     "start": "PORT=3000 NODE_ENV=development node utils/webserver.js",
-    "dev": "NODE_ENV=development webpack --mode=development --watch",
+    "dev": "NODE_ENV=development PORT=9090 webpack --mode=development --watch",
     "test": "jest"
   },
   "repository": {

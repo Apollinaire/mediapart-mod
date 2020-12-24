@@ -53,6 +53,7 @@ var options = {
     // clean the build folder
     // new CleanWebpackPlugin(),
     new ExtensionReloader({
+      PORT: 9090,
       entries: {
         contentScript: "content",
         background: "background",
@@ -86,7 +87,7 @@ var options = {
 };
 
 if (env.NODE_ENV === "development") {
-  options.devtool = "eval-cheap-source-map";
+  // options.devtool = "eval-cheap-source-map";
 }
 
 module.exports = options;
