@@ -26,10 +26,7 @@ var options = {
         test: /\.css$/,
         use: [
           {
-            loader: "style-loader",
-          },
-          {
-            loader: "css-loader",
+            loader: "raw-loader",
           },
         ],
         exclude: /node_modules/,
