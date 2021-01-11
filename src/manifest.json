@@ -3,25 +3,12 @@
   "name": "Mediapart: Themes",
   "version": "0.0.1",
   "description": "Changez les couleurs des sites Mediapart!",
-  "permissions": [
-    "https://www.mediapart.fr/",
-    "https://blogs.mediapart.fr/"
-  ],
+  "permissions": ["https://www.mediapart.fr/", "https://blogs.mediapart.fr/", "activeTab", "webNavigation"],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "content_scripts": [
-    {
-      "matches": [
-        "https://www.mediapart.fr/*",
-        "https://blogs.mediapart.fr/*"
-      ],
-      "js": [
-        "content.bundle.js"
-      ]
-    }
   ],
   "background": {
-    "scripts": [
-      "background.bundle.js"
-    ]
+    "scripts": ["background.bundle.js"],
+    "persistent": true
   }
 }
