@@ -3,7 +3,7 @@
   "name": "Mediapart: Themes",
   "version": "0.0.1",
   "description": "Changez les couleurs des sites Mediapart!",
-  "permissions": ["https://www.mediapart.fr/", "https://blogs.mediapart.fr/", "activeTab", "webNavigation"],
+  "permissions": ["https://www.mediapart.fr/", "https://blogs.mediapart.fr/", "tabs", "webNavigation"],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "content_scripts": [
     {

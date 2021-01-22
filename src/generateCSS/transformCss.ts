@@ -1,40 +1,54 @@
-import {
-  parse,
-  walk,
-  findAll,
-  find,
-  generate,
-  Declaration,
-  Value,
-} from "css-tree";
-import _ from "lodash";
-import { invertColorNode } from "./AstUtils/invertColorNode";
+import { parse, walk, generate, CssNode } from 'css-tree';
+import { handleDeclaration, invertColorNode } from './AstUtils/invertColorNode';
+import { selectorIncludes, parseSelectorsList, isEqualSelectorChild } from './AstUtils/selectorUtils';
+
+const config = {
+  selectorBlackList: parseSelectorsList(['.footer', '.main-menu', '.menu-sticky']),
+  propertyWhiteList: ['background-color', 'color', 'background', 'border', 'border-color'],
+};
 
 const transformCss = (css: string) => {
   const tree = parse(css);
-  // const colorDeclarations = findAll(tree, (node, item, list) => {
-  //   if (node.type === "Declaration" && node.property === "color") {
-  //     return true;
-  //   }
-  //   return false;
-  // });
-  // const colors = (colorDeclarations as Declaration[]).map((node) => {
-  //   if (node.value.type === "Value" && node.value.children) {
-  //     const firstNode = node.value.children.first();
-  //     if (firstNode?.type === "Hash" as "HexColor") {
-  //       return firstNode.value
-  //     }
-  //   }
-  // });
-  // console.log(colors);
   walk(tree, {
-    visit: "Declaration",
-    enter: (node) => {
-      if (
-        (node.property === "color" || node.property === "background-color") &&
-        node.value.type === "Value"
-      ) {
-        node.value.children = node.value.children.map(invertColorNode);
+    visit: 'Rule',
+    enter: (rule, ruleItem, ruleList) => {
+      // remove selectors that match the blacklist
+      if (rule.prelude.type === 'SelectorList') {
+        walk(rule.prelude, {
+          visit: 'Selector',
+          enter: (selector, selectorItem, selectorList) => {
+            for (const blackListedSelector of config.selectorBlackList) {
+              if (selectorList && selectorItem && selectorIncludes(selector, blackListedSelector)) {
+                selectorList.remove(selectorItem);
+              }
+            }
+          },
+        });
+        // if there are no more selectors inside the list, remove the whole rule
+        if (ruleItem && ruleList && rule.prelude.children.getSize() === 0) {
+          ruleList.remove(ruleItem);
+          return;
+        }
+      }
+
+      // remove the properties that don't match the whitelist
+      walk(rule.block, {
+        visit: 'Declaration',
+        enter: (declaration, declarationItem, declarationList) => {
+          if (!config.propertyWhiteList.includes(declaration.property)) {
+            if (ruleItem && ruleList) {
+              declarationList.remove(declarationItem);
+            }
+          } else {
+            // modify the declaration
+            handleDeclaration(declaration);
+          }
+        },
+      });
+
+      if (ruleItem && ruleList && rule.block.children.getSize() === 0) {
+        ruleList.remove(ruleItem);
+        return;
       }
     },
   });

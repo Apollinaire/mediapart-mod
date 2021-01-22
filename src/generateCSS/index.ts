@@ -1,13 +1,13 @@
-import getCss from "./getCSS";
-import transformCss from "./transformCss";
-import writeCssToLocal from "./writeCssToLocal";
+import { parse, toPlainObject } from 'css-tree';
+import displayTree from './AstUtils/displayTree';
+import getCss from './getCSS';
+import transformCss from './transformCss';
+import writeCssToLocal from './writeCssToLocal';
 
 const CSS = `
 
 .a {
   color: red;
-}
-.a {
   color: #eee;
 }
 .a {
@@ -26,10 +26,10 @@ const CSS = `
   color: rgba(1,1,1,0.2);
 }
 .a {
-  rgb(100%,0%,20%);
+  color: rgb(100%,0%,20%);
 }
 .a {
-  hsla(240 100% 50% / 5%);
+  color: hsla(240 100% 50% / 5%);
 }
 .a {
   color: default;
@@ -45,13 +45,22 @@ const CSS = `
 }
 
 
-`
+`;
+
+const minimalCSS = `
+.a > .b, .c {
+  color: #eee;
+}
+`;
 
 export const generateCss = async () => {
-  const css = await getCss();
+  // const css = await getCss();
 
-  const newCss = transformCss(css);
-  writeCssToLocal(newCss, "newMediapart.css")
+  // displayTree(parse(CSS));
+  const newCss = transformCss(CSS);
+  console.log(newCss);
+  // console.log(JSON.stringify(toPlainObject(parse(`.a > .b, .c {}`)), null, 2));
+  // writeCssToLocal(newCss, "newMediapart.css");
   return;
 };
 generateCss();
