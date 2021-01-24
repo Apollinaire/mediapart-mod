@@ -1,4 +1,4 @@
-import { parse, toPlainObject } from 'css-tree';
+import { generate, parse, toPlainObject } from 'css-tree';
 import displayTree from './AstUtils/displayTree';
 import getCss from './getCSS';
 import transformCss from './transformCss';
@@ -23,7 +23,7 @@ const CSS = `
   color: hsla(18,18,18,0.5);
 }
 .a {
-  color: rgba(1,1,1,0.2);
+  color: rgba(1e2,1,1,0.2);
 }
 .a {
   color: rgb(100%,0%,20%);
@@ -54,11 +54,11 @@ const minimalCSS = `
 `;
 
 export const generateCss = async () => {
-  // const css = await getCss();
-
-  // displayTree(parse(CSS));
+  const css = await getCss();
+  // console.log(css)
+  displayTree(parse(CSS));
   const newCss = transformCss(CSS);
-  console.log(newCss);
+
   // console.log(JSON.stringify(toPlainObject(parse(`.a > .b, .c {}`)), null, 2));
   // writeCssToLocal(newCss, "newMediapart.css");
   return;

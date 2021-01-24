@@ -1,16 +1,47 @@
-import { CssNode, Declaration, HexColor, Identifier, FunctionNode, List, Value } from 'css-tree';
+import {
+  CssNode,
+  Declaration,
+  Hash,
+  Identifier,
+  FunctionNode,
+  List,
+  Value,
+  walk,
+  NumberNode,
+  Percentage,
+  Operator,
+} from 'css-tree';
 import convert from 'color-convert';
 import { ColorType, invertRGBColor } from '../colorUtils/invertRGBColor';
 import { RGB } from 'color-convert/conversions';
+import displayTree from './displayTree';
 
-const getHexNode = (hex: string): HexColor => ({
-  type: 'Hash' as 'HexColor', // HACK: types are wrong
+const getHexNode = (hex: string): Hash => ({
+  type: 'Hash', // HACK: types are wrong
   value: hex,
+});
+const getNumberNode = (num: number): NumberNode => ({
+  type: 'Number',
+  value: num.toString(),
+});
+const getPercentageNode = (num: number): Percentage => ({
+  type: 'Percentage',
+  value: num.toString(),
+});
+const getCommaNode = (): Operator => ({
+  type: 'Operator',
+  value: ',',
 });
 
 const getRGBFunctionNode = (rgb: RGB, alpha?: number): FunctionNode => {
   const hasAlpha = typeof alpha === 'number';
-  const children = new List<Value>();
+  const children = new List<CssNode>();
+  rgb.forEach((num, i) => {
+    children.append(children.createItem(getNumberNode(num)));
+    if (i < rgb.length - 1) {
+      children.append(children.createItem(getCommaNode()));
+    }
+  });
   return {
     type: 'Function',
     name: hasAlpha ? 'rgba' : 'rgb',
@@ -23,12 +54,12 @@ export const handleDeclaration = (declaration: Declaration) => {
     switch (declaration.property) {
       case 'background-color':
       case 'border-color':
+      case 'border':
+      case 'background':
         declaration.value.children = declaration.value.children.map(value => invertColorNode(value, 'background'));
         break;
-      case 'background':
-      case 'border':
-        console.log(declaration.value.children);
-        break;
+      // displayTree(declaration );
+      // break;
       case 'color':
         declaration.value.children = declaration.value.children.map(value => invertColorNode(value, 'text'));
         break;
@@ -40,15 +71,57 @@ export const handleDeclaration = (declaration: Declaration) => {
   }
 };
 
-const convertFunctionToRGB = (fn: FunctionNode): [rbg: RGB, alpha?: number] | [] => {
-  switch (fn.name) {
-    case 'hsl':
-    case 'hsla':
-    case 'rgb':
-    case 'rgba':
-      console.log(fn.name, fn.children.toArray());
-    default:
-      return [];
+const convertFunctionToRGB = (fn: FunctionNode): [rgb: RGB, alpha?: number] | [] => {
+  if (fn.name === 'rgb' || fn.name === 'rgba') {
+    let values: number[] = [];
+    let alpha: number | undefined = undefined;
+    walk(fn, {
+      enter: (node: CssNode) => {
+        if (node.type === 'Number') {
+          if (values.length < 3) {
+            values.push(parseFloat(node.value));
+          } else if (typeof alpha === 'undefined') {
+            alpha = parseFloat(node.value);
+          } else {
+            displayTree(fn);
+            console.log({ values, alpha });
+            throw Error('too much values in rgb function');
+          }
+        } else if (node.type === 'Percentage') {
+          if (values.length < 3) {
+            values.push(Math.round(2.55 * parseFloat(node.value)));
+          } else if (typeof alpha === 'undefined') {
+            alpha = parseFloat(node.value) / 100;
+          } else {
+            displayTree(fn);
+            console.log({ values, alpha });
+            throw Error('too much values in rgb function');
+          }
+        }
+      },
+    });
+    if (values.length === 3) {
+      return [values as RGB, alpha];
+    } else {
+      displayTree(fn);
+      console.log(values);
+      throw Error('invalid amount of rgb values');
+    }
+  } else if (fn.name === 'hsl' || fn.name === 'hsla') {
+    let values: number[] = [];
+    let alpha: number | undefined = undefined;
+
+    // todo
+
+    if (values.length === 3) {
+      return [values as RGB, alpha];
+    } else {
+      displayTree(fn);
+      console.log(values);
+      throw Error('invalid amount of rgb values');
+    }
+  } else {
+    return [];
   }
 };
 
@@ -63,14 +136,14 @@ export function invertColorNode(node: CssNode, colorType: ColorType): CssNode {
         // means it's blue, red etc
         return getHexNode(convert.rgb.hex(invertRGBColor(rgb, colorType)));
       }
-    case 'Hash' as 'HexColor': // HACK: types are wrong
-      return getHexNode(convert.rgb.hex(invertRGBColor(convert.hex.rgb((node as HexColor).value), colorType)));
+    case 'Hash':
+      return getHexNode(convert.rgb.hex(invertRGBColor(convert.hex.rgb(node.value), colorType)));
     case 'Function':
       const [maybeRGB, maybeAlpha] = convertFunctionToRGB(node);
       if (maybeRGB) {
         const newRGB = invertRGBColor(maybeRGB, colorType);
         if (typeof maybeAlpha === 'number') {
-        }
+        } else return getHexNode(convert.rgb.hex(newRGB));
       }
       return node;
     default:

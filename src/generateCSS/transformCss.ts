@@ -1,6 +1,6 @@
-import { parse, walk, generate, CssNode } from 'css-tree';
-import { handleDeclaration, invertColorNode } from './AstUtils/invertColorNode';
-import { selectorIncludes, parseSelectorsList, isEqualSelectorChild } from './AstUtils/selectorUtils';
+import { parse, walk, generate } from 'css-tree';
+import { handleDeclaration } from './AstUtils/invertColorNode';
+import { selectorIncludes, parseSelectorsList } from './AstUtils/selectorUtils';
 
 const config = {
   selectorBlackList: parseSelectorsList(['.footer', '.main-menu', '.menu-sticky']),
