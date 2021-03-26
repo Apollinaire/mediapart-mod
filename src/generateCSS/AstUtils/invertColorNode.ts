@@ -36,7 +36,6 @@ const getCommaNode = (): Operator => ({
 });
 
 const getRGBFunctionNode = (rgb: RGB, alpha?: number): FunctionNode => {
-  const hasAlpha = typeof alpha === 'number';
   const children = new List<CssNode>();
   rgb.forEach((num, i) => {
     children.append(children.createItem(getNumberNode(num)));
@@ -44,9 +43,13 @@ const getRGBFunctionNode = (rgb: RGB, alpha?: number): FunctionNode => {
       children.append(children.createItem(getCommaNode()));
     }
   });
+  if (typeof alpha === 'number') {
+    children.append(children.createItem(getCommaNode()));
+    children.append(children.createItem(getNumberNode(alpha)));
+  }
   return {
     type: 'Function',
-    name: hasAlpha ? 'rgba' : 'rgb',
+    name: typeof alpha === 'number' ? 'rgba' : 'rgb',
     children,
   };
 };

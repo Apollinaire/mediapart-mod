@@ -49,7 +49,7 @@ const CSS = `
 
 const minimalCSS = `
 .a > .b, .c {
-  color: #eee;
+  color: rgba(0,141,245,.05);
 }
 `;
 
@@ -58,7 +58,6 @@ export const generateCss = async () => {
   // console.log(css)
   // displayTree(parse(CSS));
   const newCss = transformCss(css);
-
   // console.log(JSON.stringify(toPlainObject(parse(`.a > .b, .c {}`)), null, 2));
   writeCssToLocal(newCss, "newMediapart.css");
   return;
