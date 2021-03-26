@@ -6,6 +6,33 @@ import { selectorIncludes, parseSelectorsList } from './AstUtils/selectorUtils';
 const config = {
   selectorBlackList: parseSelectorsList(['.footer', '.main-menu', '.menu-sticky', '.menu-wrapper']),
   propertyWhiteList: ['background-color', 'color', 'background', 'border', 'border-color', 'box-shadow', '-webkit-box-shadow'],
+  customCSS: `
+    a.logo img.brand {
+      filter: invert(1);
+    }
+
+    html {
+      --scrollbarBG: #121212;
+      --thumbBG: #4d4d4d;
+    }
+    html {
+      scrollbar-width: auto;
+      scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+    }
+    html::-webkit-scrollbar {
+      height: 16px;
+    }
+    html::-webkit-scrollbar-track {
+      background-color: --scrollbarBG;
+    }
+    html::-webkit-scrollbar-thumb {
+      background-color: var(--thumbBG) ;
+      border: 3px solid var(--scrollbarBG);
+    }
+    div {
+      color: rgb(221,223,223);
+    }
+  `
 };
 
 const transformCss = (css: string) => {
@@ -61,7 +88,7 @@ const transformCss = (css: string) => {
     },
   });
 
-  return generate(tree);
+  return generate(tree) + config.customCSS;
 };
 
 export default transformCss;
