@@ -1,9 +1,10 @@
 import { parse, walk, generate } from 'css-tree';
+import displayTree from './AstUtils/displayTree';
 import { handleDeclaration } from './AstUtils/invertColorNode';
 import { selectorIncludes, parseSelectorsList } from './AstUtils/selectorUtils';
 
 const config = {
-  selectorBlackList: parseSelectorsList(['.footer', '.main-menu', '.menu-sticky']),
+  selectorBlackList: parseSelectorsList(['.footer', '.main-menu', '.menu-sticky', '.menu-wrapper']),
   propertyWhiteList: ['background-color', 'color', 'background', 'border', 'border-color'],
 };
 
@@ -19,7 +20,14 @@ const transformCss = (css: string) => {
           enter: (selector, selectorItem, selectorList) => {
             for (const blackListedSelector of config.selectorBlackList) {
               if (selectorList && selectorItem && selectorIncludes(selector, blackListedSelector)) {
-                selectorList.remove(selectorItem);
+                try {
+                  selectorList.remove(selectorItem);
+                  break;
+                } catch (error) {
+                  console.log(generate(selector));
+                  displayTree(rule);
+                  throw error;
+                }
               }
             }
           },
