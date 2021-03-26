@@ -61,6 +61,8 @@ export const handleDeclaration = (declaration: Declaration) => {
       case 'border-color':
       case 'border':
       case 'background':
+      case 'box-shadow':
+      case '-webkit-bow-shadow':
         declaration.value.children = declaration.value.children.map(value => invertColorNode(value, 'background'));
         break;
       // displayTree(declaration );

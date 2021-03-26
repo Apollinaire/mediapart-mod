@@ -5,7 +5,7 @@ import { selectorIncludes, parseSelectorsList } from './AstUtils/selectorUtils';
 
 const config = {
   selectorBlackList: parseSelectorsList(['.footer', '.main-menu', '.menu-sticky', '.menu-wrapper']),
-  propertyWhiteList: ['background-color', 'color', 'background', 'border', 'border-color'],
+  propertyWhiteList: ['background-color', 'color', 'background', 'border', 'border-color', 'box-shadow', '-webkit-box-shadow'],
 };
 
 const transformCss = (css: string) => {
