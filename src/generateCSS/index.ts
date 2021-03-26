@@ -17,7 +17,7 @@ const CSS = `
   color: rgb(1,1,1);
 }
 .a {
-  color: hsl(18,18,18);
+  color: hsl(18deg,18,18);
 }
 .a {
   color: hsla(18,18,18,0.5);
@@ -56,11 +56,11 @@ const minimalCSS = `
 export const generateCss = async () => {
   const css = await getCss();
   // console.log(css)
-  displayTree(parse(CSS));
-  const newCss = transformCss(CSS);
+  // displayTree(parse(CSS));
+  const newCss = transformCss(css);
 
   // console.log(JSON.stringify(toPlainObject(parse(`.a > .b, .c {}`)), null, 2));
-  // writeCssToLocal(newCss, "newMediapart.css");
+  writeCssToLocal(newCss, "newMediapart.css");
   return;
 };
 generateCss();

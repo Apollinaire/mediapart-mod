@@ -10,14 +10,16 @@ import {
   NumberNode,
   Percentage,
   Operator,
+  generate,
 } from 'css-tree';
 import convert from 'color-convert';
 import { ColorType, invertRGBColor } from '../colorUtils/invertRGBColor';
+import { HSLModel, RGBModel } from '../colorUtils/colorModels';
 import { RGB } from 'color-convert/conversions';
 import displayTree from './displayTree';
 
 const getHexNode = (hex: string): Hash => ({
-  type: 'Hash', // HACK: types are wrong
+  type: 'Hash',
   value: hex,
 });
 const getNumberNode = (num: number): NumberNode => ({
@@ -71,57 +73,35 @@ export const handleDeclaration = (declaration: Declaration) => {
   }
 };
 
-const convertFunctionToRGB = (fn: FunctionNode): [rgb: RGB, alpha?: number] | [] => {
-  if (fn.name === 'rgb' || fn.name === 'rgba') {
-    let values: number[] = [];
-    let alpha: number | undefined = undefined;
-    walk(fn, {
-      enter: (node: CssNode) => {
-        if (node.type === 'Number') {
-          if (values.length < 3) {
-            values.push(parseFloat(node.value));
-          } else if (typeof alpha === 'undefined') {
-            alpha = parseFloat(node.value);
-          } else {
-            displayTree(fn);
-            console.log({ values, alpha });
-            throw Error('too much values in rgb function');
+const convertFunctionToRGB = (fn: FunctionNode): [rgb: RGB, alpha: number | null] | [] => {
+  try {
+    if (fn.name === 'rgb' || fn.name === 'rgba') {
+      const rgb = new RGBModel();
+      walk(fn, {
+        enter: (node: CssNode) => {
+          if (node.type === 'Number' || node.type === 'Percentage') {
+            rgb.push(node.value, node.type);
           }
-        } else if (node.type === 'Percentage') {
-          if (values.length < 3) {
-            values.push(Math.round(2.55 * parseFloat(node.value)));
-          } else if (typeof alpha === 'undefined') {
-            alpha = parseFloat(node.value) / 100;
-          } else {
-            displayTree(fn);
-            console.log({ values, alpha });
-            throw Error('too much values in rgb function');
+        },
+      });
+      return rgb.toValues();
+    } else if (fn.name === 'hsl' || fn.name === 'hsla') {
+      const hsl = new HSLModel();
+      walk(fn, {
+        enter: (node: CssNode) => {
+          if (node.type === 'Percentage' || node.type === 'Number' || node.type === 'Dimension') {
+            hsl.push(node.value, node.type);
           }
-        }
-      },
-    });
-    if (values.length === 3) {
-      return [values as RGB, alpha];
+        },
+      });
+      return hsl.toValues();
     } else {
-      displayTree(fn);
-      console.log(values);
-      throw Error('invalid amount of rgb values');
+      return [];
     }
-  } else if (fn.name === 'hsl' || fn.name === 'hsla') {
-    let values: number[] = [];
-    let alpha: number | undefined = undefined;
-
-    // todo
-
-    if (values.length === 3) {
-      return [values as RGB, alpha];
-    } else {
-      displayTree(fn);
-      console.log(values);
-      throw Error('invalid amount of rgb values');
-    }
-  } else {
-    return [];
+  } catch (error) {
+    console.log(generate(fn));
+    displayTree(fn);
+    throw error;
   }
 };
 
@@ -143,7 +123,10 @@ export function invertColorNode(node: CssNode, colorType: ColorType): CssNode {
       if (maybeRGB) {
         const newRGB = invertRGBColor(maybeRGB, colorType);
         if (typeof maybeAlpha === 'number') {
-        } else return getHexNode(convert.rgb.hex(newRGB));
+          return getRGBFunctionNode(newRGB, maybeAlpha);
+        } else {
+          return getHexNode(convert.rgb.hex(newRGB));
+        }
       }
       return node;
     default:
