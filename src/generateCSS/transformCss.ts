@@ -5,10 +5,28 @@ import { selectorIncludes, parseSelectorsList } from './AstUtils/selectorUtils';
 
 const config = {
   selectorBlackList: parseSelectorsList(['.footer', '.main-menu', '.menu-sticky', '.menu-wrapper']),
-  propertyWhiteList: ['background-color', 'color', 'background', 'border', 'border-color', 'box-shadow', '-webkit-box-shadow'],
-  customCSS: `
+  propertyWhiteList: [
+    'background-color',
+    'color',
+    'background',
+    'border',
+    'border-color',
+    'box-shadow',
+    '-webkit-box-shadow',
+  ],
+  customCSS: /* CSS */`
     a.logo img.brand {
       filter: invert(1);
+    }
+
+    :root {
+      --main-bg-color: #121212;
+      --main-text-color: #eee;
+    }
+    
+    body {
+      background-color: var(--main-bg-color);
+      color: var(--main-text-color);
     }
 
     html {
@@ -30,9 +48,10 @@ const config = {
       border: 3px solid var(--scrollbarBG);
     }
     div {
-      color: rgb(221,223,223);
+      color: #dfdfdf;
     }
-  `
+    
+  `,
 };
 
 const transformCss = (css: string) => {
