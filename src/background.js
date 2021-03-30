@@ -1,3 +1,6 @@
+import { getConfig, setDarkTheme, setZenMode } from './utils/config';
+import { sendApplyStyles, sendApplyStylesToAll } from './utils/messages';
+
 console.log('start background');
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -18,9 +21,27 @@ chrome.webNavigation.onCommitted.addListener(function (event) {
   if (url.host.endsWith('mediapart.fr')) {
     try {
       console.log('send applyStyles');
-      chrome.tabs.sendMessage(event.tabId, { method: 'applyStyles' });
+      sendApplyStyles(event.tabId);
     } catch (error) {
       console.log(error);
     }
+  }
+});
+
+chrome.commands.onCommand.addListener(async command => {
+  switch (command) {
+    case 'toggle-theme':
+      const { darkTheme } = await getConfig();
+      console.log({ command, darkTheme });
+      await setDarkTheme(!darkTheme);
+      sendApplyStylesToAll();
+      break;
+    case 'toggle-zen':
+      const { zenMode } = await getConfig();
+      await setZenMode(!zenMode);
+      sendApplyStylesToAll();
+      break;
+    default:
+      break;
   }
 });
