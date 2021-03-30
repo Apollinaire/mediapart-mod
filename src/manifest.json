@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Mediapart Mod",
   "version": "0.0.1",
-  "description": "Changez les couleurs des sites Mediapart!",
+  "description": "Mediapart modifié pour une meilleure expérience",
   "permissions": ["https://www.mediapart.fr/", "https://blogs.mediapart.fr/", "tabs", "webNavigation"],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "content_scripts": [
