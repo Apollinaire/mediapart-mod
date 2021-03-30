@@ -4,7 +4,13 @@ import { handleDeclaration } from './AstUtils/invertColorNode';
 import { selectorIncludes, parseSelectorsList } from './AstUtils/selectorUtils';
 
 const config = {
-  selectorBlackList: parseSelectorsList(['.footer', '.main-menu', '.menu-sticky', '.menu-wrapper']),
+  selectorBlackList: parseSelectorsList([
+    '.footer',
+    '.main-menu',
+    '.menu-sticky',
+    '.menu-wrapper',
+    '.cc-cookie-consent-banner-modal',
+  ]),
   propertyWhiteList: [
     'background-color',
     'color',
