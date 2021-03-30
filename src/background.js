@@ -1,5 +1,17 @@
 console.log('start background');
 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  const { method } = message;
+  switch (method) {
+    case 'getStyles':
+      // todo get config from localhost and return it
+      sendResponse({ done: true });
+      return;
+    default:
+      break;
+  }
+});
+
 chrome.webNavigation.onCommitted.addListener(function (event) {
   console.log('onCommited', event);
   const url = new URL(event.url);
