@@ -14,7 +14,7 @@ const config = {
     'box-shadow',
     '-webkit-box-shadow',
   ],
-  customCSS: /* CSS */`
+  customCSS: /* CSS */ `
     a.logo img.brand {
       filter: invert(1);
     }

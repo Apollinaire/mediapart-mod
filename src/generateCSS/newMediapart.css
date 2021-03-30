@@ -3,6 +3,16 @@
       filter: invert(1);
     }
 
+    :root {
+      --main-bg-color: #121212;
+      --main-text-color: #eee;
+    }
+    
+    body {
+      background-color: var(--main-bg-color);
+      color: var(--main-text-color);
+    }
+
     html {
       --scrollbarBG: #121212;
       --thumbBG: #4d4d4d;
@@ -22,6 +32,7 @@
       border: 3px solid var(--scrollbarBG);
     }
     div {
-      color: rgb(221,223,223);
+      color: #dfdfdf;
     }
+    
   
