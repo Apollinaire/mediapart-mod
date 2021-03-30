@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "Mediapart: Themes",
+  "name": "Mediapart Mod",
   "version": "0.0.1",
   "description": "Changez les couleurs des sites Mediapart!",
   "permissions": ["https://www.mediapart.fr/", "https://blogs.mediapart.fr/", "tabs", "webNavigation"],
