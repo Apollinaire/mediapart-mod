@@ -52,6 +52,7 @@ var options = {
     // in dev mode cleaning the folder conflicts with the extension reload
     new CleanWebpackPlugin({
       dry: !isProduction,
+      cleanOnceBeforeBuildPatterns: ['**/*', path.join(process.cwd(), 'dist', '*.zip')],
     }),
     new ExtensionReloader({
       PORT: 9090,
@@ -85,12 +86,12 @@ var options = {
 
 // add zip file
 if (isProduction) {
-  options.plugins.push(
-    new ZipPlugin({
-      path: '..',
-      filename: 'mediapart-mod.zip',
-    })
-  );
+  // options.plugins.push(
+  //   new ZipPlugin({
+  //     path: '..',
+  //     filename: 'mediapart-mod.zip',
+  //   })
+  // );
 }
 
 module.exports = options;
