@@ -100,3 +100,5 @@ typings/
 .tern-port
 
 build
+
+src/generateCSS/newMediapart.css
