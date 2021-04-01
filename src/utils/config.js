@@ -6,7 +6,7 @@ const DEFAULT_CONFIG = {
 
 export const getConfig = () => {
   return new Promise(resolve => {
-    chrome.storage.sync.get(CONFIG_KEYS, config => {
+    chrome.storage.local.get(CONFIG_KEYS, config => {
       resolve({
         ...DEFAULT_CONFIG,
         ...config,
@@ -17,12 +17,12 @@ export const getConfig = () => {
 
 export const setZenMode = newZenMode => {
   return new Promise(resolve => {
-    chrome.storage.sync.set({ zenMode: newZenMode }, resolve);
+    chrome.storage.local.set({ zenMode: newZenMode }, resolve);
   });
 };
 
 export const setDarkTheme = newDarkTheme => {
   return new Promise(resolve => {
-    chrome.storage.sync.set({ darkTheme: newDarkTheme }, resolve);
+    chrome.storage.local.set({ darkTheme: newDarkTheme }, resolve);
   });
 };

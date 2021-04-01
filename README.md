@@ -7,7 +7,7 @@ Modifie mediapart.fr et blogs.mediapart.fr pour une meilleure expérience!
 The extension is not published on any platform, but I plan to release it on the Firefox addons and the chrome webstore.
 The last version is prebuilt in `/dist` as a zip file or unpackaged in `/dist/raw`. The zip file is not signed, so testing on firefox can be done with the temporary installation. On chrome, you have to enable dev mode and install the package locally. For both options, you must point to `/dist/raw`.
 
-Currently, it only features a dark theme for the site. You can toggle the dark theme with Alt+T on the keyboard.
+Currently, it only features a dark theme for the site. You can toggle the dark theme with Alt+Shift+D on the keyboard.
 
 ## Building the extension
 
