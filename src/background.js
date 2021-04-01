@@ -3,7 +3,7 @@ import { sendApplyStyles, sendApplyStylesToAll } from './utils/messages';
 
 console.log('start background');
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const { method } = message;
   switch (method) {
     case 'getStyles':
@@ -15,7 +15,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-chrome.webNavigation.onCommitted.addListener(function (event) {
+browser.webNavigation.onCommitted.addListener(function (event) {
   console.log('onCommited', event);
   const url = new URL(event.url);
   if (url.host.endsWith('mediapart.fr')) {
@@ -28,7 +28,7 @@ chrome.webNavigation.onCommitted.addListener(function (event) {
   }
 });
 
-chrome.commands.onCommand.addListener(async command => {
+browser.commands.onCommand.addListener(async command => {
   switch (command) {
     case 'toggle-theme':
       const { darkTheme } = await getConfig();
