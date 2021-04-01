@@ -3,8 +3,7 @@ var webpack = require('webpack'),
   ExtensionReloader = require('webpack-extension-reloader'),
   CopyWebpackPlugin = require('copy-webpack-plugin'),
   WriteFilePlugin = require('write-file-webpack-plugin'),
-  { CleanWebpackPlugin } = require('clean-webpack-plugin'),
-  ZipPlugin = require('zip-webpack-plugin');
+  { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 var isProduction = process.env.NODE_ENV === 'production';
 
@@ -46,6 +45,9 @@ var options = {
   },
   resolve: {
     extensions: ['.css', '.json', '.js'],
+  },
+  optimization: {
+    minimize: false,
   },
   plugins: [
     // clean the dist folder before build
