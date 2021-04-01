@@ -6,9 +6,9 @@ async function applyStyles() {
   applyDarkThemeConfig(darkTheme);
 }
 
-browser.runtime.sendMessage({ method: 'getStyles' }, applyStyles);
+chrome.runtime.sendMessage({ method: 'getStyles' }, applyStyles);
 
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.method) {
     case 'applyStyles':
       applyStyles();

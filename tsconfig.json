@@ -17,8 +17,7 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": false,
-    "noImplicitAny": true,
-    "typeRoots": ["node_modules/@types", "node_modules/web-ext-types"]
+    "noImplicitAny": true
   },
   "include": [
     "src"

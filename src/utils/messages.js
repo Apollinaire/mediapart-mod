@@ -1,9 +1,9 @@
 export const sendApplyStyles = tabId => {
-  browser.tabs.sendMessage(tabId, { method: 'applyStyles' });
+  chrome.tabs.sendMessage(tabId, { method: 'applyStyles' });
 };
 
 export const sendApplyStylesToAll = () => {
-  browser.tabs.query({}, (tabs = []) => {
+  chrome.tabs.query({}, (tabs = []) => {
     tabs.forEach(tab => {
       sendApplyStyles(tab.id);
     });
