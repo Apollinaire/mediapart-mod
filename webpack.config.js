@@ -72,12 +72,18 @@ var options = {
           from: 'src/manifest.json',
           transform: function (content, path) {
             // generates the manifest file using the package.json informations
-            return Buffer.from(
-              JSON.stringify({
-                ...JSON.parse(content.toString()),
-                version: process.env.npm_package_version,
-              })
-            );
+
+            const manifest = {
+              ...JSON.parse(content.toString()),
+              version: process.env.npm_package_version,
+            };
+
+            if (!isProduction) {
+              // we need unsafe-eval for autoreload, but not in prod
+              manifest.content_security_policy = "script-src 'self' 'unsafe-eval'; object-src 'none'";
+            }
+
+            return Buffer.from(JSON.stringify(manifest));
           },
         },
       ],
