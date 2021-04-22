@@ -1,5 +1,6 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
+var __webpack_exports__ = {};
 
 ;// CONCATENATED MODULE: ./src/utils/config.js
 const CONFIG_KEYS = ['zenMode', 'darkTheme'];
@@ -9,7 +10,7 @@ const DEFAULT_CONFIG = {
 };
 const getConfig = () => {
   return new Promise(resolve => {
-    chrome.storage.sync.get(CONFIG_KEYS, config => {
+    chrome.storage.local.get(CONFIG_KEYS, config => {
       resolve({ ...DEFAULT_CONFIG,
         ...config
       });
@@ -18,14 +19,14 @@ const getConfig = () => {
 };
 const setZenMode = newZenMode => {
   return new Promise(resolve => {
-    chrome.storage.sync.set({
+    chrome.storage.local.set({
       zenMode: newZenMode
     }, resolve);
   });
 };
 const setDarkTheme = newDarkTheme => {
   return new Promise(resolve => {
-    chrome.storage.sync.set({
+    chrome.storage.local.set({
       darkTheme: newDarkTheme
     }, resolve);
   });

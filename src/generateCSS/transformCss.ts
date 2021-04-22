@@ -31,7 +31,7 @@ const config = {
     }
     
     body {
-      background-color: var(--main-bg-color);
+      background-color: #000000;
       color: var(--main-text-color);
     }
 
@@ -45,6 +45,7 @@ const config = {
     }
     html::-webkit-scrollbar {
       height: 16px;
+      background-color: var(--scrollbarBG);
     }
     html::-webkit-scrollbar-track {
       background-color: --scrollbarBG;
@@ -55,6 +56,10 @@ const config = {
     }
     div {
       color: #dfdfdf;
+    }
+
+    .fixed .header {
+      border-bottom: 1px solid #333333;
     }
     
   `,
