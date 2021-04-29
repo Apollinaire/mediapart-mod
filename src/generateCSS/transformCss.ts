@@ -61,6 +61,10 @@ const config = {
     .fixed .header {
       border-bottom: 1px solid #333333;
     }
+
+    iframe {
+      background-color: white;
+    }
     
   `,
 };
