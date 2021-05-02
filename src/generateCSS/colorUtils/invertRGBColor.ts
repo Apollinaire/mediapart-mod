@@ -11,7 +11,7 @@ export const invertRGBColor = ([r, g, b]: RGB, colorType: ColorType): RGB => {
 const invertLightness = (lightness: number, colorType: ColorType) => {
   switch (colorType) {
     case 'background':
-      return Math.max(100 - lightness, 7.1);
+      return Math.max(100 - lightness, 16);
     case 'text':
       return Math.min(100 - lightness, 93);
     default:
