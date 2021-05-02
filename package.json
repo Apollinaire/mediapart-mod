@@ -9,6 +9,7 @@
     "postbuild": "web-ext build --source-dir=\"dist/raw\" --artifacts-dir=\"dist\"",
     "start": "NODE_ENV=development PORT=9090 webpack --mode=development --watch",
     "gen-css": "ts-node --script-mode ./src/generateCSS",
+    "zip:source": "zip source.zip -r src README.md tsconfig.json babel.config.js LICENSE package.json package-lock.json tsconfig.json webpack.config.js public",
     "test": "jest"
   },
   "repository": {
