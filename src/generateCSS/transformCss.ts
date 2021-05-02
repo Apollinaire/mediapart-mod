@@ -26,7 +26,7 @@ const config = {
     }
 
     :root {
-      --main-bg-color: #121212;
+      --main-bg-color: #292929;
       --main-text-color: #eee;
     }
     
@@ -36,7 +36,7 @@ const config = {
     }
 
     html {
-      --scrollbarBG: #121212;
+      --scrollbarBG: var(--main-bg-color);
       --thumbBG: #4d4d4d;
     }
     html {
