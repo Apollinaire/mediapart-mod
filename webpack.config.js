@@ -86,6 +86,9 @@ var options = {
             return Buffer.from(JSON.stringify(manifest));
           },
         },
+        {
+          from: 'public'
+        }
       ],
     }),
     new WriteFilePlugin(),
