@@ -3,7 +3,7 @@
   "name": "Mediapart Mod",
   "version": "0.0.5",
   "description": "Mediapart modifié pour une meilleure expérience",
-  "permissions": ["https://www.mediapart.fr/", "https://blogs.mediapart.fr/", "webNavigation", "storage"],
+  "permissions": ["https://www.mediapart.fr/", "https://blogs.mediapart.fr/", "storage"],
   "content_security_policy": "script-src 'self'; object-src 'none'",
   "content_scripts": [
     {
