@@ -73,28 +73,23 @@ const applyDarkThemeConfig = darkTheme => {
 
 
 async function applyStyles() {
-  const {
-    darkTheme
-  } = await getConfig();
-  applyDarkThemeConfig(darkTheme);
+  if (document.head) {
+    const {
+      darkTheme
+    } = await getConfig();
+    applyDarkThemeConfig(darkTheme);
+  } else {
+    setTimeout(() => {
+      applyStyles();
+    }, 1);
+  }
 }
 
-chrome.runtime.sendMessage({
-  method: 'getStyles'
-}, applyStyles);
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  switch (message.method) {
-    case 'applyStyles':
-      applyStyles();
-      sendResponse({
-        method: 'applyStyles',
-        done: true
-      });
-      break;
-
-    default:
-      break;
+chrome.storage.onChanged.addListener(changes => {
+  if (changes.darkTheme) {
+    applyDarkThemeConfig(changes.darkTheme.newValue);
   }
 });
+applyStyles();
 /******/ })()
 ;
