@@ -6,15 +6,10 @@ async function applyStyles() {
   applyDarkThemeConfig(darkTheme);
 }
 
-chrome.runtime.sendMessage({ method: 'getStyles' }, applyStyles);
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  switch (message.method) {
-    case 'applyStyles':
-      applyStyles();
-      sendResponse({ method: 'applyStyles', done: true });
-      break;
-    default:
-      break;
+chrome.storage.onChanged.addListener(changes => {
+  if (changes.darkTheme) {
+    applyDarkThemeConfig(changes.darkTheme.newValue);
   }
 });
+
+applyStyles();
