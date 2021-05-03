@@ -75,7 +75,6 @@ var options = {
 
             const manifest = {
               ...JSON.parse(content.toString()),
-              version: process.env.npm_package_version,
             };
 
             if (!isProduction) {
