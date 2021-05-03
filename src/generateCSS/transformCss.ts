@@ -13,6 +13,7 @@ const config = {
   ]),
   propertyWhiteList: [
     'background-color',
+    'background-position',
     'color',
     'background',
     'border',
