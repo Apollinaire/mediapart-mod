@@ -132,6 +132,9 @@ export function invertColorNode(node: CssNode, colorType: ColorType): CssNode {
         } else {
           return getHexNode(convert.rgb.hex(newRGB));
         }
+      } else {
+        // other function, could be linear-gradient so go deeper
+        node.children = node.children.map((childNode) => invertColorNode(childNode, colorType))
       }
       return node;
     default:
