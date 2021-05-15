@@ -10,7 +10,8 @@ var isProduction = process.env.NODE_ENV === 'production';
 var options = {
   mode: process.env.NODE_ENV || 'development',
   entry: {
-    content: path.join(__dirname, 'src', 'injectTheme.js'),
+    interactionController: path.join(__dirname, 'src', 'interactionController.js'),
+    injectTheme: path.join(__dirname, 'src', 'injectTheme.js'),
     background: path.join(__dirname, 'src', 'background.js'),
   },
   output: {
@@ -41,10 +42,21 @@ var options = {
         },
         exclude: /node_modules/,
       },
+      {
+        test: /\.less$/,
+        use: [
+          {
+            loader: 'raw-loader',
+          },
+          {
+            loader: 'less-loader',
+          },
+        ],
+      },
     ],
   },
   resolve: {
-    extensions: ['.css', '.json', '.js'],
+    extensions: ['.css', '.less', '.json', '.js'],
   },
   optimization: {
     minimize: false,
@@ -59,7 +71,7 @@ var options = {
     new ExtensionReloader({
       PORT: 9090,
       entries: {
-        contentScript: 'content',
+        contentScript: ['injectTheme', 'interactionController'],
         background: 'background',
       },
       reloadPage: true,

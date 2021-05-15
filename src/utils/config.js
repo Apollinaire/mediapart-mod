@@ -26,3 +26,13 @@ export const setDarkTheme = newDarkTheme => {
     chrome.storage.local.set({ darkTheme: newDarkTheme }, resolve);
   });
 };
+
+export const toggleDarkTheme = async () => {
+  const { darkTheme } = await getConfig()
+  return setDarkTheme(!darkTheme)
+}
+
+export const toggleZenMode = async () => {
+  const { zenMode } = await getConfig()
+  return setZenMode(!zenMode)
+}

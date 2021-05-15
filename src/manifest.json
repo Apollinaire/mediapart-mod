@@ -8,8 +8,13 @@
   "content_scripts": [
     {
       "matches": ["https://www.mediapart.fr/*", "https://blogs.mediapart.fr/*"],
-      "js": ["content.bundle.js"],
+      "js": ["injectTheme.bundle.js"],
       "run_at": "document_start"
+    },
+    {
+      "matches": ["https://www.mediapart.fr/*", "https://blogs.mediapart.fr/*"],
+      "js": ["interactionController.bundle.js"],
+      "run_at": "document_end"
     }
   ],
   "background": {
