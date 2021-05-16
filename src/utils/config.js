@@ -42,7 +42,7 @@ export const setFullPage = newFullPage => {
     chrome.storage.local.set({ fullPage: newFullPage }, resolve);
   });
 };
-export const toggleZenMode = async () => {
+export const toggleFullPage = async () => {
   const { fullPage } = await getConfig();
   return setFullPage(!fullPage);
 };
