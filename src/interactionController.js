@@ -1,7 +1,6 @@
-import { enableHotkeys, disableHotkeys } from './interactions/hotkeys';
-import { getConfig } from './utils/config';
-import { getFullPageLink, isArticleLink } from './interactions/links';
 import { articleLinksToFullPage } from './interactions/fullPage';
+import { disableHotkeys, enableHotkeys } from './interactions/hotkeys';
+import { getConfig } from './utils/config';
 
 const run = async () => {
   const { hotkeysActive, fullPage } = await getConfig();
@@ -31,7 +30,7 @@ const run = async () => {
         articleLinksToFullPage()
       }
       if (changes.fullPage.newValue === false) {
-        window.reload()
+        window.location.reload()
       }
     }
   })
