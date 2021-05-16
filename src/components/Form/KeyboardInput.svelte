@@ -9,7 +9,15 @@
 
 <div class="keyboard-input">
   <div class="button-container">
-    <button class:active {disabled} on:click={() => setActiveId(id)}>
+    <button
+      class:disabled
+      class:active
+      on:click={() => {
+        if (!disabled) {
+          setActiveId(id);
+        }
+      }}
+    >
       {value}
     </button>
   </div>
@@ -44,8 +52,13 @@
     cursor: pointer;
     margin-right: 4px;
   }
+  button.disabled {
+    color: rgba(16, 16, 16, 0.3);
+    background-color: rgba(239, 239, 239, 0.3);
+    border-color: rgba(118, 118, 118, 0.3);
+  }
   button.active {
     color: black;
-    background-color: rgba(255, 125, 125);
+    background-color: rgb(255, 125, 125);
   }
 </style>
