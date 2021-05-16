@@ -5,7 +5,9 @@
 </script>
 
 <label class="switch">
-  {label}
+  <span class="label">
+    {label}
+  </span>
   <input type="checkbox" bind:checked {disabled} />
   <span class="slider round" />
 </label>
@@ -14,10 +16,14 @@
   .switch {
     cursor: pointer;
     position: relative;
-    display: inline-block;
-    height: 34px;
-    line-height: 34px;
-    padding-right: 60px;
+    display: flex;
+    height: 24px;
+    line-height: 24px;
+  }
+
+  .label {
+    font-size: 14px;
+    flex-grow: 1;
   }
 
   /* Hide default HTML checkbox */
@@ -29,42 +35,37 @@
 
   /* The slider */
   .slider {
-    display: inline-block;
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 60px;
+    width: 48px;
     background-color: #ccc;
     -webkit-transition: 0.4s;
     transition: 0.4s;
   }
 
   .slider:before {
-    position: absolute;
+    position: relative;
+    display: block;
     content: '';
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
+    height: 22px;
+    width: 22px;
+    left: 1px;
+    top: 1px;
     background-color: white;
     -webkit-transition: 0.4s;
     transition: 0.4s;
   }
 
   input:checked + .slider {
-    background-color: #2196f3;
+    background-color: red;
   }
 
   input:focus + .slider {
-    box-shadow: 0 0 1px #2196f3;
+    box-shadow: 0 0 3px red;
   }
 
   input:checked + .slider:before {
-    -webkit-transform: translateX(26px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
+    -webkit-transform: translateX(24px);
+    -ms-transform: translateX(24px);
+    transform: translateX(24px);
   }
 
   /* Rounded sliders */
