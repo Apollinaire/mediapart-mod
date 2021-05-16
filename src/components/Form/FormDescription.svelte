@@ -4,5 +4,6 @@
 
 <style>
   .form-description {
+    margin-top: 4px;
   }
 </style>
