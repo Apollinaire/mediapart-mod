@@ -1,15 +1,41 @@
-import { handleKey } from './interactions';
+import { enableHotkeys, disableHotkeys } from './interactions/hotkeys';
+import { getConfig } from './utils/config';
+import { getFullPageLink, isArticleLink } from './interactions/links';
+import { articleLinksToFullPage } from './interactions/fullPage';
 
-const ignoredTagnames = ['input', 'textarea'];
+const run = async () => {
+  const { hotkeysActive, fullPage } = await getConfig();
 
-document.addEventListener('keydown', e => {
-  // ignore when we are inside an input
-  const tagname = e.target.tagName.toLowerCase();
-  if (ignoredTagnames.includes(tagname)) {
-    return;
+  // keyboard shortcuts
+  if (hotkeysActive) {
+    enableHotkeys()
   }
-  if (e.ctrlKey || e.altKey || e.shiftKey) {
-    return
+
+  // article links to full page
+  if (fullPage) {
+    articleLinksToFullPage()
   }
-  handleKey(e.key);
-});
+
+  // react to settings update
+  chrome.storage.onChanged.addListener((changes) => {
+    if (changes.hotkeysActive) {
+      if (changes.hotkeysActive.newValue === true) {
+        enableHotkeys()
+      }
+      if (changes.hotkeysActive.newValue === false) {
+        disableHotkeys()
+      }
+    }
+    if (changes.fullPage) {
+      if (changes.fullPage.newValue === true) {
+        articleLinksToFullPage()
+      }
+      if (changes.fullPage.newValue === false) {
+        window.reload()
+      }
+    }
+  })
+
+};
+
+run();

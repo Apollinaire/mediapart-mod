@@ -1,6 +1,28 @@
 import { toggleDarkTheme, toggleZenMode } from '../utils/config';
 
-export const handleKey = key => {
+export const enableHotkeys = () => {
+  document.addEventListener('keydown', onKeydown)
+}
+
+export const disableHotkeys = () => {
+  document.removeEventListener('keydown', onKeydown)
+}
+
+const ignoredTagnames = ['input', 'textarea'];
+
+export const onKeydown = e => {
+  // ignore when we are inside an input
+  const tagname = e.target.tagName.toLowerCase();
+  if (ignoredTagnames.includes(tagname)) {
+    return;
+  }
+  if (e.ctrlKey || e.altKey || e.shiftKey) {
+    return;
+  }
+  handleKey(e.key);
+};
+
+const handleKey = key => {
   if (typeof keyMap[key] === 'function') {
     keyMap[key]();
   }
@@ -33,16 +55,16 @@ const keyMap = {
   },
   // increase font-size
   '+': () => {
-    const buttonEl = document.querySelector('ul.sub-menu li ul li button.increase-fs')
+    const buttonEl = document.querySelector('ul.sub-menu li ul li button.increase-fs');
     if (!buttonEl.disabled) {
-      buttonEl.click()
+      buttonEl.click();
     }
   },
   // decrease font-size
-  '-': () =>{
-    const buttonEl = document.querySelector('ul.sub-menu li ul li button.decrease-fs')
+  '-': () => {
+    const buttonEl = document.querySelector('ul.sub-menu li ul li button.decrease-fs');
     if (!buttonEl.disabled) {
-      buttonEl.click()
+      buttonEl.click();
     }
-  }
+  },
 };
