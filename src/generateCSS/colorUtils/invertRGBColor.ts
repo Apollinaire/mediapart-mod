@@ -13,7 +13,7 @@ const invertLightness = (lightness: number, colorType: ColorType) => {
     case 'background':
       return Math.max(100 - lightness, 16);
     case 'text':
-      return Math.min(100 - lightness, 93);
+      return Math.min(100 - lightness, 71);
     default:
       return lightness;
   }

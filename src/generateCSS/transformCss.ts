@@ -28,7 +28,7 @@ const config = {
 
     :root {
       --main-bg-color: #292929;
-      --main-text-color: #eee;
+      --main-text-color: #b5b5b5;
     }
     
     body {
