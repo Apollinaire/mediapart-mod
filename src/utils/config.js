@@ -1,10 +1,10 @@
-const CONFIG_KEYS = ['zenMode', 'darkTheme'];
-const DEFAULT_CONFIG = {
+export const DEFAULT_CONFIG = {
   zenMode: true,
   darkTheme: true,
   fullPage: true,
   hotkeysActive: true,
 };
+export const CONFIG_KEYS = Object.keys(DEFAULT_CONFIG);
 
 export const getConfig = () => {
   return new Promise(resolve => {
@@ -16,6 +16,10 @@ export const getConfig = () => {
     });
   });
 };
+
+export const setConfig = (newConfig) => {
+  chrome.storage.local.set(newConfig)
+}
 
 export const setDarkTheme = newDarkTheme => {
   return new Promise(resolve => {

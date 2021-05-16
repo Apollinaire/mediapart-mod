@@ -13,6 +13,8 @@ var options = {
     interactionController: path.join(__dirname, 'src', 'interactionController.js'),
     injectTheme: path.join(__dirname, 'src', 'injectTheme.js'),
     background: path.join(__dirname, 'src', 'background.js'),
+    popup: path.join(__dirname, 'src', 'popup.js'),
+    options: path.join(__dirname, 'src', 'options.js'),
   },
   output: {
     path: path.join(__dirname, isProduction ? 'dist/raw' : 'build'),
@@ -53,10 +55,33 @@ var options = {
           },
         ],
       },
+      {
+        test: /\.(html|svelte)$/,
+        use: {
+          loader: 'svelte-loader',
+          options: {
+            compilerOptions: {
+              css: true,
+              dev: !isProduction,
+            },
+          },
+        },
+      },
+      {
+        // required to prevent errors from Svelte on Webpack 5+, omit on Webpack 4
+        test: /node_modules\/svelte\/.*\.mjs$/,
+        resolve: {
+          fullySpecified: false,
+        },
+      },
     ],
   },
   resolve: {
-    extensions: ['.css', '.less', '.json', '.js'],
+    extensions: ['.css', '.less', '.json', '.js', '.mjs', '.svelte'],
+    alias: {
+      svelte: path.resolve('node_modules', 'svelte'),
+    },
+    mainFields: ['svelte', 'browser', 'module', 'main'],
   },
   optimization: {
     minimize: false,
@@ -73,6 +98,7 @@ var options = {
       entries: {
         contentScript: ['injectTheme', 'interactionController'],
         background: 'background',
+        extensionPage: ['popup', 'options'],
       },
       reloadPage: true,
     }),
@@ -98,8 +124,8 @@ var options = {
           },
         },
         {
-          from: 'public'
-        }
+          from: 'public',
+        },
       ],
     }),
     new WriteFilePlugin(),
