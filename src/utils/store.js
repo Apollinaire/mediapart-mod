@@ -31,8 +31,6 @@ const createConfigStore = () => {
     subscribe,
     set: args => {
       setConfig({ ...args, loading: true });
-
-      // set(args);
     },
   };
 };

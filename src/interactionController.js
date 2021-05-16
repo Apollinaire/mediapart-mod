@@ -3,38 +3,43 @@ import { disableHotkeys, enableHotkeys } from './interactions/hotkeys';
 import { getConfig } from './utils/config';
 
 const run = async () => {
-  const { hotkeysActive, fullPage } = await getConfig();
+  const { hotkeysActive, fullPage, keySetting } = await getConfig();
 
   // keyboard shortcuts
   if (hotkeysActive) {
-    enableHotkeys()
+    enableHotkeys(keySetting);
   }
 
   // article links to full page
   if (fullPage) {
-    articleLinksToFullPage()
+    articleLinksToFullPage();
   }
 
   // react to settings update
-  chrome.storage.onChanged.addListener((changes) => {
+  chrome.storage.onChanged.addListener(async changes => {
     if (changes.hotkeysActive) {
       if (changes.hotkeysActive.newValue === true) {
-        enableHotkeys()
+        disableHotkeys();
+        const { keySetting } = await getConfig();
+        enableHotkeys(keySetting);
       }
       if (changes.hotkeysActive.newValue === false) {
-        disableHotkeys()
+        disableHotkeys();
       }
+    }
+    if (changes.keySetting) {
+      disableHotkeys();
+      enableHotkeys(changes.keySetting.newValue);
     }
     if (changes.fullPage) {
       if (changes.fullPage.newValue === true) {
-        articleLinksToFullPage()
+        articleLinksToFullPage();
       }
       if (changes.fullPage.newValue === false) {
-        window.location.reload()
+        window.location.reload();
       }
     }
-  })
-
+  });
 };
 
 run();

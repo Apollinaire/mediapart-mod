@@ -1,7 +1,7 @@
-<div class="header">
+<h1 class="header">
   <img src="mediapart-mod-48.png" alt="logo mediapart mod" />
   <span> Mediapart Mod </span>
-</div>
+</h1>
 
 <style>
   .header {
@@ -12,6 +12,6 @@
     line-height: 48px;
     font-size: 22px;
     height: 48px;
-    padding-bottom: 12px;
+    padding-bottom: 24px;
   }
 </style>

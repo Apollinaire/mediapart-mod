@@ -3,12 +3,22 @@ export const DEFAULT_CONFIG = {
   darkTheme: true,
   fullPage: true,
   hotkeysActive: true,
+  keySetting: [
+    { key: 't', action: 'toggleDarkTheme' },
+    { key: 'z', action: 'toggleZenMode' },
+    { key: 'u', action: 'une' },
+    { key: 'o', action: 'nextPage' },
+    { key: 'i', action: 'previousPage' },
+    { key: 'p', action: 'fullPage' },
+    { key: '+', action: 'increaseFontSize' },
+    { key: '-', action: 'decreaseFontSize' },
+  ],
 };
 export const CONFIG_KEYS = Object.keys(DEFAULT_CONFIG);
 
-export const getConfig = () => {
+export const getConfig = (keys = CONFIG_KEYS) => {
   return new Promise(resolve => {
-    chrome.storage.local.get(CONFIG_KEYS, config => {
+    chrome.storage.local.get(keys, config => {
       resolve({
         ...DEFAULT_CONFIG,
         ...config,
@@ -17,9 +27,9 @@ export const getConfig = () => {
   });
 };
 
-export const setConfig = (newConfig) => {
-  chrome.storage.local.set(newConfig)
-}
+export const setConfig = newConfig => {
+  chrome.storage.local.set(newConfig);
+};
 
 export const setDarkTheme = newDarkTheme => {
   return new Promise(resolve => {
