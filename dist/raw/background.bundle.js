@@ -3,19 +3,65 @@
 var __webpack_exports__ = {};
 
 ;// CONCATENATED MODULE: ./src/utils/config.js
-const CONFIG_KEYS = ['zenMode', 'darkTheme'];
 const DEFAULT_CONFIG = {
   zenMode: true,
-  darkTheme: true
+  darkTheme: true,
+  fullPage: true,
+  hotkeysActive: true,
+  keySetting: [{
+    key: 't',
+    action: 'toggleDarkTheme',
+    ctrl: false,
+    alt: false,
+    shift: false
+  }, {
+    key: 'z',
+    action: 'toggleZenMode'
+  }, {
+    key: 'u',
+    action: 'une'
+  }, {
+    key: 'o',
+    action: 'nextPage'
+  }, {
+    key: 'i',
+    action: 'previousPage'
+  }, {
+    key: 'p',
+    action: 'fullPage'
+  }, {
+    key: '+',
+    action: 'increaseFontSize'
+  }, {
+    key: '-',
+    action: 'decreaseFontSize'
+  }]
 };
-const getConfig = () => {
+const CONFIG_KEYS = Object.keys(DEFAULT_CONFIG);
+const getConfig = (keys = CONFIG_KEYS) => {
   return new Promise(resolve => {
-    chrome.storage.local.get(CONFIG_KEYS, config => {
+    chrome.storage.local.get(keys, config => {
       resolve({ ...DEFAULT_CONFIG,
         ...config
       });
     });
   });
+};
+const setConfig = newConfig => {
+  chrome.storage.local.set(newConfig);
+};
+const setDarkTheme = newDarkTheme => {
+  return new Promise(resolve => {
+    chrome.storage.local.set({
+      darkTheme: newDarkTheme
+    }, resolve);
+  });
+};
+const toggleDarkTheme = async () => {
+  const {
+    darkTheme
+  } = await getConfig();
+  return setDarkTheme(!darkTheme);
 };
 const setZenMode = newZenMode => {
   return new Promise(resolve => {
@@ -24,12 +70,37 @@ const setZenMode = newZenMode => {
     }, resolve);
   });
 };
-const setDarkTheme = newDarkTheme => {
+const toggleZenMode = async () => {
+  const {
+    zenMode
+  } = await getConfig();
+  return setZenMode(!zenMode);
+};
+const setFullPage = newFullPage => {
   return new Promise(resolve => {
     chrome.storage.local.set({
-      darkTheme: newDarkTheme
+      fullPage: newFullPage
     }, resolve);
   });
+};
+const toggleFullPage = async () => {
+  const {
+    fullPage
+  } = await getConfig();
+  return setFullPage(!fullPage);
+};
+const setHotkeysActive = newHotkeysActive => {
+  return new Promise(resolve => {
+    chrome.storage.local.set({
+      hotkeysActive: newHotkeysActive
+    }, resolve);
+  });
+};
+const toggleHotkeysActive = async () => {
+  const {
+    hotkeysActive
+  } = await getConfig();
+  return setZenMode(!hotkeysActive);
 };
 ;// CONCATENATED MODULE: ./src/background.js
 
