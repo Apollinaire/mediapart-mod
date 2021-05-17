@@ -19,15 +19,16 @@ let onKeydown = e => {
   if (ignoredTagnames.includes(tagname)) {
     return;
   }
-  if (e.ctrlKey || e.altKey || e.shiftKey) {
-    return;
-  }
-  handleKey(e.key);
+  handleKey(e.key, { alt: !!e.altKey, ctrl: !!e.ctrlKey, shift: !!e.shiftKey }, e);
 };
 
-const handleKey = keyChar => {
-  const { action } = keySetting.find(({ key }) => key === keyChar);
+const handleKey = (keyChar, { alt: altMod, ctrl: ctrlMod, shift: shiftMod }, e) => {
+  const { action } = keySetting.find(
+    ({ key, alt, ctrl, shift }) => key === keyChar && !!alt === altMod && !!ctrl === ctrlMod && !!shift === shiftMod
+  );
   if (action) {
+    e.preventDefault();
+    e.stopPropagation();
     actions[action].run();
   }
 };

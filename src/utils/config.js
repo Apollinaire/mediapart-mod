@@ -4,7 +4,7 @@ export const DEFAULT_CONFIG = {
   fullPage: true,
   hotkeysActive: true,
   keySetting: [
-    { key: 't', action: 'toggleDarkTheme' },
+    { key: 't', action: 'toggleDarkTheme', ctrl: false, alt: false, shift: false },
     { key: 'z', action: 'toggleZenMode' },
     { key: 'u', action: 'une' },
     { key: 'o', action: 'nextPage' },

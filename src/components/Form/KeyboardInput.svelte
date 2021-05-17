@@ -1,5 +1,10 @@
 <script>
+  import KeyboardInputButton from './KeyboardInputButton.svelte';
+
   export let value;
+  export let ctrl;
+  export let shift;
+  export let alt;
   export let label;
   export let active = false;
   export let disabled;
@@ -9,17 +14,18 @@
 
 <div class="keyboard-input">
   <div class="button-container">
-    <button
-      class:disabled
-      class:active
-      on:click={() => {
-        if (!disabled) {
-          setActiveId(id);
-        }
-      }}
-    >
+    {#if ctrl}
+      <KeyboardInputButton {active} {disabled} {id} {setActiveId}>Ctrl</KeyboardInputButton>
+    {/if}
+    {#if shift}
+      <KeyboardInputButton {active} {disabled} {id} {setActiveId}>Maj</KeyboardInputButton>
+    {/if}
+    {#if alt}
+      <KeyboardInputButton {active} {disabled} {id} {setActiveId}>Alt</KeyboardInputButton>
+    {/if}
+    <KeyboardInputButton {active} {disabled} {id} {setActiveId}>
       {value}
-    </button>
+    </KeyboardInputButton>
   </div>
   <div class="label-container">
     <span>{label}</span>
@@ -30,6 +36,7 @@
   .keyboard-input {
     width: 100%;
     display: flex;
+    margin-bottom: 4px;
   }
   .label-container {
     flex-basis: 50%;
@@ -42,23 +49,5 @@
   span {
     flex-grow: 1;
     line-height: 32px;
-  }
-  button {
-    height: 32px;
-    min-width: 32px;
-    padding: 4px;
-    line-height: 20px;
-    font-size: 20px;
-    cursor: pointer;
-    margin-right: 4px;
-  }
-  button.disabled {
-    color: rgba(16, 16, 16, 0.3);
-    background-color: rgba(239, 239, 239, 0.3);
-    border-color: rgba(118, 118, 118, 0.3);
-  }
-  button.active {
-    color: black;
-    background-color: rgb(255, 125, 125);
   }
 </style>

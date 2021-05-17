@@ -1,6 +1,6 @@
 <script>
   import { actions } from '../interactions/hotkeys';
-
+  import { DEFAULT_CONFIG } from '../utils/config';
   import { configStore } from '../utils/store';
   import FormField from './Form/FormField.svelte';
   import FormInput from './Form/FormInput.svelte';
@@ -10,13 +10,39 @@
   import Header from './UI/Header.svelte';
   import ThemeSwitch from './UI/ThemeSwitch.svelte';
 
+  const ignoredKeys = [
+    'Control',
+    'Alt',
+    'Shift',
+    'Dead',
+    'Unidentified',
+    'AltGraph',
+    'Fn',
+    'FnLock',
+    'Hyper',
+    'Super',
+    'Symbol',
+    'SymbolLock',
+  ];
+  const isIgnoredMeta = key => {
+    return key === 'Meta' && !window.navigator.userAgent.includes('Macintosh');
+  };
+
   let activeId = null;
   const handleKeyDown = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!e.key || ignoredKeys.includes(e.key) || isIgnoredMeta(e.key)) {
+      return;
+    }
     const newKeySetting = $configStore.keySetting.map(hotkey => {
       if (hotkey.action === activeId) {
         return {
           action: hotkey.action,
           key: e.key,
+          alt: e.altKey,
+          ctrl: e.ctrlKey,
+          shift: e.altKey,
         };
       } else return hotkey;
     });
@@ -38,6 +64,9 @@
     setTimeout(() => {
       document.addEventListener('click', handleClick);
     }, 1);
+  };
+  const resetDefaultKeybinds = () => {
+    configStore.set({ keySetting: DEFAULT_CONFIG.keySetting });
   };
 </script>
 
@@ -72,13 +101,23 @@
       {#each $configStore.keySetting as keyBind}
         <KeyboardInput
           value={keyBind.key}
+          ctrl={keyBind.ctrl}
+          alt={keyBind.alt}
+          shift={keyBind.shift}
           id={keyBind.action}
           label={actions[keyBind.action].label}
           active={keyBind.action === activeId}
-          disabled={!!activeId}
+          disabled={!!activeId || !$configStore.hotkeysActive}
           {setActiveId}
         />
       {/each}
+    </div>
+    <div class="text-container">
+      <button
+        class="default-keybinds"
+        disabled={!!activeId || !$configStore.hotkeysActive}
+        on:click={resetDefaultKeybinds}>rétablir les valeurs par défaut</button
+      >
     </div>
   </div>
 </ThemeSwitch>
@@ -92,5 +131,16 @@
   .form-container {
     max-width: 700px;
     margin: auto;
+  }
+  .text-container {
+    text-align: center;
+    margin-top: 12px;
+  }
+  .default-keybinds {
+    background: transparent;
+    border: none;
+    text-decoration: underline;
+    color: currentColor;
+    cursor: pointer;
   }
 </style>
