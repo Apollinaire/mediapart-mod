@@ -4,7 +4,7 @@
   import FormField from './Form/FormField.svelte';
   import FormInput from './Form/FormInput.svelte';
   import Switch from './Form/Switch.svelte';
-import Header from './UI/Header.svelte';
+  import Header from './UI/Header.svelte';
   import ThemeSwitch from './UI/ThemeSwitch.svelte';
 </script>
 

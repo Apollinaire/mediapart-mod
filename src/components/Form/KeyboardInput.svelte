@@ -12,31 +12,43 @@
   export let setActiveId;
 </script>
 
-<div class="keyboard-input">
-  <div class="button-container">
-    {#if ctrl}
-      <KeyboardInputButton {active} {disabled} {id} {setActiveId}>Ctrl</KeyboardInputButton>
-    {/if}
-    {#if shift}
-      <KeyboardInputButton {active} {disabled} {id} {setActiveId}>Maj</KeyboardInputButton>
-    {/if}
-    {#if alt}
-      <KeyboardInputButton {active} {disabled} {id} {setActiveId}>Alt</KeyboardInputButton>
-    {/if}
-    <KeyboardInputButton {active} {disabled} {id} {setActiveId}>
-      {value}
-    </KeyboardInputButton>
-  </div>
+<button
+  class="keyboard-input"
+  on:click={() => {
+    if (!disabled) {
+      setActiveId(id);
+    }
+  }}
+>
   <div class="label-container">
     <span>{label}</span>
   </div>
-</div>
+  <div class="button-container">
+    {#if ctrl}
+      <KeyboardInputButton {active} {disabled}>Ctrl</KeyboardInputButton>
+    {/if}
+    {#if shift}
+      <KeyboardInputButton {active} {disabled}>Maj</KeyboardInputButton>
+    {/if}
+    {#if alt}
+      <KeyboardInputButton {active} {disabled}>Alt</KeyboardInputButton>
+    {/if}
+    <KeyboardInputButton {active} {disabled}>
+      {value}
+    </KeyboardInputButton>
+  </div>
+</button>
 
 <style>
   .keyboard-input {
+    cursor: pointer;
     width: 100%;
     display: flex;
-    margin-bottom: 4px;
+    padding: 4px;
+    border: none;
+    background: none;
+    color: #b5b5b5;
+    font-size: 14px;
   }
   .label-container {
     flex-basis: 50%;

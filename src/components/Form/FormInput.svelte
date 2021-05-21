@@ -3,11 +3,10 @@
 </div>
 
 <style>
-  .form-input {
-    margin: -4px;
-    padding: 4px;
+  div {
+    border-radius: 4px;
   }
-  .form-input:hover {
-    background-color: rgba(0,0,0,0.1);
+  div:hover {
+    background-color: rgba(0, 0, 0, 0.1);
   }
 </style>

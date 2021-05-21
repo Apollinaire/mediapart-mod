@@ -97,19 +97,21 @@
       </FormField>
     </div>
     <CategoryTitle>Raccourcis clavier</CategoryTitle>
-    <div class="keybind-container">
+    <div class="form-container">
       {#each $configStore.keySetting as keyBind}
-        <KeyboardInput
-          value={keyBind.key}
-          ctrl={keyBind.ctrl}
-          alt={keyBind.alt}
-          shift={keyBind.shift}
-          id={keyBind.action}
-          label={actions[keyBind.action].label}
-          active={keyBind.action === activeId}
-          disabled={!!activeId || !$configStore.hotkeysActive}
-          {setActiveId}
-        />
+        <FormInput>
+          <KeyboardInput
+            value={keyBind.key}
+            ctrl={keyBind.ctrl}
+            alt={keyBind.alt}
+            shift={keyBind.shift}
+            id={keyBind.action}
+            label={actions[keyBind.action].label}
+            active={keyBind.action === activeId}
+            disabled={!!activeId || !$configStore.hotkeysActive}
+            {setActiveId}
+          />
+        </FormInput>
       {/each}
     </div>
     <div class="text-container">
@@ -129,7 +131,8 @@
     min-height: 100vh;
   }
   .form-container {
-    max-width: 700px;
+    max-width: 500px;
+    font-size: 14px;
     margin: auto;
   }
   .text-container {
@@ -142,5 +145,8 @@
     text-decoration: underline;
     color: currentColor;
     cursor: pointer;
+  }
+  :global(button:focus) {
+    outline: solid 1px white;
   }
 </style>

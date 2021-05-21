@@ -15,4 +15,7 @@
     background-color: #292929;
     color: #b5b5b5;
   }
+  :global(a) {
+    color: currentColor;
+  }
 </style>

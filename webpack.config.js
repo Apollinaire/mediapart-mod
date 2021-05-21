@@ -126,6 +126,9 @@ var options = {
         {
           from: 'public',
         },
+        {
+          from: 'node_modules/ress/dist/ress.min.css',
+        },
       ],
     }),
     new WriteFilePlugin(),

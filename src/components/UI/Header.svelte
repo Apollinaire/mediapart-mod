@@ -12,6 +12,6 @@
     line-height: 48px;
     font-size: 22px;
     height: 48px;
-    padding-bottom: 24px;
+    margin-bottom: 24px;
   }
 </style>

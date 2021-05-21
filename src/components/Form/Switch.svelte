@@ -17,8 +17,8 @@
     cursor: pointer;
     position: relative;
     display: flex;
-    height: 24px;
     line-height: 24px;
+    padding: 8px 4px;
   }
 
   .label {
@@ -36,9 +36,10 @@
   /* The slider */
   .slider {
     width: 48px;
-    background-color: #ccc;
-    -webkit-transition: 0.4s;
-    transition: 0.4s;
+    border-radius: 34px;
+    background-color: #b5b5b5;
+    -webkit-transition: background-color 0.4s;
+    transition: background-color 0.4s;
   }
 
   .slider:before {
@@ -59,7 +60,7 @@
   }
 
   input:focus + .slider {
-    box-shadow: 0 0 3px red;
+    box-shadow: 0 0 0 1px white;
   }
 
   input:checked + .slider:before {
