@@ -134,7 +134,7 @@ export function invertColorNode(node: CssNode, colorType: ColorType): CssNode {
         }
       } else {
         // other function, could be linear-gradient so go deeper
-        node.children = node.children.map((childNode) => invertColorNode(childNode, colorType))
+        node.children = node.children.map(childNode => invertColorNode(childNode, colorType));
       }
       return node;
     default:

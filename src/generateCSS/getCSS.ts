@@ -1,19 +1,19 @@
-import https from "https";
+import https from 'https';
 
-const MEDIAPART_CSS_URL = "https://www.mediapart.fr/assets/front/css/main.min.css";
+const MEDIAPART_CSS_URL = 'https://www.mediapart.fr/assets/front/css/main.min.css';
 
 const getCss = async (): Promise<string> => {
   return new Promise((resolve, reject) => {
-    https.get(MEDIAPART_CSS_URL, (res) => {
-      let data = "";
+    https.get(MEDIAPART_CSS_URL, res => {
+      let data = '';
 
-      res.on("data", (content) => {
+      res.on('data', content => {
         data += content;
       });
-      res.on("end", () => {
+      res.on('end', () => {
         resolve(data);
       });
-      res.on("error", (err) => {
+      res.on('error', err => {
         reject(err);
       });
     });

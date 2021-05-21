@@ -1,5 +1,3 @@
-import { Declaration, Rule } from "css-tree";
+import { Declaration, Rule } from 'css-tree';
 
-const hasProperty = (rule: Rule, property: Declaration["property"]) => {
-  
-}
+const hasProperty = (rule: Rule, property: Declaration['property']) => {};

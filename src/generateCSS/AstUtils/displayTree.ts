@@ -1,10 +1,10 @@
-import { CssNode, generate, walk } from "css-tree";
+import { CssNode, generate, walk } from 'css-tree';
 
-const deep = "│   ";
-const last = "│── ";
+const deep = '│   ';
+const last = '│── ';
 
 const getTreeLine = (text: string, depth: number) => {
-  let prefix = "";
+  let prefix = '';
   for (let index = 0; index <= depth; index++) {
     prefix += index === depth ? last : deep;
   }
@@ -13,19 +13,19 @@ const getTreeLine = (text: string, depth: number) => {
 
 const getNodeValue = (node: CssNode) => {
   switch (node.type) {
-    case "SelectorList":
-    case "Selector":
-    case "Value":
-    case "Raw":
-    case "Number":
-    case "Operator":
+    case 'SelectorList':
+    case 'Selector':
+    case 'Value':
+    case 'Raw':
+    case 'Number':
+    case 'Operator':
       return generate(node);
-    case "Declaration":
+    case 'Declaration':
       return node.property;
-    case "Function":
+    case 'Function':
       return node.name;
     default:
-      return "";
+      return '';
   }
 };
 

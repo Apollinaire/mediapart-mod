@@ -5,7 +5,7 @@ export const articleLinksToFullPage = () => {
       a.href = getFullPageLink(a.href);
     }
   }
-}
+};
 
 export const isArticleLink = href => {
   let url;
@@ -20,11 +20,11 @@ export const isArticleLink = href => {
 
 const articlePathnameRegex = /^\/journal\/([a-z]|-)+\/[0-9]{6}\/[^/]+$/;
 
-export const getFullPageLink = (href) => {
-  const url = new URL(href)
+export const getFullPageLink = href => {
+  const url = new URL(href);
   if (url.searchParams.get('onglet') === 'full' || url.searchParams.has('page_article')) {
-    return href
+    return href;
   }
-  url.searchParams.append('onglet', 'full')
-  return url.toString()
-}
+  url.searchParams.append('onglet', 'full');
+  return url.toString();
+};
