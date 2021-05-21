@@ -6,6 +6,7 @@
   import FormInput from './Form/FormInput.svelte';
   import KeyboardInput from './Form/KeyboardInput.svelte';
   import Switch from './Form/Switch.svelte';
+  import About from './UI/About.svelte';
   import CategoryTitle from './UI/CategoryTitle.svelte';
   import Header from './UI/Header.svelte';
   import ThemeSwitch from './UI/ThemeSwitch.svelte';
@@ -121,13 +122,17 @@
         on:click={resetDefaultKeybinds}>rétablir les valeurs par défaut</button
       >
     </div>
+    <CategoryTitle>À propos</CategoryTitle>
+    <div class="form-container">
+      <About />
+    </div>
   </div>
 </ThemeSwitch>
 
 <style>
   .layout {
     box-sizing: border-box;
-    padding: 8px;
+    padding: 8px 8px 64px;
     min-height: 100vh;
   }
   .form-container {
@@ -138,6 +143,7 @@
   .text-container {
     text-align: center;
     margin-top: 12px;
+    margin-bottom: 8px;
   }
   .default-keybinds {
     background: transparent;
@@ -145,8 +151,5 @@
     text-decoration: underline;
     color: currentColor;
     cursor: pointer;
-  }
-  :global(button:focus) {
-    outline: solid 1px white;
   }
 </style>
