@@ -31,7 +31,7 @@
         <Switch disabled={configStore.loading} bind:checked={$configStore.hotkeysActive} label="Raccourcis clavier" />
       </FormInput>
       <FormDescription>
-        Le détail des raccourcis clavier ainsi qu'un configurateur est disponible sur <a
+        Le détail des raccourcis clavier ainsi qu'un configurateur sont disponibles sur <a
           href="chrome-extension://addenbcmfpfhmmoobmdgnjdbmfgoioda/options.html"
           target="_blank">la page d'options</a
         >
