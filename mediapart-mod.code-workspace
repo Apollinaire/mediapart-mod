@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"editor.formatOnSave": true,
+		"svelte.enable-ts-plugin": true,
+		"svelte.plugin.css.completions.emmet": false,
+		"svelte.plugin.svelte.format.config.printWidth": 120
+	},
+	"extensions": {
+		"recommendations": [
+			"esbenp.prettier-vscode",
+			"fivethree.vscode-svelte-snippets",
+			"dbaeumer.vscode-eslint"
+		]
+	}
+}
