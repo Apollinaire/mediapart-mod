@@ -1,5 +1,5 @@
 <p>
-  Mediapart Mod a été imaginée, créée et programmée par <a href="https://apollinai.re">Apollinaire</a>. L'ensembe du
+  Mediapart Mod a été imaginée, créée et programmée par <a href="https://www.apollinai.re">Apollinaire</a>. L'ensembe du
   code est libre et open-source: il est public, gratuit, toute modification, publication ou vente sont permis sans
   contreparties.
 </p>
@@ -13,3 +13,14 @@
   <li>typescript</li>
   <li>webpack</li>
 </ul>
+
+<style>
+  p {
+    margin-bottom: 16px;
+  }
+  ul {
+    margin-bottom: 16px;
+    padding-left: 24px;
+  }
+
+</style>
