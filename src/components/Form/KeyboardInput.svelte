@@ -10,6 +10,7 @@
   export let disabled;
   export let id;
   export let setActiveId;
+
 </script>
 
 <button
@@ -47,7 +48,6 @@
     padding: 4px;
     border: none;
     background: none;
-    color: #b5b5b5;
     font-size: 14px;
   }
   .label-container {
@@ -62,4 +62,5 @@
     flex-grow: 1;
     line-height: 32px;
   }
+
 </style>
