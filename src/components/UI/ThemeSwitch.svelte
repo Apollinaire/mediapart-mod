@@ -3,6 +3,7 @@
 
   $: dark = $configStore.darkTheme;
   $: light = !$configStore.darkTheme;
+
 </script>
 
 <div class:dark class:light><slot /></div>
@@ -14,6 +15,7 @@
   }
   :global(body) {
     margin: 0px;
+    font-family: sans-serif;
   }
   :global(a) {
     color: currentColor;
@@ -21,4 +23,5 @@
   :global(button:focus) {
     outline: solid 1px white;
   }
+
 </style>
