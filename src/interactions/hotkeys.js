@@ -25,7 +25,8 @@ let onKeydown = e => {
 const handleKey = (keyChar, { alt: altMod, ctrl: ctrlMod, shift: shiftMod }, e) => {
   const { action } =
     keySetting.find(
-      ({ key, alt, ctrl, shift }) => key === keyChar && !!alt === altMod && !!ctrl === ctrlMod && !!shift === shiftMod
+      ({ key, alt, ctrl, shift }) =>
+        key.toLowerCase() === keyChar.toLowerCase() && !!alt === altMod && !!ctrl === ctrlMod && !!shift === shiftMod
     ) ?? {};
   if (action) {
     e.preventDefault();

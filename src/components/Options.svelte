@@ -40,10 +40,10 @@
       if (hotkey.action === activeId) {
         return {
           action: hotkey.action,
-          key: e.key,
+          key: e.key.toLowerCase(),
           alt: e.altKey,
           ctrl: e.ctrlKey,
-          shift: e.altKey,
+          shift: e.shiftKey,
         };
       } else return hotkey;
     });
@@ -69,6 +69,7 @@
   const resetDefaultKeybinds = () => {
     configStore.set({ keySetting: DEFAULT_CONFIG.keySetting });
   };
+
 </script>
 
 <ThemeSwitch>
@@ -152,4 +153,5 @@
     color: currentColor;
     cursor: pointer;
   }
+
 </style>
