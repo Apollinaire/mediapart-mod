@@ -4,7 +4,8 @@ body.not-une {
   .content-article ul {
     margin: 0.75em 0;
   }
-  div.accur8-desktop {
+  div.accur8-desktop:not(.sub-header-article):not(.sub-header) {
+    & > .col-left,
     div.content-article {
       display: block;
       margin-left: auto;
@@ -25,6 +26,7 @@ body.not-une {
     aside.aside-region {
       width: auto;
       display: flex;
+      justify-content: space-evenly;
       flex-wrap: wrap;
       div.universe-journal,
       div.universe-club {
