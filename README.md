@@ -1,4 +1,4 @@
-![Mediapart Mod](public/mediapart-mod-32.png)![Chrome Web Store](https://img.shields.io/chrome-web-store/v/bcnknflnppgioakmddkbdjdpdlignpel?style=for-the-badge)![Mozilla Add-on](https://img.shields.io/amo/v/mediapart-mod?style=for-the-badge)
+[![Mediapart Mod](public/mediapart-mod-32.png)](https://github.com/apollinaire/mediapart-mod#readme)[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/bcnknflnppgioakmddkbdjdpdlignpel?style=for-the-badge)](https://chrome.google.com/webstore/detail/mediapart-mod/bcnknflnppgioakmddkbdjdpdlignpel)[![Mozilla Add-on](https://img.shields.io/amo/v/mediapart-mod?style=for-the-badge)](https://addons.mozilla.org/en-US/firefox/addon/mediapart-mod/)
 
 # Mediapart-mod
 
