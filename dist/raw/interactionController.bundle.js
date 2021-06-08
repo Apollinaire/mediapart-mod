@@ -173,7 +173,7 @@ const handleKey = (keyChar, {
     alt,
     ctrl,
     shift
-  }) => key === keyChar && !!alt === altMod && !!ctrl === ctrlMod && !!shift === shiftMod);
+  }) => key.toLowerCase() === keyChar.toLowerCase() && !!alt === altMod && !!ctrl === ctrlMod && !!shift === shiftMod) ?? {};
 
   if (action) {
     e.preventDefault();

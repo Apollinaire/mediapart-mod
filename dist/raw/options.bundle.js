@@ -1880,7 +1880,7 @@ const handleKey = (keyChar, {
     alt,
     ctrl,
     shift
-  }) => key === keyChar && !!alt === altMod && !!ctrl === ctrlMod && !!shift === shiftMod);
+  }) => key.toLowerCase() === keyChar.toLowerCase() && !!alt === altMod && !!ctrl === ctrlMod && !!shift === shiftMod) ?? {};
 
   if (action) {
     e.preventDefault();
@@ -2112,8 +2112,8 @@ const configStore = createConfigStore();
 
 function add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-1utonij-style";
-	style.textContent = ".form-field.svelte-1utonij{padding-bottom:16px}";
+	style.id = "svelte-16v2b5o-style";
+	style.textContent = ".form-field.svelte-16v2b5o{padding-bottom:8px}";
 	append(document.head, style);
 }
 
@@ -2127,7 +2127,7 @@ function create_fragment(ctx) {
 		c() {
 			div = internal_element("div");
 			if (default_slot) default_slot.c();
-			attr(div, "class", "form-field svelte-1utonij");
+			attr(div, "class", "form-field svelte-16v2b5o");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -2174,7 +2174,7 @@ function instance($$self, $$props, $$invalidate) {
 class FormField extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-1utonij-style")) add_css();
+		if (!document.getElementById("svelte-16v2b5o-style")) add_css();
 		init(this, options, instance, create_fragment, safe_not_equal, {});
 	}
 }
@@ -2186,8 +2186,8 @@ class FormField extends SvelteComponent {
 
 function FormInput_svelte_add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-bouj6m-style";
-	style.textContent = ".form-input.svelte-bouj6m{margin:-4px;padding:4px}.form-input.svelte-bouj6m:hover{background-color:rgba(0,0,0,0.1)}";
+	style.id = "svelte-1fjxhl6-style";
+	style.textContent = "div.svelte-1fjxhl6{border-radius:4px}div.svelte-1fjxhl6:hover{background-color:rgba(0, 0, 0, 0.1)}";
 	append(document.head, style);
 }
 
@@ -2201,7 +2201,7 @@ function FormInput_svelte_create_fragment(ctx) {
 		c() {
 			div = internal_element("div");
 			if (default_slot) default_slot.c();
-			attr(div, "class", "form-input svelte-bouj6m");
+			attr(div, "class", "form-input svelte-1fjxhl6");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -2248,7 +2248,7 @@ function FormInput_svelte_instance($$self, $$props, $$invalidate) {
 class FormInput extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-bouj6m-style")) FormInput_svelte_add_css();
+		if (!document.getElementById("svelte-1fjxhl6-style")) FormInput_svelte_add_css();
 		init(this, options, FormInput_svelte_instance, FormInput_svelte_create_fragment, safe_not_equal, {});
 	}
 }
@@ -2260,54 +2260,47 @@ class FormInput extends SvelteComponent {
 
 function KeyboardInputButton_svelte_add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-132rg87-style";
-	style.textContent = "button.svelte-132rg87{height:32px;min-width:32px;padding:4px;line-height:20px;font-size:20px;cursor:pointer;margin-right:4px}button.disabled.svelte-132rg87{color:rgba(16, 16, 16, 0.3);background-color:rgba(239, 239, 239, 0.3);border-color:rgba(118, 118, 118, 0.3)}button.active.svelte-132rg87{color:black;background-color:rgb(255, 125, 125)}";
+	style.id = "svelte-nrwd7a-style";
+	style.textContent = "span.svelte-nrwd7a{display:inline-block;color:black;background-color:rgb(239, 239, 239);height:32px;min-width:32px;padding:4px;line-height:24px;font-size:20px;text-align:center;cursor:pointer;margin-left:4px;border-radius:4px;box-sizing:border-box}span.disabled.svelte-nrwd7a{color:rgba(16, 16, 16, 0.3);background-color:rgba(239, 239, 239, 0.3);border-color:rgba(118, 118, 118, 0.3)}span.active.svelte-nrwd7a{color:black;background-color:rgb(255, 125, 125)}";
 	append(document.head, style);
 }
 
 function KeyboardInputButton_svelte_create_fragment(ctx) {
-	let button;
+	let span;
 	let current;
-	let mounted;
-	let dispose;
-	const default_slot_template = /*#slots*/ ctx[5].default;
-	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[4], null);
+	const default_slot_template = /*#slots*/ ctx[3].default;
+	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[2], null);
 
 	return {
 		c() {
-			button = internal_element("button");
+			span = internal_element("span");
 			if (default_slot) default_slot.c();
-			attr(button, "class", "svelte-132rg87");
-			toggle_class(button, "disabled", /*disabled*/ ctx[0]);
-			toggle_class(button, "active", /*active*/ ctx[1]);
+			attr(span, "class", "svelte-nrwd7a");
+			toggle_class(span, "disabled", /*disabled*/ ctx[0]);
+			toggle_class(span, "active", /*active*/ ctx[1]);
 		},
 		m(target, anchor) {
-			insert(target, button, anchor);
+			insert(target, span, anchor);
 
 			if (default_slot) {
-				default_slot.m(button, null);
+				default_slot.m(span, null);
 			}
 
 			current = true;
-
-			if (!mounted) {
-				dispose = listen(button, "click", /*click_handler*/ ctx[6]);
-				mounted = true;
-			}
 		},
 		p(ctx, [dirty]) {
 			if (default_slot) {
-				if (default_slot.p && (!current || dirty & /*$$scope*/ 16)) {
-					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[4], dirty, null, null);
+				if (default_slot.p && (!current || dirty & /*$$scope*/ 4)) {
+					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[2], dirty, null, null);
 				}
 			}
 
 			if (dirty & /*disabled*/ 1) {
-				toggle_class(button, "disabled", /*disabled*/ ctx[0]);
+				toggle_class(span, "disabled", /*disabled*/ ctx[0]);
 			}
 
 			if (dirty & /*active*/ 2) {
-				toggle_class(button, "active", /*active*/ ctx[1]);
+				toggle_class(span, "active", /*active*/ ctx[1]);
 			}
 		},
 		i(local) {
@@ -2320,10 +2313,8 @@ function KeyboardInputButton_svelte_create_fragment(ctx) {
 			current = false;
 		},
 		d(detaching) {
-			if (detaching) detach(button);
+			if (detaching) detach(span);
 			if (default_slot) default_slot.d(detaching);
-			mounted = false;
-			dispose();
 		}
 	};
 }
@@ -2332,37 +2323,21 @@ function KeyboardInputButton_svelte_instance($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { disabled } = $$props;
 	let { active } = $$props;
-	let { setActiveId } = $$props;
-	let { id } = $$props;
-
-	const click_handler = () => {
-		if (!disabled) {
-			setActiveId(id);
-		}
-	};
 
 	$$self.$$set = $$props => {
 		if ("disabled" in $$props) $$invalidate(0, disabled = $$props.disabled);
 		if ("active" in $$props) $$invalidate(1, active = $$props.active);
-		if ("setActiveId" in $$props) $$invalidate(2, setActiveId = $$props.setActiveId);
-		if ("id" in $$props) $$invalidate(3, id = $$props.id);
-		if ("$$scope" in $$props) $$invalidate(4, $$scope = $$props.$$scope);
+		if ("$$scope" in $$props) $$invalidate(2, $$scope = $$props.$$scope);
 	};
 
-	return [disabled, active, setActiveId, id, $$scope, slots, click_handler];
+	return [disabled, active, $$scope, slots];
 }
 
 class KeyboardInputButton extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-132rg87-style")) KeyboardInputButton_svelte_add_css();
-
-		init(this, options, KeyboardInputButton_svelte_instance, KeyboardInputButton_svelte_create_fragment, safe_not_equal, {
-			disabled: 0,
-			active: 1,
-			setActiveId: 2,
-			id: 3
-		});
+		if (!document.getElementById("svelte-nrwd7a-style")) KeyboardInputButton_svelte_add_css();
+		init(this, options, KeyboardInputButton_svelte_instance, KeyboardInputButton_svelte_create_fragment, safe_not_equal, { disabled: 0, active: 1 });
 	}
 }
 
@@ -2375,12 +2350,12 @@ class KeyboardInputButton extends SvelteComponent {
 
 function KeyboardInput_svelte_add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-1lzsczn-style";
-	style.textContent = ".keyboard-input.svelte-1lzsczn{width:100%;display:flex;margin-bottom:4px}.label-container.svelte-1lzsczn{flex-basis:50%;text-align:left}.button-container.svelte-1lzsczn{flex-basis:50%;text-align:right}span.svelte-1lzsczn{flex-grow:1;line-height:32px}";
+	style.id = "svelte-ntlum9-style";
+	style.textContent = ".keyboard-input.svelte-ntlum9{cursor:pointer;width:100%;display:flex;padding:4px;border:none;background:none;font-size:14px}.label-container.svelte-ntlum9{flex-basis:50%;text-align:left}.button-container.svelte-ntlum9{flex-basis:50%;text-align:right}span.svelte-ntlum9{flex-grow:1;line-height:32px}";
 	append(document.head, style);
 }
 
-// (17:4) {#if ctrl}
+// (28:4) {#if ctrl}
 function create_if_block_2(ctx) {
 	let keyboardinputbutton;
 	let current;
@@ -2389,8 +2364,6 @@ function create_if_block_2(ctx) {
 			props: {
 				active: /*active*/ ctx[5],
 				disabled: /*disabled*/ ctx[6],
-				id: /*id*/ ctx[7],
-				setActiveId: /*setActiveId*/ ctx[8],
 				$$slots: { default: [create_default_slot_3] },
 				$$scope: { ctx }
 			}
@@ -2408,10 +2381,8 @@ function create_if_block_2(ctx) {
 			const keyboardinputbutton_changes = {};
 			if (dirty & /*active*/ 32) keyboardinputbutton_changes.active = /*active*/ ctx[5];
 			if (dirty & /*disabled*/ 64) keyboardinputbutton_changes.disabled = /*disabled*/ ctx[6];
-			if (dirty & /*id*/ 128) keyboardinputbutton_changes.id = /*id*/ ctx[7];
-			if (dirty & /*setActiveId*/ 256) keyboardinputbutton_changes.setActiveId = /*setActiveId*/ ctx[8];
 
-			if (dirty & /*$$scope*/ 512) {
+			if (dirty & /*$$scope*/ 1024) {
 				keyboardinputbutton_changes.$$scope = { dirty, ctx };
 			}
 
@@ -2432,7 +2403,7 @@ function create_if_block_2(ctx) {
 	};
 }
 
-// (18:6) <KeyboardInputButton {active} {disabled} {id} {setActiveId}>
+// (29:6) <KeyboardInputButton {active} {disabled}>
 function create_default_slot_3(ctx) {
 	let t;
 
@@ -2449,7 +2420,7 @@ function create_default_slot_3(ctx) {
 	};
 }
 
-// (20:4) {#if shift}
+// (31:4) {#if shift}
 function create_if_block_1(ctx) {
 	let keyboardinputbutton;
 	let current;
@@ -2458,8 +2429,6 @@ function create_if_block_1(ctx) {
 			props: {
 				active: /*active*/ ctx[5],
 				disabled: /*disabled*/ ctx[6],
-				id: /*id*/ ctx[7],
-				setActiveId: /*setActiveId*/ ctx[8],
 				$$slots: { default: [create_default_slot_2] },
 				$$scope: { ctx }
 			}
@@ -2477,10 +2446,8 @@ function create_if_block_1(ctx) {
 			const keyboardinputbutton_changes = {};
 			if (dirty & /*active*/ 32) keyboardinputbutton_changes.active = /*active*/ ctx[5];
 			if (dirty & /*disabled*/ 64) keyboardinputbutton_changes.disabled = /*disabled*/ ctx[6];
-			if (dirty & /*id*/ 128) keyboardinputbutton_changes.id = /*id*/ ctx[7];
-			if (dirty & /*setActiveId*/ 256) keyboardinputbutton_changes.setActiveId = /*setActiveId*/ ctx[8];
 
-			if (dirty & /*$$scope*/ 512) {
+			if (dirty & /*$$scope*/ 1024) {
 				keyboardinputbutton_changes.$$scope = { dirty, ctx };
 			}
 
@@ -2501,7 +2468,7 @@ function create_if_block_1(ctx) {
 	};
 }
 
-// (21:6) <KeyboardInputButton {active} {disabled} {id} {setActiveId}>
+// (32:6) <KeyboardInputButton {active} {disabled}>
 function create_default_slot_2(ctx) {
 	let t;
 
@@ -2518,7 +2485,7 @@ function create_default_slot_2(ctx) {
 	};
 }
 
-// (23:4) {#if alt}
+// (34:4) {#if alt}
 function create_if_block(ctx) {
 	let keyboardinputbutton;
 	let current;
@@ -2527,8 +2494,6 @@ function create_if_block(ctx) {
 			props: {
 				active: /*active*/ ctx[5],
 				disabled: /*disabled*/ ctx[6],
-				id: /*id*/ ctx[7],
-				setActiveId: /*setActiveId*/ ctx[8],
 				$$slots: { default: [create_default_slot_1] },
 				$$scope: { ctx }
 			}
@@ -2546,10 +2511,8 @@ function create_if_block(ctx) {
 			const keyboardinputbutton_changes = {};
 			if (dirty & /*active*/ 32) keyboardinputbutton_changes.active = /*active*/ ctx[5];
 			if (dirty & /*disabled*/ 64) keyboardinputbutton_changes.disabled = /*disabled*/ ctx[6];
-			if (dirty & /*id*/ 128) keyboardinputbutton_changes.id = /*id*/ ctx[7];
-			if (dirty & /*setActiveId*/ 256) keyboardinputbutton_changes.setActiveId = /*setActiveId*/ ctx[8];
 
-			if (dirty & /*$$scope*/ 512) {
+			if (dirty & /*$$scope*/ 1024) {
 				keyboardinputbutton_changes.$$scope = { dirty, ctx };
 			}
 
@@ -2570,7 +2533,7 @@ function create_if_block(ctx) {
 	};
 }
 
-// (24:6) <KeyboardInputButton {active} {disabled} {id} {setActiveId}>
+// (35:6) <KeyboardInputButton {active} {disabled}>
 function create_default_slot_1(ctx) {
 	let t;
 
@@ -2587,7 +2550,7 @@ function create_default_slot_1(ctx) {
 	};
 }
 
-// (26:4) <KeyboardInputButton {active} {disabled} {id} {setActiveId}>
+// (37:4) <KeyboardInputButton {active} {disabled}>
 function create_default_slot(ctx) {
 	let t;
 
@@ -2608,17 +2571,19 @@ function create_default_slot(ctx) {
 }
 
 function KeyboardInput_svelte_create_fragment(ctx) {
-	let div2;
+	let button;
 	let div0;
+	let span;
 	let t0;
 	let t1;
-	let t2;
-	let keyboardinputbutton;
-	let t3;
 	let div1;
-	let span;
+	let t2;
+	let t3;
 	let t4;
+	let keyboardinputbutton;
 	let current;
+	let mounted;
+	let dispose;
 	let if_block0 = /*ctrl*/ ctx[1] && create_if_block_2(ctx);
 	let if_block1 = /*shift*/ ctx[2] && create_if_block_1(ctx);
 	let if_block2 = /*alt*/ ctx[3] && create_if_block(ctx);
@@ -2627,8 +2592,6 @@ function KeyboardInput_svelte_create_fragment(ctx) {
 			props: {
 				active: /*active*/ ctx[5],
 				disabled: /*disabled*/ ctx[6],
-				id: /*id*/ ctx[7],
-				setActiveId: /*setActiveId*/ ctx[8],
 				$$slots: { default: [create_default_slot] },
 				$$scope: { ctx }
 			}
@@ -2636,41 +2599,48 @@ function KeyboardInput_svelte_create_fragment(ctx) {
 
 	return {
 		c() {
-			div2 = internal_element("div");
+			button = internal_element("button");
 			div0 = internal_element("div");
-			if (if_block0) if_block0.c();
-			t0 = space();
-			if (if_block1) if_block1.c();
-			t1 = space();
-			if (if_block2) if_block2.c();
-			t2 = space();
-			create_component(keyboardinputbutton.$$.fragment);
-			t3 = space();
-			div1 = internal_element("div");
 			span = internal_element("span");
-			t4 = internal_text(/*label*/ ctx[4]);
-			attr(div0, "class", "button-container svelte-1lzsczn");
-			attr(span, "class", "svelte-1lzsczn");
-			attr(div1, "class", "label-container svelte-1lzsczn");
-			attr(div2, "class", "keyboard-input svelte-1lzsczn");
+			t0 = internal_text(/*label*/ ctx[4]);
+			t1 = space();
+			div1 = internal_element("div");
+			if (if_block0) if_block0.c();
+			t2 = space();
+			if (if_block1) if_block1.c();
+			t3 = space();
+			if (if_block2) if_block2.c();
+			t4 = space();
+			create_component(keyboardinputbutton.$$.fragment);
+			attr(span, "class", "svelte-ntlum9");
+			attr(div0, "class", "label-container svelte-ntlum9");
+			attr(div1, "class", "button-container svelte-ntlum9");
+			attr(button, "class", "keyboard-input svelte-ntlum9");
 		},
 		m(target, anchor) {
-			insert(target, div2, anchor);
-			append(div2, div0);
-			if (if_block0) if_block0.m(div0, null);
-			append(div0, t0);
-			if (if_block1) if_block1.m(div0, null);
-			append(div0, t1);
-			if (if_block2) if_block2.m(div0, null);
-			append(div0, t2);
-			mount_component(keyboardinputbutton, div0, null);
-			append(div2, t3);
-			append(div2, div1);
-			append(div1, span);
-			append(span, t4);
+			insert(target, button, anchor);
+			append(button, div0);
+			append(div0, span);
+			append(span, t0);
+			append(button, t1);
+			append(button, div1);
+			if (if_block0) if_block0.m(div1, null);
+			append(div1, t2);
+			if (if_block1) if_block1.m(div1, null);
+			append(div1, t3);
+			if (if_block2) if_block2.m(div1, null);
+			append(div1, t4);
+			mount_component(keyboardinputbutton, div1, null);
 			current = true;
+
+			if (!mounted) {
+				dispose = listen(button, "click", /*click_handler*/ ctx[9]);
+				mounted = true;
+			}
 		},
 		p(ctx, [dirty]) {
+			if (!current || dirty & /*label*/ 16) set_data(t0, /*label*/ ctx[4]);
+
 			if (/*ctrl*/ ctx[1]) {
 				if (if_block0) {
 					if_block0.p(ctx, dirty);
@@ -2682,7 +2652,7 @@ function KeyboardInput_svelte_create_fragment(ctx) {
 					if_block0 = create_if_block_2(ctx);
 					if_block0.c();
 					transition_in(if_block0, 1);
-					if_block0.m(div0, t0);
+					if_block0.m(div1, t2);
 				}
 			} else if (if_block0) {
 				group_outros();
@@ -2705,7 +2675,7 @@ function KeyboardInput_svelte_create_fragment(ctx) {
 					if_block1 = create_if_block_1(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
-					if_block1.m(div0, t1);
+					if_block1.m(div1, t3);
 				}
 			} else if (if_block1) {
 				group_outros();
@@ -2728,7 +2698,7 @@ function KeyboardInput_svelte_create_fragment(ctx) {
 					if_block2 = create_if_block(ctx);
 					if_block2.c();
 					transition_in(if_block2, 1);
-					if_block2.m(div0, t2);
+					if_block2.m(div1, t4);
 				}
 			} else if (if_block2) {
 				group_outros();
@@ -2743,15 +2713,12 @@ function KeyboardInput_svelte_create_fragment(ctx) {
 			const keyboardinputbutton_changes = {};
 			if (dirty & /*active*/ 32) keyboardinputbutton_changes.active = /*active*/ ctx[5];
 			if (dirty & /*disabled*/ 64) keyboardinputbutton_changes.disabled = /*disabled*/ ctx[6];
-			if (dirty & /*id*/ 128) keyboardinputbutton_changes.id = /*id*/ ctx[7];
-			if (dirty & /*setActiveId*/ 256) keyboardinputbutton_changes.setActiveId = /*setActiveId*/ ctx[8];
 
-			if (dirty & /*$$scope, value*/ 513) {
+			if (dirty & /*$$scope, value*/ 1025) {
 				keyboardinputbutton_changes.$$scope = { dirty, ctx };
 			}
 
 			keyboardinputbutton.$set(keyboardinputbutton_changes);
-			if (!current || dirty & /*label*/ 16) set_data(t4, /*label*/ ctx[4]);
 		},
 		i(local) {
 			if (current) return;
@@ -2769,11 +2736,13 @@ function KeyboardInput_svelte_create_fragment(ctx) {
 			current = false;
 		},
 		d(detaching) {
-			if (detaching) detach(div2);
+			if (detaching) detach(button);
 			if (if_block0) if_block0.d();
 			if (if_block1) if_block1.d();
 			if (if_block2) if_block2.d();
 			destroy_component(keyboardinputbutton);
+			mounted = false;
+			dispose();
 		}
 	};
 }
@@ -2789,6 +2758,12 @@ function KeyboardInput_svelte_instance($$self, $$props, $$invalidate) {
 	let { id } = $$props;
 	let { setActiveId } = $$props;
 
+	const click_handler = () => {
+		if (!disabled) {
+			setActiveId(id);
+		}
+	};
+
 	$$self.$$set = $$props => {
 		if ("value" in $$props) $$invalidate(0, value = $$props.value);
 		if ("ctrl" in $$props) $$invalidate(1, ctrl = $$props.ctrl);
@@ -2801,13 +2776,24 @@ function KeyboardInput_svelte_instance($$self, $$props, $$invalidate) {
 		if ("setActiveId" in $$props) $$invalidate(8, setActiveId = $$props.setActiveId);
 	};
 
-	return [value, ctrl, shift, alt, label, active, disabled, id, setActiveId];
+	return [
+		value,
+		ctrl,
+		shift,
+		alt,
+		label,
+		active,
+		disabled,
+		id,
+		setActiveId,
+		click_handler
+	];
 }
 
 class KeyboardInput extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-1lzsczn-style")) KeyboardInput_svelte_add_css();
+		if (!document.getElementById("svelte-ntlum9-style")) KeyboardInput_svelte_add_css();
 
 		init(this, options, KeyboardInput_svelte_instance, KeyboardInput_svelte_create_fragment, safe_not_equal, {
 			value: 0,
@@ -2830,8 +2816,8 @@ class KeyboardInput extends SvelteComponent {
 
 function Switch_svelte_add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-j0qz47-style";
-	style.textContent = ".switch.svelte-j0qz47.svelte-j0qz47{cursor:pointer;position:relative;display:flex;height:24px;line-height:24px}.label.svelte-j0qz47.svelte-j0qz47{font-size:14px;flex-grow:1}.switch.svelte-j0qz47 input.svelte-j0qz47{opacity:0;width:0;height:0}.slider.svelte-j0qz47.svelte-j0qz47{width:48px;background-color:#ccc;-webkit-transition:0.4s;transition:0.4s}.slider.svelte-j0qz47.svelte-j0qz47:before{position:relative;display:block;content:'';height:22px;width:22px;left:1px;top:1px;background-color:white;-webkit-transition:0.4s;transition:0.4s}input.svelte-j0qz47:checked+.slider.svelte-j0qz47{background-color:red}input.svelte-j0qz47:focus+.slider.svelte-j0qz47{box-shadow:0 0 3px red}input.svelte-j0qz47:checked+.slider.svelte-j0qz47:before{-webkit-transform:translateX(24px);-ms-transform:translateX(24px);transform:translateX(24px)}.slider.round.svelte-j0qz47.svelte-j0qz47{border-radius:34px}.slider.round.svelte-j0qz47.svelte-j0qz47:before{border-radius:50%}";
+	style.id = "svelte-1ohi108-style";
+	style.textContent = ".switch.svelte-1ohi108.svelte-1ohi108{cursor:pointer;position:relative;display:flex;line-height:24px;padding:8px 4px}.label.svelte-1ohi108.svelte-1ohi108{font-size:14px;flex-grow:1}.switch.svelte-1ohi108 input.svelte-1ohi108{opacity:0;width:0;height:0}.slider.svelte-1ohi108.svelte-1ohi108{width:48px;border-radius:34px;background-color:#b5b5b5;-webkit-transition:background-color 0.4s;transition:background-color 0.4s}.slider.svelte-1ohi108.svelte-1ohi108:before{position:relative;display:block;content:'';height:22px;width:22px;left:1px;top:1px;background-color:white;-webkit-transition:0.4s;transition:0.4s}input.svelte-1ohi108:checked+.slider.svelte-1ohi108{background-color:red}input.svelte-1ohi108:focus+.slider.svelte-1ohi108{box-shadow:0 0 0 1px white}input.svelte-1ohi108:checked+.slider.svelte-1ohi108:before{-webkit-transform:translateX(24px);-ms-transform:translateX(24px);transform:translateX(24px)}.slider.round.svelte-1ohi108.svelte-1ohi108{border-radius:34px}.slider.round.svelte-1ohi108.svelte-1ohi108:before{border-radius:50%}";
 	append(document.head, style);
 }
 
@@ -2855,12 +2841,12 @@ function Switch_svelte_create_fragment(ctx) {
 			input = internal_element("input");
 			t2 = space();
 			span1 = internal_element("span");
-			attr(span0, "class", "label svelte-j0qz47");
+			attr(span0, "class", "label svelte-1ohi108");
 			attr(input, "type", "checkbox");
 			input.disabled = /*disabled*/ ctx[2];
-			attr(input, "class", "svelte-j0qz47");
-			attr(span1, "class", "slider round svelte-j0qz47");
-			attr(label_1, "class", "switch svelte-j0qz47");
+			attr(input, "class", "svelte-1ohi108");
+			attr(span1, "class", "slider round svelte-1ohi108");
+			attr(label_1, "class", "switch svelte-1ohi108");
 		},
 		m(target, anchor) {
 			insert(target, label_1, anchor);
@@ -2920,20 +2906,106 @@ function Switch_svelte_instance($$self, $$props, $$invalidate) {
 class Switch extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-j0qz47-style")) Switch_svelte_add_css();
+		if (!document.getElementById("svelte-1ohi108-style")) Switch_svelte_add_css();
 		init(this, options, Switch_svelte_instance, Switch_svelte_create_fragment, safe_not_equal, { label: 1, checked: 0, disabled: 2 });
 	}
 }
 
 /* harmony default export */ const Switch_svelte = (Switch);
+;// CONCATENATED MODULE: ./src/components/UI/About.svelte
+/* src/components/UI/About.svelte generated by Svelte v3.38.2 */
+
+
+function About_svelte_add_css() {
+	var style = internal_element("style");
+	style.id = "svelte-idgcu2-style";
+	style.textContent = "p.svelte-idgcu2{margin-bottom:16px}ul.svelte-idgcu2{margin-bottom:16px;padding-left:24px}";
+	append(document.head, style);
+}
+
+function About_svelte_create_fragment(ctx) {
+	let p0;
+	let t3;
+	let p1;
+	let t8;
+	let p2;
+	let t10;
+	let ul;
+
+	return {
+		c() {
+			p0 = internal_element("p");
+
+			p0.innerHTML = `L&#39;extension Mediapart Mod a été imaginée, créée et programmée par <a href="https://www.apollinai.re">Apollinaire</a>.
+  L&#39;ensembe du code est libre et open-source: il est public, gratuit, toute modification, publication ou vente sont
+  permis sans contreparties.`;
+
+			t3 = space();
+			p1 = internal_element("p");
+
+			p1.innerHTML = `Pour tout retour, toute suggestion ou contribution, postez une <i>issue</i> sur le repo Github du projet:
+  <a href="https://github.com/apollinaire/mediapart-mod">apollinaire/mediapart-mod</a>`;
+
+			t8 = space();
+			p2 = internal_element("p");
+			p2.textContent = "Librairies externes utilisées, mentions notables:";
+			t10 = space();
+			ul = internal_element("ul");
+
+			ul.innerHTML = `<li>babel</li> 
+  <li>color-convert</li> 
+  <li>css-tree</li> 
+  <li>prettier</li> 
+  <li>svelte</li> 
+  <li>typescript</li> 
+  <li>webpack</li>`;
+
+			attr(p0, "class", "svelte-idgcu2");
+			attr(p1, "class", "svelte-idgcu2");
+			attr(p2, "class", "svelte-idgcu2");
+			attr(ul, "class", "svelte-idgcu2");
+		},
+		m(target, anchor) {
+			insert(target, p0, anchor);
+			insert(target, t3, anchor);
+			insert(target, p1, anchor);
+			insert(target, t8, anchor);
+			insert(target, p2, anchor);
+			insert(target, t10, anchor);
+			insert(target, ul, anchor);
+		},
+		p: internal_noop,
+		i: internal_noop,
+		o: internal_noop,
+		d(detaching) {
+			if (detaching) detach(p0);
+			if (detaching) detach(t3);
+			if (detaching) detach(p1);
+			if (detaching) detach(t8);
+			if (detaching) detach(p2);
+			if (detaching) detach(t10);
+			if (detaching) detach(ul);
+		}
+	};
+}
+
+class About extends SvelteComponent {
+	constructor(options) {
+		super();
+		if (!document.getElementById("svelte-idgcu2-style")) About_svelte_add_css();
+		init(this, options, null, About_svelte_create_fragment, safe_not_equal, {});
+	}
+}
+
+/* harmony default export */ const About_svelte = (About);
 ;// CONCATENATED MODULE: ./src/components/UI/CategoryTitle.svelte
 /* src/components/UI/CategoryTitle.svelte generated by Svelte v3.38.2 */
 
 
 function CategoryTitle_svelte_add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-18fj5iu-style";
-	style.textContent = "h2.svelte-18fj5iu{display:flex;justify-content:center;align-items:center;text-align:center;line-height:48px;font-size:18px;height:48px}";
+	style.id = "svelte-14bu5ei-style";
+	style.textContent = "h2.svelte-14bu5ei{display:flex;justify-content:center;align-items:center;text-align:center;line-height:48px;font-size:18px;height:48px}";
 	append(document.head, style);
 }
 
@@ -2947,7 +3019,7 @@ function CategoryTitle_svelte_create_fragment(ctx) {
 		c() {
 			h2 = internal_element("h2");
 			if (default_slot) default_slot.c();
-			attr(h2, "class", "svelte-18fj5iu");
+			attr(h2, "class", "svelte-14bu5ei");
 		},
 		m(target, anchor) {
 			insert(target, h2, anchor);
@@ -2994,7 +3066,7 @@ function CategoryTitle_svelte_instance($$self, $$props, $$invalidate) {
 class CategoryTitle extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-18fj5iu-style")) CategoryTitle_svelte_add_css();
+		if (!document.getElementById("svelte-14bu5ei-style")) CategoryTitle_svelte_add_css();
 		init(this, options, CategoryTitle_svelte_instance, CategoryTitle_svelte_create_fragment, safe_not_equal, {});
 	}
 }
@@ -3006,8 +3078,8 @@ class CategoryTitle extends SvelteComponent {
 
 function Header_svelte_add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-zjm2p0-style";
-	style.textContent = ".header.svelte-zjm2p0{display:flex;justify-content:center;align-items:center;text-align:center;line-height:48px;font-size:22px;height:48px;padding-bottom:24px}";
+	style.id = "svelte-1m5sor7-style";
+	style.textContent = ".header.svelte-1m5sor7{display:flex;justify-content:center;align-items:center;text-align:center;line-height:48px;font-size:22px;height:48px;margin-bottom:24px}";
 	append(document.head, style);
 }
 
@@ -3021,7 +3093,7 @@ function Header_svelte_create_fragment(ctx) {
 			h1.innerHTML = `<img src="mediapart-mod-48.png" alt="logo mediapart mod"/> 
   <span>Mediapart Mod</span>`;
 
-			attr(h1, "class", "header svelte-zjm2p0");
+			attr(h1, "class", "header svelte-1m5sor7");
 		},
 		m(target, anchor) {
 			insert(target, h1, anchor);
@@ -3038,7 +3110,7 @@ function Header_svelte_create_fragment(ctx) {
 class Header extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-zjm2p0-style")) Header_svelte_add_css();
+		if (!document.getElementById("svelte-1m5sor7-style")) Header_svelte_add_css();
 		init(this, options, null, Header_svelte_create_fragment, safe_not_equal, {});
 	}
 }
@@ -3052,8 +3124,8 @@ class Header extends SvelteComponent {
 
 function ThemeSwitch_svelte_add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-2pnxup-style";
-	style.textContent = "body{margin:0px}.dark.svelte-2pnxup{background-color:#292929;color:#b5b5b5}";
+	style.id = "svelte-173b2yu-style";
+	style.textContent = ".dark.svelte-173b2yu{background-color:#292929;color:#b5b5b5}body{margin:0px;font-family:sans-serif}a{color:currentColor}button:focus{outline:solid 1px white}";
 	append(document.head, style);
 }
 
@@ -3067,7 +3139,7 @@ function ThemeSwitch_svelte_create_fragment(ctx) {
 		c() {
 			div = internal_element("div");
 			if (default_slot) default_slot.c();
-			attr(div, "class", "svelte-2pnxup");
+			attr(div, "class", "svelte-173b2yu");
 			toggle_class(div, "dark", /*dark*/ ctx[0]);
 			toggle_class(div, "light", /*light*/ ctx[1]);
 		},
@@ -3138,7 +3210,7 @@ function ThemeSwitch_svelte_instance($$self, $$props, $$invalidate) {
 class ThemeSwitch extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-2pnxup-style")) ThemeSwitch_svelte_add_css();
+		if (!document.getElementById("svelte-173b2yu-style")) ThemeSwitch_svelte_add_css();
 		init(this, options, ThemeSwitch_svelte_instance, ThemeSwitch_svelte_create_fragment, safe_not_equal, {});
 	}
 }
@@ -3160,10 +3232,11 @@ const { document: document_1 } = globals;
 
 
 
+
 function Options_svelte_add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-b012qr-style";
-	style.textContent = ".layout.svelte-b012qr{box-sizing:border-box;padding:8px;min-height:100vh}.form-container.svelte-b012qr{max-width:700px;margin:auto}.text-container.svelte-b012qr{text-align:center;margin-top:12px}.default-keybinds.svelte-b012qr{background:transparent;border:none;text-decoration:underline;color:currentColor;cursor:pointer}";
+	style.id = "svelte-110kjy5-style";
+	style.textContent = ".layout.svelte-110kjy5{box-sizing:border-box;padding:8px 8px 64px;min-height:100vh}.form-container.svelte-110kjy5{max-width:500px;font-size:14px;margin:auto}.text-container.svelte-110kjy5{text-align:center;margin-top:12px;margin-bottom:8px}.default-keybinds.svelte-110kjy5{background:transparent;border:none;text-decoration:underline;color:currentColor;cursor:pointer}";
 	append(document_1.head, style);
 }
 
@@ -3173,8 +3246,8 @@ function get_each_context(ctx, list, i) {
 	return child_ctx;
 }
 
-// (76:4) <CategoryTitle>
-function create_default_slot_10(ctx) {
+// (78:4) <CategoryTitle>
+function create_default_slot_12(ctx) {
 	let t;
 
 	return {
@@ -3190,8 +3263,8 @@ function create_default_slot_10(ctx) {
 	};
 }
 
-// (79:8) <FormInput>
-function create_default_slot_9(ctx) {
+// (81:8) <FormInput>
+function create_default_slot_11(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
@@ -3246,14 +3319,14 @@ function create_default_slot_9(ctx) {
 	};
 }
 
-// (78:6) <FormField>
-function create_default_slot_8(ctx) {
+// (80:6) <FormField>
+function create_default_slot_10(ctx) {
 	let forminput;
 	let current;
 
 	forminput = new FormInput_svelte({
 			props: {
-				$$slots: { default: [create_default_slot_9] },
+				$$slots: { default: [create_default_slot_11] },
 				$$scope: { ctx }
 			}
 		});
@@ -3290,8 +3363,8 @@ function create_default_slot_8(ctx) {
 	};
 }
 
-// (84:8) <FormInput>
-function create_default_slot_7(ctx) {
+// (86:8) <FormInput>
+function create_default_slot_9(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
@@ -3346,14 +3419,14 @@ function create_default_slot_7(ctx) {
 	};
 }
 
-// (83:6) <FormField>
-function create_default_slot_6(ctx) {
+// (85:6) <FormField>
+function create_default_slot_8(ctx) {
 	let forminput;
 	let current;
 
 	forminput = new FormInput_svelte({
 			props: {
-				$$slots: { default: [create_default_slot_7] },
+				$$slots: { default: [create_default_slot_9] },
 				$$scope: { ctx }
 			}
 		});
@@ -3390,8 +3463,8 @@ function create_default_slot_6(ctx) {
 	};
 }
 
-// (89:8) <FormInput>
-function create_default_slot_5(ctx) {
+// (91:8) <FormInput>
+function create_default_slot_7(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
@@ -3446,14 +3519,14 @@ function create_default_slot_5(ctx) {
 	};
 }
 
-// (88:6) <FormField>
-function create_default_slot_4(ctx) {
+// (90:6) <FormField>
+function create_default_slot_6(ctx) {
 	let forminput;
 	let current;
 
 	forminput = new FormInput_svelte({
 			props: {
-				$$slots: { default: [create_default_slot_5] },
+				$$slots: { default: [create_default_slot_7] },
 				$$scope: { ctx }
 			}
 		});
@@ -3490,8 +3563,8 @@ function create_default_slot_4(ctx) {
 	};
 }
 
-// (94:8) <FormInput>
-function Options_svelte_create_default_slot_3(ctx) {
+// (96:8) <FormInput>
+function create_default_slot_5(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
@@ -3546,14 +3619,14 @@ function Options_svelte_create_default_slot_3(ctx) {
 	};
 }
 
-// (93:6) <FormField>
-function Options_svelte_create_default_slot_2(ctx) {
+// (95:6) <FormField>
+function create_default_slot_4(ctx) {
 	let forminput;
 	let current;
 
 	forminput = new FormInput_svelte({
 			props: {
-				$$slots: { default: [Options_svelte_create_default_slot_3] },
+				$$slots: { default: [create_default_slot_5] },
 				$$scope: { ctx }
 			}
 		});
@@ -3590,8 +3663,8 @@ function Options_svelte_create_default_slot_2(ctx) {
 	};
 }
 
-// (99:4) <CategoryTitle>
-function Options_svelte_create_default_slot_1(ctx) {
+// (101:4) <CategoryTitle>
+function Options_svelte_create_default_slot_3(ctx) {
 	let t;
 
 	return {
@@ -3607,9 +3680,10 @@ function Options_svelte_create_default_slot_1(ctx) {
 	};
 }
 
-// (101:6) {#each $configStore.keySetting as keyBind}
-function create_each_block(ctx) {
+// (104:8) <FormInput>
+function Options_svelte_create_default_slot_2(ctx) {
 	let keyboardinput;
+	let t;
 	let current;
 
 	keyboardinput = new KeyboardInput_svelte({
@@ -3629,9 +3703,11 @@ function create_each_block(ctx) {
 	return {
 		c() {
 			create_component(keyboardinput.$$.fragment);
+			t = space();
 		},
 		m(target, anchor) {
 			mount_component(keyboardinput, target, anchor);
+			insert(target, t, anchor);
 			current = true;
 		},
 		p(ctx, dirty) {
@@ -3657,13 +3733,75 @@ function create_each_block(ctx) {
 		},
 		d(detaching) {
 			destroy_component(keyboardinput, detaching);
+			if (detaching) detach(t);
 		}
 	};
 }
 
-// (73:0) <ThemeSwitch>
+// (103:6) {#each $configStore.keySetting as keyBind}
+function create_each_block(ctx) {
+	let forminput;
+	let current;
+
+	forminput = new FormInput_svelte({
+			props: {
+				$$slots: { default: [Options_svelte_create_default_slot_2] },
+				$$scope: { ctx }
+			}
+		});
+
+	return {
+		c() {
+			create_component(forminput.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(forminput, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const forminput_changes = {};
+
+			if (dirty & /*$$scope, $configStore, activeId*/ 32771) {
+				forminput_changes.$$scope = { dirty, ctx };
+			}
+
+			forminput.$set(forminput_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(forminput.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(forminput.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(forminput, detaching);
+		}
+	};
+}
+
+// (126:4) <CategoryTitle>
+function Options_svelte_create_default_slot_1(ctx) {
+	let t;
+
+	return {
+		c() {
+			t = internal_text("À propos");
+		},
+		m(target, anchor) {
+			insert(target, t, anchor);
+		},
+		d(detaching) {
+			if (detaching) detach(t);
+		}
+	};
+}
+
+// (75:0) <ThemeSwitch>
 function Options_svelte_create_default_slot(ctx) {
-	let div3;
+	let div4;
 	let header;
 	let t0;
 	let categorytitle0;
@@ -3685,6 +3823,11 @@ function Options_svelte_create_default_slot(ctx) {
 	let button;
 	let t8;
 	let button_disabled_value;
+	let t9;
+	let categorytitle2;
+	let t10;
+	let div3;
+	let about;
 	let current;
 	let mounted;
 	let dispose;
@@ -3692,42 +3835,42 @@ function Options_svelte_create_default_slot(ctx) {
 
 	categorytitle0 = new CategoryTitle_svelte({
 			props: {
-				$$slots: { default: [create_default_slot_10] },
+				$$slots: { default: [create_default_slot_12] },
 				$$scope: { ctx }
 			}
 		});
 
 	formfield0 = new FormField_svelte({
 			props: {
-				$$slots: { default: [create_default_slot_8] },
+				$$slots: { default: [create_default_slot_10] },
 				$$scope: { ctx }
 			}
 		});
 
 	formfield1 = new FormField_svelte({
 			props: {
-				$$slots: { default: [create_default_slot_6] },
+				$$slots: { default: [create_default_slot_8] },
 				$$scope: { ctx }
 			}
 		});
 
 	formfield2 = new FormField_svelte({
 			props: {
-				$$slots: { default: [create_default_slot_4] },
+				$$slots: { default: [create_default_slot_6] },
 				$$scope: { ctx }
 			}
 		});
 
 	formfield3 = new FormField_svelte({
 			props: {
-				$$slots: { default: [Options_svelte_create_default_slot_2] },
+				$$slots: { default: [create_default_slot_4] },
 				$$scope: { ctx }
 			}
 		});
 
 	categorytitle1 = new CategoryTitle_svelte({
 			props: {
-				$$slots: { default: [Options_svelte_create_default_slot_1] },
+				$$slots: { default: [Options_svelte_create_default_slot_3] },
 				$$scope: { ctx }
 			}
 		});
@@ -3743,9 +3886,18 @@ function Options_svelte_create_default_slot(ctx) {
 		each_blocks[i] = null;
 	});
 
+	categorytitle2 = new CategoryTitle_svelte({
+			props: {
+				$$slots: { default: [Options_svelte_create_default_slot_1] },
+				$$scope: { ctx }
+			}
+		});
+
+	about = new About_svelte({});
+
 	return {
 		c() {
-			div3 = internal_element("div");
+			div4 = internal_element("div");
 			create_component(header.$$.fragment);
 			t0 = space();
 			create_component(categorytitle0.$$.fragment);
@@ -3771,20 +3923,26 @@ function Options_svelte_create_default_slot(ctx) {
 			div2 = internal_element("div");
 			button = internal_element("button");
 			t8 = internal_text("rétablir les valeurs par défaut");
-			attr(div0, "class", "form-container svelte-b012qr");
-			attr(div1, "class", "keybind-container");
-			attr(button, "class", "default-keybinds svelte-b012qr");
+			t9 = space();
+			create_component(categorytitle2.$$.fragment);
+			t10 = space();
+			div3 = internal_element("div");
+			create_component(about.$$.fragment);
+			attr(div0, "class", "form-container svelte-110kjy5");
+			attr(div1, "class", "form-container svelte-110kjy5");
+			attr(button, "class", "default-keybinds svelte-110kjy5");
 			button.disabled = button_disabled_value = !!/*activeId*/ ctx[0] || !/*$configStore*/ ctx[1].hotkeysActive;
-			attr(div2, "class", "text-container svelte-b012qr");
-			attr(div3, "class", "layout svelte-b012qr");
+			attr(div2, "class", "text-container svelte-110kjy5");
+			attr(div3, "class", "form-container svelte-110kjy5");
+			attr(div4, "class", "layout svelte-110kjy5");
 		},
 		m(target, anchor) {
-			insert(target, div3, anchor);
-			mount_component(header, div3, null);
-			append(div3, t0);
-			mount_component(categorytitle0, div3, null);
-			append(div3, t1);
-			append(div3, div0);
+			insert(target, div4, anchor);
+			mount_component(header, div4, null);
+			append(div4, t0);
+			mount_component(categorytitle0, div4, null);
+			append(div4, t1);
+			append(div4, div0);
 			mount_component(formfield0, div0, null);
 			append(div0, t2);
 			mount_component(formfield1, div0, null);
@@ -3792,19 +3950,24 @@ function Options_svelte_create_default_slot(ctx) {
 			mount_component(formfield2, div0, null);
 			append(div0, t4);
 			mount_component(formfield3, div0, null);
-			append(div3, t5);
-			mount_component(categorytitle1, div3, null);
-			append(div3, t6);
-			append(div3, div1);
+			append(div4, t5);
+			mount_component(categorytitle1, div4, null);
+			append(div4, t6);
+			append(div4, div1);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
 				each_blocks[i].m(div1, null);
 			}
 
-			append(div3, t7);
-			append(div3, div2);
+			append(div4, t7);
+			append(div4, div2);
 			append(div2, button);
 			append(button, t8);
+			append(div4, t9);
+			mount_component(categorytitle2, div4, null);
+			append(div4, t10);
+			append(div4, div3);
+			mount_component(about, div3, null);
 			current = true;
 
 			if (!mounted) {
@@ -3886,6 +4049,14 @@ function Options_svelte_create_default_slot(ctx) {
 			if (!current || dirty & /*activeId, $configStore*/ 3 && button_disabled_value !== (button_disabled_value = !!/*activeId*/ ctx[0] || !/*$configStore*/ ctx[1].hotkeysActive)) {
 				button.disabled = button_disabled_value;
 			}
+
+			const categorytitle2_changes = {};
+
+			if (dirty & /*$$scope*/ 32768) {
+				categorytitle2_changes.$$scope = { dirty, ctx };
+			}
+
+			categorytitle2.$set(categorytitle2_changes);
 		},
 		i(local) {
 			if (current) return;
@@ -3901,6 +4072,8 @@ function Options_svelte_create_default_slot(ctx) {
 				transition_in(each_blocks[i]);
 			}
 
+			transition_in(categorytitle2.$$.fragment, local);
+			transition_in(about.$$.fragment, local);
 			current = true;
 		},
 		o(local) {
@@ -3917,10 +4090,12 @@ function Options_svelte_create_default_slot(ctx) {
 				transition_out(each_blocks[i]);
 			}
 
+			transition_out(categorytitle2.$$.fragment, local);
+			transition_out(about.$$.fragment, local);
 			current = false;
 		},
 		d(detaching) {
-			if (detaching) detach(div3);
+			if (detaching) detach(div4);
 			destroy_component(header);
 			destroy_component(categorytitle0);
 			destroy_component(formfield0);
@@ -3929,6 +4104,8 @@ function Options_svelte_create_default_slot(ctx) {
 			destroy_component(formfield3);
 			destroy_component(categorytitle1);
 			destroy_each(each_blocks, detaching);
+			destroy_component(categorytitle2);
+			destroy_component(about);
 			mounted = false;
 			dispose();
 		}
@@ -4015,10 +4192,10 @@ function Options_svelte_instance($$self, $$props, $$invalidate) {
 			if (hotkey.action === activeId) {
 				return {
 					action: hotkey.action,
-					key: e.key,
+					key: e.key.toLowerCase(),
 					alt: e.altKey,
 					ctrl: e.ctrlKey,
-					shift: e.altKey
+					shift: e.shiftKey
 				};
 			} else return hotkey;
 		});
@@ -4097,7 +4274,7 @@ function Options_svelte_instance($$self, $$props, $$invalidate) {
 class Options extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document_1.getElementById("svelte-b012qr-style")) Options_svelte_add_css();
+		if (!document_1.getElementById("svelte-110kjy5-style")) Options_svelte_add_css();
 		init(this, options, Options_svelte_instance, Options_svelte_create_fragment, safe_not_equal, {});
 	}
 }

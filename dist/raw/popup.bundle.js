@@ -1998,8 +1998,8 @@ const configStore = createConfigStore();
 
 function add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-1e3uhrv-style";
-	style.textContent = ".form-description.svelte-1e3uhrv{margin-top:4px}";
+	style.id = "svelte-1sxh29-style";
+	style.textContent = ".form-description.svelte-1sxh29{margin:4px 4px 0px}";
 	append(document.head, style);
 }
 
@@ -2013,7 +2013,7 @@ function create_fragment(ctx) {
 		c() {
 			div = internal_element("div");
 			if (default_slot) default_slot.c();
-			attr(div, "class", "form-description svelte-1e3uhrv");
+			attr(div, "class", "form-description svelte-1sxh29");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -2060,7 +2060,7 @@ function instance($$self, $$props, $$invalidate) {
 class FormDescription extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-1e3uhrv-style")) add_css();
+		if (!document.getElementById("svelte-1sxh29-style")) add_css();
 		init(this, options, instance, create_fragment, safe_not_equal, {});
 	}
 }
@@ -2072,8 +2072,8 @@ class FormDescription extends SvelteComponent {
 
 function FormField_svelte_add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-1utonij-style";
-	style.textContent = ".form-field.svelte-1utonij{padding-bottom:16px}";
+	style.id = "svelte-16v2b5o-style";
+	style.textContent = ".form-field.svelte-16v2b5o{padding-bottom:8px}";
 	append(document.head, style);
 }
 
@@ -2087,7 +2087,7 @@ function FormField_svelte_create_fragment(ctx) {
 		c() {
 			div = internal_element("div");
 			if (default_slot) default_slot.c();
-			attr(div, "class", "form-field svelte-1utonij");
+			attr(div, "class", "form-field svelte-16v2b5o");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -2134,7 +2134,7 @@ function FormField_svelte_instance($$self, $$props, $$invalidate) {
 class FormField extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-1utonij-style")) FormField_svelte_add_css();
+		if (!document.getElementById("svelte-16v2b5o-style")) FormField_svelte_add_css();
 		init(this, options, FormField_svelte_instance, FormField_svelte_create_fragment, safe_not_equal, {});
 	}
 }
@@ -2146,8 +2146,8 @@ class FormField extends SvelteComponent {
 
 function FormInput_svelte_add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-bouj6m-style";
-	style.textContent = ".form-input.svelte-bouj6m{margin:-4px;padding:4px}.form-input.svelte-bouj6m:hover{background-color:rgba(0,0,0,0.1)}";
+	style.id = "svelte-1fjxhl6-style";
+	style.textContent = "div.svelte-1fjxhl6{border-radius:4px}div.svelte-1fjxhl6:hover{background-color:rgba(0, 0, 0, 0.1)}";
 	append(document.head, style);
 }
 
@@ -2161,7 +2161,7 @@ function FormInput_svelte_create_fragment(ctx) {
 		c() {
 			div = internal_element("div");
 			if (default_slot) default_slot.c();
-			attr(div, "class", "form-input svelte-bouj6m");
+			attr(div, "class", "form-input svelte-1fjxhl6");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -2208,7 +2208,7 @@ function FormInput_svelte_instance($$self, $$props, $$invalidate) {
 class FormInput extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-bouj6m-style")) FormInput_svelte_add_css();
+		if (!document.getElementById("svelte-1fjxhl6-style")) FormInput_svelte_add_css();
 		init(this, options, FormInput_svelte_instance, FormInput_svelte_create_fragment, safe_not_equal, {});
 	}
 }
@@ -2220,8 +2220,8 @@ class FormInput extends SvelteComponent {
 
 function Switch_svelte_add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-j0qz47-style";
-	style.textContent = ".switch.svelte-j0qz47.svelte-j0qz47{cursor:pointer;position:relative;display:flex;height:24px;line-height:24px}.label.svelte-j0qz47.svelte-j0qz47{font-size:14px;flex-grow:1}.switch.svelte-j0qz47 input.svelte-j0qz47{opacity:0;width:0;height:0}.slider.svelte-j0qz47.svelte-j0qz47{width:48px;background-color:#ccc;-webkit-transition:0.4s;transition:0.4s}.slider.svelte-j0qz47.svelte-j0qz47:before{position:relative;display:block;content:'';height:22px;width:22px;left:1px;top:1px;background-color:white;-webkit-transition:0.4s;transition:0.4s}input.svelte-j0qz47:checked+.slider.svelte-j0qz47{background-color:red}input.svelte-j0qz47:focus+.slider.svelte-j0qz47{box-shadow:0 0 3px red}input.svelte-j0qz47:checked+.slider.svelte-j0qz47:before{-webkit-transform:translateX(24px);-ms-transform:translateX(24px);transform:translateX(24px)}.slider.round.svelte-j0qz47.svelte-j0qz47{border-radius:34px}.slider.round.svelte-j0qz47.svelte-j0qz47:before{border-radius:50%}";
+	style.id = "svelte-1ohi108-style";
+	style.textContent = ".switch.svelte-1ohi108.svelte-1ohi108{cursor:pointer;position:relative;display:flex;line-height:24px;padding:8px 4px}.label.svelte-1ohi108.svelte-1ohi108{font-size:14px;flex-grow:1}.switch.svelte-1ohi108 input.svelte-1ohi108{opacity:0;width:0;height:0}.slider.svelte-1ohi108.svelte-1ohi108{width:48px;border-radius:34px;background-color:#b5b5b5;-webkit-transition:background-color 0.4s;transition:background-color 0.4s}.slider.svelte-1ohi108.svelte-1ohi108:before{position:relative;display:block;content:'';height:22px;width:22px;left:1px;top:1px;background-color:white;-webkit-transition:0.4s;transition:0.4s}input.svelte-1ohi108:checked+.slider.svelte-1ohi108{background-color:red}input.svelte-1ohi108:focus+.slider.svelte-1ohi108{box-shadow:0 0 0 1px white}input.svelte-1ohi108:checked+.slider.svelte-1ohi108:before{-webkit-transform:translateX(24px);-ms-transform:translateX(24px);transform:translateX(24px)}.slider.round.svelte-1ohi108.svelte-1ohi108{border-radius:34px}.slider.round.svelte-1ohi108.svelte-1ohi108:before{border-radius:50%}";
 	append(document.head, style);
 }
 
@@ -2245,12 +2245,12 @@ function Switch_svelte_create_fragment(ctx) {
 			input = internal_element("input");
 			t2 = space();
 			span1 = internal_element("span");
-			attr(span0, "class", "label svelte-j0qz47");
+			attr(span0, "class", "label svelte-1ohi108");
 			attr(input, "type", "checkbox");
 			input.disabled = /*disabled*/ ctx[2];
-			attr(input, "class", "svelte-j0qz47");
-			attr(span1, "class", "slider round svelte-j0qz47");
-			attr(label_1, "class", "switch svelte-j0qz47");
+			attr(input, "class", "svelte-1ohi108");
+			attr(span1, "class", "slider round svelte-1ohi108");
+			attr(label_1, "class", "switch svelte-1ohi108");
 		},
 		m(target, anchor) {
 			insert(target, label_1, anchor);
@@ -2310,7 +2310,7 @@ function Switch_svelte_instance($$self, $$props, $$invalidate) {
 class Switch extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-j0qz47-style")) Switch_svelte_add_css();
+		if (!document.getElementById("svelte-1ohi108-style")) Switch_svelte_add_css();
 		init(this, options, Switch_svelte_instance, Switch_svelte_create_fragment, safe_not_equal, { label: 1, checked: 0, disabled: 2 });
 	}
 }
@@ -2322,8 +2322,8 @@ class Switch extends SvelteComponent {
 
 function Header_svelte_add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-zjm2p0-style";
-	style.textContent = ".header.svelte-zjm2p0{display:flex;justify-content:center;align-items:center;text-align:center;line-height:48px;font-size:22px;height:48px;padding-bottom:24px}";
+	style.id = "svelte-1m5sor7-style";
+	style.textContent = ".header.svelte-1m5sor7{display:flex;justify-content:center;align-items:center;text-align:center;line-height:48px;font-size:22px;height:48px;margin-bottom:24px}";
 	append(document.head, style);
 }
 
@@ -2337,7 +2337,7 @@ function Header_svelte_create_fragment(ctx) {
 			h1.innerHTML = `<img src="mediapart-mod-48.png" alt="logo mediapart mod"/> 
   <span>Mediapart Mod</span>`;
 
-			attr(h1, "class", "header svelte-zjm2p0");
+			attr(h1, "class", "header svelte-1m5sor7");
 		},
 		m(target, anchor) {
 			insert(target, h1, anchor);
@@ -2354,7 +2354,7 @@ function Header_svelte_create_fragment(ctx) {
 class Header extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-zjm2p0-style")) Header_svelte_add_css();
+		if (!document.getElementById("svelte-1m5sor7-style")) Header_svelte_add_css();
 		init(this, options, null, Header_svelte_create_fragment, safe_not_equal, {});
 	}
 }
@@ -2368,8 +2368,8 @@ class Header extends SvelteComponent {
 
 function ThemeSwitch_svelte_add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-2pnxup-style";
-	style.textContent = "body{margin:0px}.dark.svelte-2pnxup{background-color:#292929;color:#b5b5b5}";
+	style.id = "svelte-173b2yu-style";
+	style.textContent = ".dark.svelte-173b2yu{background-color:#292929;color:#b5b5b5}body{margin:0px;font-family:sans-serif}a{color:currentColor}button:focus{outline:solid 1px white}";
 	append(document.head, style);
 }
 
@@ -2383,7 +2383,7 @@ function ThemeSwitch_svelte_create_fragment(ctx) {
 		c() {
 			div = internal_element("div");
 			if (default_slot) default_slot.c();
-			attr(div, "class", "svelte-2pnxup");
+			attr(div, "class", "svelte-173b2yu");
 			toggle_class(div, "dark", /*dark*/ ctx[0]);
 			toggle_class(div, "light", /*light*/ ctx[1]);
 		},
@@ -2454,7 +2454,7 @@ function ThemeSwitch_svelte_instance($$self, $$props, $$invalidate) {
 class ThemeSwitch extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-2pnxup-style")) ThemeSwitch_svelte_add_css();
+		if (!document.getElementById("svelte-173b2yu-style")) ThemeSwitch_svelte_add_css();
 		init(this, options, ThemeSwitch_svelte_instance, ThemeSwitch_svelte_create_fragment, safe_not_equal, {});
 	}
 }
@@ -2474,19 +2474,19 @@ class ThemeSwitch extends SvelteComponent {
 
 function Popup_svelte_add_css() {
 	var style = internal_element("style");
-	style.id = "svelte-2byfan-style";
-	style.textContent = ".popup.svelte-2byfan{padding:8px;width:300px}";
+	style.id = "svelte-1aqn85r-style";
+	style.textContent = ".popup.svelte-1aqn85r{padding:8px;width:300px}button.link-button.svelte-1aqn85r{text-decoration:underline}";
 	append(document.head, style);
 }
 
-// (15:6) <FormInput>
+// (23:6) <FormInput>
 function create_default_slot_9(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
 
 	function switch_1_checked_binding(value) {
-		/*switch_1_checked_binding*/ ctx[1](value);
+		/*switch_1_checked_binding*/ ctx[2](value);
 	}
 
 	let switch_1_props = {
@@ -2535,7 +2535,7 @@ function create_default_slot_9(ctx) {
 	};
 }
 
-// (14:4) <FormField>
+// (22:4) <FormField>
 function create_default_slot_8(ctx) {
 	let forminput;
 	let current;
@@ -2558,7 +2558,7 @@ function create_default_slot_8(ctx) {
 		p(ctx, dirty) {
 			const forminput_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 33) {
+			if (dirty & /*$$scope, $configStore*/ 65) {
 				forminput_changes.$$scope = { dirty, ctx };
 			}
 
@@ -2579,14 +2579,14 @@ function create_default_slot_8(ctx) {
 	};
 }
 
-// (20:6) <FormInput>
+// (28:6) <FormInput>
 function create_default_slot_7(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
 
 	function switch_1_checked_binding_1(value) {
-		/*switch_1_checked_binding_1*/ ctx[2](value);
+		/*switch_1_checked_binding_1*/ ctx[3](value);
 	}
 
 	let switch_1_props = {
@@ -2635,7 +2635,7 @@ function create_default_slot_7(ctx) {
 	};
 }
 
-// (19:4) <FormField>
+// (27:4) <FormField>
 function create_default_slot_6(ctx) {
 	let forminput;
 	let current;
@@ -2658,7 +2658,7 @@ function create_default_slot_6(ctx) {
 		p(ctx, dirty) {
 			const forminput_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 33) {
+			if (dirty & /*$$scope, $configStore*/ 65) {
 				forminput_changes.$$scope = { dirty, ctx };
 			}
 
@@ -2679,14 +2679,14 @@ function create_default_slot_6(ctx) {
 	};
 }
 
-// (25:6) <FormInput>
+// (33:6) <FormInput>
 function create_default_slot_5(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
 
 	function switch_1_checked_binding_2(value) {
-		/*switch_1_checked_binding_2*/ ctx[3](value);
+		/*switch_1_checked_binding_2*/ ctx[4](value);
 	}
 
 	let switch_1_props = {
@@ -2735,7 +2735,7 @@ function create_default_slot_5(ctx) {
 	};
 }
 
-// (24:4) <FormField>
+// (32:4) <FormField>
 function create_default_slot_4(ctx) {
 	let forminput;
 	let current;
@@ -2758,7 +2758,7 @@ function create_default_slot_4(ctx) {
 		p(ctx, dirty) {
 			const forminput_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 33) {
+			if (dirty & /*$$scope, $configStore*/ 65) {
 				forminput_changes.$$scope = { dirty, ctx };
 			}
 
@@ -2779,14 +2779,14 @@ function create_default_slot_4(ctx) {
 	};
 }
 
-// (30:6) <FormInput>
+// (38:6) <FormInput>
 function create_default_slot_3(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
 
 	function switch_1_checked_binding_3(value) {
-		/*switch_1_checked_binding_3*/ ctx[4](value);
+		/*switch_1_checked_binding_3*/ ctx[5](value);
 	}
 
 	let switch_1_props = {
@@ -2835,31 +2835,41 @@ function create_default_slot_3(ctx) {
 	};
 }
 
-// (33:6) <FormDescription>
+// (41:6) <FormDescription>
 function create_default_slot_2(ctx) {
 	let t0;
-	let a;
+	let button;
+	let mounted;
+	let dispose;
 
 	return {
 		c() {
-			t0 = internal_text("Le détail des raccourcis clavier ainsi qu'un configurateur est disponible sur ");
-			a = internal_element("a");
-			a.textContent = "la page d'options";
-			attr(a, "href", "chrome-extension://addenbcmfpfhmmoobmdgnjdbmfgoioda/options.html");
-			attr(a, "target", "_blank");
+			t0 = internal_text("Le détail des raccourcis clavier ainsi qu'un configurateur sont disponibles sur ");
+			button = internal_element("button");
+			button.textContent = "la page d'options";
+			attr(button, "class", "link-button svelte-1aqn85r");
+			attr(button, "role", "link");
 		},
 		m(target, anchor) {
 			insert(target, t0, anchor);
-			insert(target, a, anchor);
+			insert(target, button, anchor);
+
+			if (!mounted) {
+				dispose = listen(button, "click", /*onOpenOptions*/ ctx[1]);
+				mounted = true;
+			}
 		},
+		p: internal_noop,
 		d(detaching) {
 			if (detaching) detach(t0);
-			if (detaching) detach(a);
+			if (detaching) detach(button);
+			mounted = false;
+			dispose();
 		}
 	};
 }
 
-// (29:4) <FormField>
+// (37:4) <FormField>
 function create_default_slot_1(ctx) {
 	let forminput;
 	let t;
@@ -2895,14 +2905,14 @@ function create_default_slot_1(ctx) {
 		p(ctx, dirty) {
 			const forminput_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 33) {
+			if (dirty & /*$$scope, $configStore*/ 65) {
 				forminput_changes.$$scope = { dirty, ctx };
 			}
 
 			forminput.$set(forminput_changes);
 			const formdescription_changes = {};
 
-			if (dirty & /*$$scope*/ 32) {
+			if (dirty & /*$$scope*/ 64) {
 				formdescription_changes.$$scope = { dirty, ctx };
 			}
 
@@ -2927,7 +2937,7 @@ function create_default_slot_1(ctx) {
 	};
 }
 
-// (11:0) <ThemeSwitch>
+// (19:0) <ThemeSwitch>
 function create_default_slot(ctx) {
 	let div;
 	let header;
@@ -2982,7 +2992,7 @@ function create_default_slot(ctx) {
 			create_component(formfield2.$$.fragment);
 			t3 = space();
 			create_component(formfield3.$$.fragment);
-			attr(div, "class", "popup svelte-2byfan");
+			attr(div, "class", "popup svelte-1aqn85r");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -3000,28 +3010,28 @@ function create_default_slot(ctx) {
 		p(ctx, dirty) {
 			const formfield0_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 33) {
+			if (dirty & /*$$scope, $configStore*/ 65) {
 				formfield0_changes.$$scope = { dirty, ctx };
 			}
 
 			formfield0.$set(formfield0_changes);
 			const formfield1_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 33) {
+			if (dirty & /*$$scope, $configStore*/ 65) {
 				formfield1_changes.$$scope = { dirty, ctx };
 			}
 
 			formfield1.$set(formfield1_changes);
 			const formfield2_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 33) {
+			if (dirty & /*$$scope, $configStore*/ 65) {
 				formfield2_changes.$$scope = { dirty, ctx };
 			}
 
 			formfield2.$set(formfield2_changes);
 			const formfield3_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 33) {
+			if (dirty & /*$$scope, $configStore*/ 65) {
 				formfield3_changes.$$scope = { dirty, ctx };
 			}
 
@@ -3077,7 +3087,7 @@ function Popup_svelte_create_fragment(ctx) {
 		p(ctx, [dirty]) {
 			const themeswitch_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 33) {
+			if (dirty & /*$$scope, $configStore*/ 65) {
 				themeswitch_changes.$$scope = { dirty, ctx };
 			}
 
@@ -3101,6 +3111,14 @@ function Popup_svelte_create_fragment(ctx) {
 function Popup_svelte_instance($$self, $$props, $$invalidate) {
 	let $configStore;
 	component_subscribe($$self, configStore, $$value => $$invalidate(0, $configStore = $$value));
+
+	const onOpenOptions = () => {
+		if (chrome.runtime.openOptionsPage) {
+			chrome.runtime.openOptionsPage();
+		} else {
+			window.open(chrome.runtime.getURL("options.html"));
+		}
+	};
 
 	function switch_1_checked_binding(value) {
 		if ($$self.$$.not_equal($configStore.darkTheme, value)) {
@@ -3132,6 +3150,7 @@ function Popup_svelte_instance($$self, $$props, $$invalidate) {
 
 	return [
 		$configStore,
+		onOpenOptions,
 		switch_1_checked_binding,
 		switch_1_checked_binding_1,
 		switch_1_checked_binding_2,
@@ -3142,7 +3161,7 @@ function Popup_svelte_instance($$self, $$props, $$invalidate) {
 class Popup extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-2byfan-style")) Popup_svelte_add_css();
+		if (!document.getElementById("svelte-1aqn85r-style")) Popup_svelte_add_css();
 		init(this, options, Popup_svelte_instance, Popup_svelte_create_fragment, safe_not_equal, {});
 	}
 }
