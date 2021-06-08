@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Mediapart Mod",
-  "version": "0.0.6",
+  "version": "1.0.0",
   "description": "Mediapart modifié pour une meilleure expérience",
   "permissions": [
     "https://www.mediapart.fr/",
