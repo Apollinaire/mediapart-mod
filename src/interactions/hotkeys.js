@@ -50,7 +50,8 @@ export const actions = {
   une: {
     label: 'Retour à la une',
     run: () => {
-      const linkEl = document.querySelector('a.logo');
+      const linkEl = document.querySelector('[data-smarttag-name="retour_journal"]') || document.querySelector('[href="/"]')
+      console.log(linkEl)
       linkEl?.click();
     },
   },
