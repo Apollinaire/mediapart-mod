@@ -197,7 +197,8 @@ const actions = {
   une: {
     label: 'Retour à la une',
     run: () => {
-      const linkEl = document.querySelector('a.logo');
+      const linkEl = document.querySelector('[data-smarttag-name="retour_journal"]') || document.querySelector('[href="/"]');
+      console.log(linkEl);
       linkEl === null || linkEl === void 0 ? void 0 : linkEl.click();
     }
   },
@@ -229,7 +230,7 @@ const actions = {
   increaseFontSize: {
     label: 'Augmenter la taille de police',
     run: () => {
-      const buttonEl = document.querySelector('ul.sub-menu li ul li button.increase-fs');
+      const buttonEl = document.getElementById('js-fontsize-increase') || document.querySelector('ul.sub-menu li ul li button.increase-fs');
 
       if (!buttonEl.disabled) {
         buttonEl.click();
@@ -240,7 +241,7 @@ const actions = {
   decreaseFontSize: {
     label: 'Diminuer la taille de police',
     run: () => {
-      const buttonEl = document.querySelector('ul.sub-menu li ul li button.decrease-fs');
+      const buttonEl = document.getElementById('js-fontsize-decrease') || document.querySelector('ul.sub-menu li ul li button.decrease-fs');
 
       if (!buttonEl.disabled) {
         buttonEl.click();
