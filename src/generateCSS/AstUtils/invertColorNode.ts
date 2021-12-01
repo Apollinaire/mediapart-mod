@@ -55,26 +55,31 @@ const getRGBFunctionNode = (rgb: RGB, alpha?: number): FunctionNode => {
   };
 };
 
-export const handleDeclaration = (declaration: Declaration) => {
+// returns true if this declaration should be removed
+export const handleDeclaration = (declaration: Declaration): boolean => {
   if (declaration.value.type === 'Value') {
     if (declaration.property === 'color') {
       declaration.value.children = declaration.value.children.map(value => invertColorNode(value, 'text'));
     } else {
       declaration.value.children = declaration.value.children.map(value => invertColorNode(value, 'background'));
     }
+    return false
   } else {
-    // console.log('unhandled raw value:', declaration.value.value, declaration.value.type);
-    handleRawValue(declaration.value);
+    return handleRawValue(declaration.value);
   }
 };
 
 const hexRegex = /#[0-9a-fA-F]{6}/g;
-export const handleRawValue = (rawValue: Raw) => {
+export const handleRawValue = (rawValue: Raw): boolean => {
   if (hexRegex.test(rawValue.value)) {
     rawValue.value = rawValue.value.replace(
       hexRegex,
       color => '#' + convert.rgb.hex(invertRGBColor(convert.hex.rgb(color), 'background'))
     );
+    return false
+  } else {
+    // remove raw values that are not hex colors
+    return true
   }
 };
 

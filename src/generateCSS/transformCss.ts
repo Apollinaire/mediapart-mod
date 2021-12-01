@@ -71,14 +71,14 @@ const config = {
 const isWhitelisted = (property: string): boolean => {
   for (const propCheck of config.propertyWhiteList) {
     if (typeof propCheck === 'string' && propCheck === property) {
-      return true
+      return true;
     }
     if (propCheck instanceof RegExp && propCheck.test(property)) {
-      return true
+      return true;
     }
   }
-  return false
-}
+  return false;
+};
 
 const transformCss = (css: string) => {
   const tree = parse(css);
@@ -121,14 +121,27 @@ const transformCss = (css: string) => {
             }
           } else {
             // modify the declaration
-            handleDeclaration(declaration);
+            const toRemove = handleDeclaration(declaration);
+            if (toRemove) {
+              declarationList.remove(declarationItem);
+            }
           }
         },
       });
 
+      // if there are no more declarations inside a block, remove the rule
       if (ruleItem && ruleList && rule.block.children.getSize() === 0) {
         ruleList.remove(ruleItem);
         return;
+      }
+    },
+  });
+
+  walk(tree, {
+    visit: 'Atrule',
+    enter: (atRule, atRuleItem, atRuleList) => {
+      if (atRuleList && atRuleItem && atRule.block?.children.getSize() === 0) {
+        atRuleList.remove(atRuleItem);
       }
     },
   });
