@@ -30,8 +30,12 @@ const config = {
     }
     
     body {
-      background-color: #000000;
+      background-color: var(--main-bg-color);
       color: var(--main-text-color);
+    }
+
+    .news__body-wrapper {
+      background-color: #000000;
     }
 
     .home.container.grid, .news__heading.grid, .news__body.grid {
