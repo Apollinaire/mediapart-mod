@@ -11,6 +11,7 @@ import {
   Percentage,
   Operator,
   generate,
+  Raw,
 } from 'css-tree';
 import convert from 'color-convert';
 import { ColorType, invertRGBColor } from '../colorUtils/invertRGBColor';
@@ -56,25 +57,24 @@ const getRGBFunctionNode = (rgb: RGB, alpha?: number): FunctionNode => {
 
 export const handleDeclaration = (declaration: Declaration) => {
   if (declaration.value.type === 'Value') {
-    switch (declaration.property) {
-      case 'background-color':
-      case 'border-color':
-      case 'border':
-      case 'background':
-      case 'box-shadow':
-      case '-webkit-bow-shadow':
-        declaration.value.children = declaration.value.children.map(value => invertColorNode(value, 'background'));
-        break;
-      // displayTree(declaration );
-      // break;
-      case 'color':
-        declaration.value.children = declaration.value.children.map(value => invertColorNode(value, 'text'));
-        break;
-      default:
-        break;
+    if (declaration.property === 'color') {
+      declaration.value.children = declaration.value.children.map(value => invertColorNode(value, 'text'));
+    } else {
+      declaration.value.children = declaration.value.children.map(value => invertColorNode(value, 'background'));
     }
   } else {
-    console.log('unhandled raw value:', declaration.value.value);
+    // console.log('unhandled raw value:', declaration.value.value, declaration.value.type);
+    handleRawValue(declaration.value);
+  }
+};
+
+const hexRegex = /#[0-9a-fA-F]{6}/g;
+export const handleRawValue = (rawValue: Raw) => {
+  if (hexRegex.test(rawValue.value)) {
+    rawValue.value = rawValue.value.replace(
+      hexRegex,
+      color => '#' + convert.rgb.hex(invertRGBColor(convert.hex.rgb(color), 'background'))
+    );
   }
 };
 

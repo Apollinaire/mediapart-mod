@@ -12,17 +12,15 @@ const config = {
     '.cc-cookie-consent-banner-modal',
   ]),
   propertyWhiteList: [
-    'background-color',
-    'background-position',
     'color',
-    'background',
-    'border',
-    'border-color',
+    /^background/,
+    /^border/,
+    /^--/,
     'box-shadow',
     '-webkit-box-shadow',
   ],
   customCSS: /* CSS */ `
-    a.logo img.brand {
+    .mediapart-logo svg.mediapart-logo-text {
       filter: invert(1);
     }
 
@@ -34,6 +32,10 @@ const config = {
     body {
       background-color: #000000;
       color: var(--main-text-color);
+    }
+
+    .home.container.grid, .news__heading.grid, .news__body.grid {
+      background-color: var(--main-bg-color);
     }
 
     html {
@@ -55,10 +57,6 @@ const config = {
       background-color: var(--thumbBG) ;
       border: 3px solid var(--scrollbarBG);
     }
-    div {
-      color: #dfdfdf;
-    }
-
     .fixed .header {
       border-bottom: 1px solid #333333;
     }
@@ -69,6 +67,18 @@ const config = {
     
   `,
 };
+
+const isWhitelisted = (property: string): boolean => {
+  for (const propCheck of config.propertyWhiteList) {
+    if (typeof propCheck === 'string' && propCheck === property) {
+      return true
+    }
+    if (propCheck instanceof RegExp && propCheck.test(property)) {
+      return true
+    }
+  }
+  return false
+}
 
 const transformCss = (css: string) => {
   const tree = parse(css);
@@ -105,7 +115,7 @@ const transformCss = (css: string) => {
       walk(rule.block, {
         visit: 'Declaration',
         enter: (declaration, declarationItem, declarationList) => {
-          if (!config.propertyWhiteList.includes(declaration.property)) {
+          if (!isWhitelisted(declaration.property)) {
             if (ruleItem && ruleList) {
               declarationList.remove(declarationItem);
             }
