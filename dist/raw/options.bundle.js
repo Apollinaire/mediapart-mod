@@ -36,6 +36,14 @@ function internal_is_function(thing) {
 function safe_not_equal(a, b) {
     return a != a ? b == b : a !== b || ((a && typeof a === 'object') || typeof a === 'function');
 }
+let src_url_equal_anchor;
+function src_url_equal(element_src, url) {
+    if (!src_url_equal_anchor) {
+        src_url_equal_anchor = document.createElement('a');
+    }
+    src_url_equal_anchor.href = url;
+    return element_src === src_url_equal_anchor.href;
+}
 function not_equal(a, b) {
     return a != a ? b == b : a !== b;
 }
@@ -91,19 +99,26 @@ function get_slot_changes(definition, $$scope, dirty, fn) {
     }
     return $$scope.dirty;
 }
-function update_slot(slot, slot_definition, ctx, $$scope, dirty, get_slot_changes_fn, get_slot_context_fn) {
-    const slot_changes = get_slot_changes(slot_definition, $$scope, dirty, get_slot_changes_fn);
+function update_slot_base(slot, slot_definition, ctx, $$scope, slot_changes, get_slot_context_fn) {
     if (slot_changes) {
         const slot_context = get_slot_context(slot_definition, ctx, $$scope, get_slot_context_fn);
         slot.p(slot_context, slot_changes);
     }
 }
-function update_slot_spread(slot, slot_definition, ctx, $$scope, dirty, get_slot_changes_fn, get_slot_spread_changes_fn, get_slot_context_fn) {
-    const slot_changes = get_slot_spread_changes_fn(dirty) | get_slot_changes(slot_definition, $$scope, dirty, get_slot_changes_fn);
-    if (slot_changes) {
-        const slot_context = get_slot_context(slot_definition, ctx, $$scope, get_slot_context_fn);
-        slot.p(slot_context, slot_changes);
+function update_slot(slot, slot_definition, ctx, $$scope, dirty, get_slot_changes_fn, get_slot_context_fn) {
+    const slot_changes = get_slot_changes(slot_definition, $$scope, dirty, get_slot_changes_fn);
+    update_slot_base(slot, slot_definition, ctx, $$scope, slot_changes, get_slot_context_fn);
+}
+function get_all_dirty_from_scope($$scope) {
+    if ($$scope.ctx.length > 32) {
+        const dirty = [];
+        const length = $$scope.ctx.length / 32;
+        for (let i = 0; i < length; i++) {
+            dirty[i] = -1;
+        }
+        return dirty;
     }
+    return -1;
 }
 function exclude_internal_props(props) {
     const result = {};
@@ -139,7 +154,7 @@ function once(fn) {
 function null_to_empty(value) {
     return value == null ? '' : value;
 }
-function set_store_value(store, ret, value = ret) {
+function set_store_value(store, ret, value) {
     store.set(value);
     return ret;
 }
@@ -196,11 +211,170 @@ function loop(callback) {
     };
 }
 
+// Track which nodes are claimed during hydration. Unclaimed nodes can then be removed from the DOM
+// at the end of hydration without touching the remaining nodes.
+let is_hydrating = false;
+function start_hydrating() {
+    is_hydrating = true;
+}
+function end_hydrating() {
+    is_hydrating = false;
+}
+function upper_bound(low, high, key, value) {
+    // Return first index of value larger than input value in the range [low, high)
+    while (low < high) {
+        const mid = low + ((high - low) >> 1);
+        if (key(mid) <= value) {
+            low = mid + 1;
+        }
+        else {
+            high = mid;
+        }
+    }
+    return low;
+}
+function init_hydrate(target) {
+    if (target.hydrate_init)
+        return;
+    target.hydrate_init = true;
+    // We know that all children have claim_order values since the unclaimed have been detached if target is not <head>
+    let children = target.childNodes;
+    // If target is <head>, there may be children without claim_order
+    if (target.nodeName === 'HEAD') {
+        const myChildren = [];
+        for (let i = 0; i < children.length; i++) {
+            const node = children[i];
+            if (node.claim_order !== undefined) {
+                myChildren.push(node);
+            }
+        }
+        children = myChildren;
+    }
+    /*
+    * Reorder claimed children optimally.
+    * We can reorder claimed children optimally by finding the longest subsequence of
+    * nodes that are already claimed in order and only moving the rest. The longest
+    * subsequence subsequence of nodes that are claimed in order can be found by
+    * computing the longest increasing subsequence of .claim_order values.
+    *
+    * This algorithm is optimal in generating the least amount of reorder operations
+    * possible.
+    *
+    * Proof:
+    * We know that, given a set of reordering operations, the nodes that do not move
+    * always form an increasing subsequence, since they do not move among each other
+    * meaning that they must be already ordered among each other. Thus, the maximal
+    * set of nodes that do not move form a longest increasing subsequence.
+    */
+    // Compute longest increasing subsequence
+    // m: subsequence length j => index k of smallest value that ends an increasing subsequence of length j
+    const m = new Int32Array(children.length + 1);
+    // Predecessor indices + 1
+    const p = new Int32Array(children.length);
+    m[0] = -1;
+    let longest = 0;
+    for (let i = 0; i < children.length; i++) {
+        const current = children[i].claim_order;
+        // Find the largest subsequence length such that it ends in a value less than our current value
+        // upper_bound returns first greater value, so we subtract one
+        // with fast path for when we are on the current longest subsequence
+        const seqLen = ((longest > 0 && children[m[longest]].claim_order <= current) ? longest + 1 : upper_bound(1, longest, idx => children[m[idx]].claim_order, current)) - 1;
+        p[i] = m[seqLen] + 1;
+        const newLen = seqLen + 1;
+        // We can guarantee that current is the smallest value. Otherwise, we would have generated a longer sequence.
+        m[newLen] = i;
+        longest = Math.max(newLen, longest);
+    }
+    // The longest increasing subsequence of nodes (initially reversed)
+    const lis = [];
+    // The rest of the nodes, nodes that will be moved
+    const toMove = [];
+    let last = children.length - 1;
+    for (let cur = m[longest] + 1; cur != 0; cur = p[cur - 1]) {
+        lis.push(children[cur - 1]);
+        for (; last >= cur; last--) {
+            toMove.push(children[last]);
+        }
+        last--;
+    }
+    for (; last >= 0; last--) {
+        toMove.push(children[last]);
+    }
+    lis.reverse();
+    // We sort the nodes being moved to guarantee that their insertion order matches the claim order
+    toMove.sort((a, b) => a.claim_order - b.claim_order);
+    // Finally, we move the nodes
+    for (let i = 0, j = 0; i < toMove.length; i++) {
+        while (j < lis.length && toMove[i].claim_order >= lis[j].claim_order) {
+            j++;
+        }
+        const anchor = j < lis.length ? lis[j] : null;
+        target.insertBefore(toMove[i], anchor);
+    }
+}
 function append(target, node) {
     target.appendChild(node);
 }
+function append_styles(target, style_sheet_id, styles) {
+    const append_styles_to = get_root_for_style(target);
+    if (!append_styles_to.getElementById(style_sheet_id)) {
+        const style = internal_element('style');
+        style.id = style_sheet_id;
+        style.textContent = styles;
+        append_stylesheet(append_styles_to, style);
+    }
+}
+function get_root_for_style(node) {
+    if (!node)
+        return document;
+    const root = node.getRootNode ? node.getRootNode() : node.ownerDocument;
+    if (root && root.host) {
+        return root;
+    }
+    return node.ownerDocument;
+}
+function append_empty_stylesheet(node) {
+    const style_element = internal_element('style');
+    append_stylesheet(get_root_for_style(node), style_element);
+    return style_element;
+}
+function append_stylesheet(node, style) {
+    append(node.head || node, style);
+}
+function append_hydration(target, node) {
+    if (is_hydrating) {
+        init_hydrate(target);
+        if ((target.actual_end_child === undefined) || ((target.actual_end_child !== null) && (target.actual_end_child.parentElement !== target))) {
+            target.actual_end_child = target.firstChild;
+        }
+        // Skip nodes of undefined ordering
+        while ((target.actual_end_child !== null) && (target.actual_end_child.claim_order === undefined)) {
+            target.actual_end_child = target.actual_end_child.nextSibling;
+        }
+        if (node !== target.actual_end_child) {
+            // We only insert if the ordering of this node should be modified or the parent node is not target
+            if (node.claim_order !== undefined || node.parentNode !== target) {
+                target.insertBefore(node, target.actual_end_child);
+            }
+        }
+        else {
+            target.actual_end_child = node.nextSibling;
+        }
+    }
+    else if (node.parentNode !== target || node.nextSibling !== null) {
+        target.appendChild(node);
+    }
+}
 function insert(target, node, anchor) {
     target.insertBefore(node, anchor || null);
+}
+function insert_hydration(target, node, anchor) {
+    if (is_hydrating && !anchor) {
+        append_hydration(target, node);
+    }
+    else if (node.parentNode !== target || node.nextSibling != anchor) {
+        target.insertBefore(node, anchor || null);
+    }
 }
 function detach(node) {
     node.parentNode.removeChild(node);
@@ -263,6 +437,13 @@ function internal_self(fn) {
     return function (event) {
         // @ts-ignore
         if (event.target === this)
+            fn.call(this, event);
+    };
+}
+function trusted(fn) {
+    return function (event) {
+        // @ts-ignore
+        if (event.isTrusted)
             fn.call(this, event);
     };
 }
@@ -333,38 +514,123 @@ function time_ranges_to_array(ranges) {
 function children(element) {
     return Array.from(element.childNodes);
 }
-function claim_element(nodes, name, attributes, svg) {
-    for (let i = 0; i < nodes.length; i += 1) {
-        const node = nodes[i];
-        if (node.nodeName === name) {
-            let j = 0;
-            const remove = [];
-            while (j < node.attributes.length) {
-                const attribute = node.attributes[j++];
-                if (!attributes[attribute.name]) {
-                    remove.push(attribute.name);
-                }
-            }
-            for (let k = 0; k < remove.length; k++) {
-                node.removeAttribute(remove[k]);
-            }
-            return nodes.splice(i, 1)[0];
-        }
+function init_claim_info(nodes) {
+    if (nodes.claim_info === undefined) {
+        nodes.claim_info = { last_index: 0, total_claimed: 0 };
     }
-    return svg ? svg_element(name) : internal_element(name);
+}
+function claim_node(nodes, predicate, processNode, createNode, dontUpdateLastIndex = false) {
+    // Try to find nodes in an order such that we lengthen the longest increasing subsequence
+    init_claim_info(nodes);
+    const resultNode = (() => {
+        // We first try to find an element after the previous one
+        for (let i = nodes.claim_info.last_index; i < nodes.length; i++) {
+            const node = nodes[i];
+            if (predicate(node)) {
+                const replacement = processNode(node);
+                if (replacement === undefined) {
+                    nodes.splice(i, 1);
+                }
+                else {
+                    nodes[i] = replacement;
+                }
+                if (!dontUpdateLastIndex) {
+                    nodes.claim_info.last_index = i;
+                }
+                return node;
+            }
+        }
+        // Otherwise, we try to find one before
+        // We iterate in reverse so that we don't go too far back
+        for (let i = nodes.claim_info.last_index - 1; i >= 0; i--) {
+            const node = nodes[i];
+            if (predicate(node)) {
+                const replacement = processNode(node);
+                if (replacement === undefined) {
+                    nodes.splice(i, 1);
+                }
+                else {
+                    nodes[i] = replacement;
+                }
+                if (!dontUpdateLastIndex) {
+                    nodes.claim_info.last_index = i;
+                }
+                else if (replacement === undefined) {
+                    // Since we spliced before the last_index, we decrease it
+                    nodes.claim_info.last_index--;
+                }
+                return node;
+            }
+        }
+        // If we can't find any matching node, we create a new one
+        return createNode();
+    })();
+    resultNode.claim_order = nodes.claim_info.total_claimed;
+    nodes.claim_info.total_claimed += 1;
+    return resultNode;
+}
+function claim_element_base(nodes, name, attributes, create_element) {
+    return claim_node(nodes, (node) => node.nodeName === name, (node) => {
+        const remove = [];
+        for (let j = 0; j < node.attributes.length; j++) {
+            const attribute = node.attributes[j];
+            if (!attributes[attribute.name]) {
+                remove.push(attribute.name);
+            }
+        }
+        remove.forEach(v => node.removeAttribute(v));
+        return undefined;
+    }, () => create_element(name));
+}
+function claim_element(nodes, name, attributes) {
+    return claim_element_base(nodes, name, attributes, internal_element);
+}
+function claim_svg_element(nodes, name, attributes) {
+    return claim_element_base(nodes, name, attributes, svg_element);
 }
 function claim_text(nodes, data) {
-    for (let i = 0; i < nodes.length; i += 1) {
-        const node = nodes[i];
-        if (node.nodeType === 3) {
-            node.data = '' + data;
-            return nodes.splice(i, 1)[0];
+    return claim_node(nodes, (node) => node.nodeType === 3, (node) => {
+        const dataStr = '' + data;
+        if (node.data.startsWith(dataStr)) {
+            if (node.data.length !== dataStr.length) {
+                return node.splitText(dataStr.length);
+            }
         }
-    }
-    return internal_text(data);
+        else {
+            node.data = dataStr;
+        }
+    }, () => internal_text(data), true // Text nodes should not update last index since it is likely not worth it to eliminate an increasing subsequence of actual elements
+    );
 }
 function claim_space(nodes) {
     return claim_text(nodes, ' ');
+}
+function find_comment(nodes, text, start) {
+    for (let i = start; i < nodes.length; i += 1) {
+        const node = nodes[i];
+        if (node.nodeType === 8 /* comment node */ && node.textContent.trim() === text) {
+            return i;
+        }
+    }
+    return nodes.length;
+}
+function claim_html_tag(nodes) {
+    // find html opening tag
+    const start_index = find_comment(nodes, 'HTML_TAG_START', 0);
+    const end_index = find_comment(nodes, 'HTML_TAG_END', start_index);
+    if (start_index === end_index) {
+        return new HtmlTagHydration();
+    }
+    init_claim_info(nodes);
+    const html_tag_nodes = nodes.splice(start_index, end_index + 1);
+    detach(html_tag_nodes[0]);
+    detach(html_tag_nodes[html_tag_nodes.length - 1]);
+    const claimed_nodes = html_tag_nodes.slice(1, html_tag_nodes.length - 1);
+    for (const n of claimed_nodes) {
+        n.claim_order = nodes.claim_info.total_claimed;
+        nodes.claim_info.total_claimed += 1;
+    }
+    return new HtmlTagHydration(claimed_nodes);
 }
 function set_data(text, data) {
     data = '' + data;
@@ -393,6 +659,7 @@ function select_option(select, value) {
             return;
         }
     }
+    select.selectedIndex = -1; // no option should be selected
 }
 function select_options(select, value) {
     for (let i = 0; i < select.options.length; i += 1) {
@@ -463,24 +730,26 @@ function add_resize_listener(node, fn) {
 function toggle_class(element, name, toggle) {
     element.classList[toggle ? 'add' : 'remove'](name);
 }
-function custom_event(type, detail) {
+function custom_event(type, detail, bubbles = false) {
     const e = document.createEvent('CustomEvent');
-    e.initCustomEvent(type, false, false, detail);
+    e.initCustomEvent(type, bubbles, false, detail);
     return e;
 }
 function query_selector_all(selector, parent = document.body) {
     return Array.from(parent.querySelectorAll(selector));
 }
 class HtmlTag {
-    constructor(anchor = null) {
-        this.a = anchor;
+    constructor() {
         this.e = this.n = null;
+    }
+    c(html) {
+        this.h(html);
     }
     m(html, target, anchor = null) {
         if (!this.e) {
             this.e = internal_element(target.nodeName);
             this.t = target;
-            this.h(html);
+            this.c(html);
         }
         this.i(anchor);
     }
@@ -500,6 +769,26 @@ class HtmlTag {
     }
     d() {
         this.n.forEach(detach);
+    }
+}
+class HtmlTagHydration extends (/* unused pure expression or super */ null && (HtmlTag)) {
+    constructor(claimed_nodes) {
+        super();
+        this.e = this.n = null;
+        this.l = claimed_nodes;
+    }
+    c(html) {
+        if (this.l) {
+            this.n = this.l;
+        }
+        else {
+            super.c(html);
+        }
+    }
+    i(anchor) {
+        for (let i = 0; i < this.n.length; i += 1) {
+            insert_hydration(this.t, this.n[i], anchor);
+        }
     }
 }
 function attribute_to_object(attributes) {
@@ -536,9 +825,9 @@ function create_rule(node, a, b, duration, delay, ease, fn, uid = 0) {
     }
     const rule = keyframes + `100% {${fn(b, 1 - b)}}\n}`;
     const name = `__svelte_${hash(rule)}_${uid}`;
-    const doc = node.ownerDocument;
+    const doc = get_root_for_style(node);
     active_docs.add(doc);
-    const stylesheet = doc.__svelte_stylesheet || (doc.__svelte_stylesheet = doc.head.appendChild(internal_element('style')).sheet);
+    const stylesheet = doc.__svelte_stylesheet || (doc.__svelte_stylesheet = append_empty_stylesheet(node).sheet);
     const current_rules = doc.__svelte_rules || (doc.__svelte_rules = {});
     if (!current_rules[name]) {
         current_rules[name] = true;
@@ -688,6 +977,9 @@ function setContext(key, context) {
 function getContext(key) {
     return get_current_component().$$.context.get(key);
 }
+function getAllContexts() {
+    return get_current_component().$$.context;
+}
 function hasContext(key) {
     return get_current_component().$$.context.has(key);
 }
@@ -697,7 +989,8 @@ function hasContext(key) {
 function bubble(component, event) {
     const callbacks = component.$$.callbacks[event.type];
     if (callbacks) {
-        callbacks.slice().forEach(fn => fn(event));
+        // @ts-ignore
+        callbacks.slice().forEach(fn => fn.call(this, event));
     }
 }
 
@@ -866,6 +1159,7 @@ function create_in_transition(node, fn, params) {
         start() {
             if (started)
                 return;
+            started = true;
             delete_rule(node);
             if (internal_is_function(config)) {
                 config = config();
@@ -953,7 +1247,7 @@ function create_bidirectional_transition(node, fn, params, intro) {
             delete_rule(node, animation_name);
     }
     function init(program, duration) {
-        const d = program.b - t;
+        const d = (program.b - t);
         duration *= Math.abs(d);
         return {
             a: t,
@@ -1329,7 +1623,7 @@ function spread(args, classes_to_add) {
                 str += ' ' + name;
         }
         else if (value != null) {
-            str += ` ${name}="${String(value).replace(/"/g, '&#34;').replace(/'/g, '&#39;')}"`;
+            str += ` ${name}="${value}"`;
         }
     });
     return str;
@@ -1343,6 +1637,16 @@ const escaped = {
 };
 function internal_escape(html) {
     return String(html).replace(/["'&<>]/g, match => escaped[match]);
+}
+function escape_attribute_value(value) {
+    return typeof value === 'string' ? internal_escape(value) : value;
+}
+function escape_object(obj) {
+    const result = {};
+    for (const key in obj) {
+        result[key] = escape_attribute_value(obj[key]);
+    }
+    return result;
 }
 function each(items, fn) {
     let str = '';
@@ -1373,7 +1677,7 @@ function create_ssr_component(fn) {
         const parent_component = current_component;
         const $$ = {
             on_destroy,
-            context: new Map(parent_component ? parent_component.$$.context : context || []),
+            context: new Map(context || (parent_component ? parent_component.$$.context : [])),
             // these will be immediately discarded
             on_mount: [],
             before_update: [],
@@ -1464,7 +1768,7 @@ function make_dirty(component, i) {
     }
     component.$$.dirty[(i / 31) | 0] |= (1 << (i % 31));
 }
-function init(component, options, instance, create_fragment, not_equal, props, dirty = [-1]) {
+function init(component, options, instance, create_fragment, not_equal, props, append_styles, dirty = [-1]) {
     const parent_component = current_component;
     set_current_component(component);
     const $$ = component.$$ = {
@@ -1481,12 +1785,14 @@ function init(component, options, instance, create_fragment, not_equal, props, d
         on_disconnect: [],
         before_update: [],
         after_update: [],
-        context: new Map(parent_component ? parent_component.$$.context : options.context || []),
+        context: new Map(options.context || (parent_component ? parent_component.$$.context : [])),
         // everything else
         callbacks: blank_object(),
         dirty,
-        skip_bound: false
+        skip_bound: false,
+        root: options.target || parent_component.$$.root
     };
+    append_styles && append_styles($$.root);
     let ready = false;
     $$.ctx = instance
         ? instance(component, options.props || {}, (i, ret, ...rest) => {
@@ -1507,6 +1813,7 @@ function init(component, options, instance, create_fragment, not_equal, props, d
     $$.fragment = create_fragment ? create_fragment($$.ctx) : false;
     if (options.target) {
         if (options.hydrate) {
+            start_hydrating();
             const nodes = children(options.target);
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             $$.fragment && $$.fragment.l(nodes);
@@ -1519,6 +1826,7 @@ function init(component, options, instance, create_fragment, not_equal, props, d
         if (options.intro)
             transition_in(component.$$.fragment);
         mount_component(component, options.target, options.anchor, options.customElement);
+        end_hydrating();
         flush();
     }
     set_current_component(parent_component);
@@ -1595,15 +1903,23 @@ class SvelteComponent {
 }
 
 function dispatch_dev(type, detail) {
-    document.dispatchEvent(custom_event(type, Object.assign({ version: '3.38.2' }, detail)));
+    document.dispatchEvent(custom_event(type, Object.assign({ version: '3.44.2' }, detail), true));
 }
 function append_dev(target, node) {
     dispatch_dev('SvelteDOMInsert', { target, node });
     append(target, node);
 }
+function append_hydration_dev(target, node) {
+    dispatch_dev('SvelteDOMInsert', { target, node });
+    append_hydration(target, node);
+}
 function insert_dev(target, node, anchor) {
     dispatch_dev('SvelteDOMInsert', { target, node, anchor });
     insert(target, node, anchor);
+}
+function insert_hydration_dev(target, node, anchor) {
+    dispatch_dev('SvelteDOMInsert', { target, node, anchor });
+    insert_hydration(target, node, anchor);
 }
 function detach_dev(node) {
     dispatch_dev('SvelteDOMRemove', { node });
@@ -1723,7 +2039,7 @@ class SvelteComponentDev extends (/* unused pure expression or super */ null && 
  * class ASubclassOfSvelteComponent extends SvelteComponent<{foo: string}> {}
  * const component: typeof SvelteComponent = ASubclassOfSvelteComponent;
  * ```
- * will throw a type error, so we need to seperate the more strictly typed class.
+ * will throw a type error, so we need to separate the more strictly typed class.
  */
 class SvelteComponentTyped extends (/* unused pure expression or super */ null && (SvelteComponentDev)) {
     constructor(options) {
@@ -1978,16 +2294,15 @@ function readable(value, start) {
  */
 function writable(value, start = internal_noop) {
     let stop;
-    const subscribers = [];
+    const subscribers = new Set();
     function set(new_value) {
         if (safe_not_equal(value, new_value)) {
             value = new_value;
             if (stop) { // store is ready
                 const run_queue = !subscriber_queue.length;
-                for (let i = 0; i < subscribers.length; i += 1) {
-                    const s = subscribers[i];
-                    s[1]();
-                    subscriber_queue.push(s, value);
+                for (const subscriber of subscribers) {
+                    subscriber[1]();
+                    subscriber_queue.push(subscriber, value);
                 }
                 if (run_queue) {
                     for (let i = 0; i < subscriber_queue.length; i += 2) {
@@ -2003,17 +2318,14 @@ function writable(value, start = internal_noop) {
     }
     function subscribe(run, invalidate = internal_noop) {
         const subscriber = [run, invalidate];
-        subscribers.push(subscriber);
-        if (subscribers.length === 1) {
+        subscribers.add(subscriber);
+        if (subscribers.size === 1) {
             stop = start(set) || internal_noop;
         }
         run(value);
         return () => {
-            const index = subscribers.indexOf(subscriber);
-            if (index !== -1) {
-                subscribers.splice(index, 1);
-            }
-            if (subscribers.length === 0) {
+            subscribers.delete(subscriber);
+            if (subscribers.size === 0) {
                 stop();
                 stop = null;
             }
@@ -2108,14 +2420,11 @@ const createConfigStore = () => {
 
 const configStore = createConfigStore();
 ;// CONCATENATED MODULE: ./src/components/Form/FormField.svelte
-/* src/components/Form/FormField.svelte generated by Svelte v3.38.2 */
+/* src/components/Form/FormField.svelte generated by Svelte v3.44.2 */
 
 
-function add_css() {
-	var style = internal_element("style");
-	style.id = "svelte-16v2b5o-style";
-	style.textContent = ".form-field.svelte-16v2b5o{padding-bottom:8px}";
-	append(document.head, style);
+function add_css(target) {
+	append_styles(target, "svelte-16v2b5o", ".form-field.svelte-16v2b5o{padding-bottom:8px}");
 }
 
 function create_fragment(ctx) {
@@ -2142,7 +2451,16 @@ function create_fragment(ctx) {
 		p(ctx, [dirty]) {
 			if (default_slot) {
 				if (default_slot.p && (!current || dirty & /*$$scope*/ 1)) {
-					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[0], dirty, null, null);
+					update_slot_base(
+						default_slot,
+						default_slot_template,
+						ctx,
+						/*$$scope*/ ctx[0],
+						!current
+						? get_all_dirty_from_scope(/*$$scope*/ ctx[0])
+						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[0], dirty, null),
+						null
+					);
 				}
 			}
 		},
@@ -2166,7 +2484,7 @@ function instance($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 
 	$$self.$$set = $$props => {
-		if ("$$scope" in $$props) $$invalidate(0, $$scope = $$props.$$scope);
+		if ('$$scope' in $$props) $$invalidate(0, $$scope = $$props.$$scope);
 	};
 
 	return [$$scope, slots];
@@ -2175,21 +2493,17 @@ function instance($$self, $$props, $$invalidate) {
 class FormField extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-16v2b5o-style")) add_css();
-		init(this, options, instance, create_fragment, safe_not_equal, {});
+		init(this, options, instance, create_fragment, safe_not_equal, {}, add_css);
 	}
 }
 
 /* harmony default export */ const FormField_svelte = (FormField);
 ;// CONCATENATED MODULE: ./src/components/Form/FormInput.svelte
-/* src/components/Form/FormInput.svelte generated by Svelte v3.38.2 */
+/* src/components/Form/FormInput.svelte generated by Svelte v3.44.2 */
 
 
-function FormInput_svelte_add_css() {
-	var style = internal_element("style");
-	style.id = "svelte-1fjxhl6-style";
-	style.textContent = "div.svelte-1fjxhl6{border-radius:4px}div.svelte-1fjxhl6:hover{background-color:rgba(0, 0, 0, 0.1)}";
-	append(document.head, style);
+function FormInput_svelte_add_css(target) {
+	append_styles(target, "svelte-1fjxhl6", "div.svelte-1fjxhl6{border-radius:4px}div.svelte-1fjxhl6:hover{background-color:rgba(0, 0, 0, 0.1)}");
 }
 
 function FormInput_svelte_create_fragment(ctx) {
@@ -2216,7 +2530,16 @@ function FormInput_svelte_create_fragment(ctx) {
 		p(ctx, [dirty]) {
 			if (default_slot) {
 				if (default_slot.p && (!current || dirty & /*$$scope*/ 1)) {
-					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[0], dirty, null, null);
+					update_slot_base(
+						default_slot,
+						default_slot_template,
+						ctx,
+						/*$$scope*/ ctx[0],
+						!current
+						? get_all_dirty_from_scope(/*$$scope*/ ctx[0])
+						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[0], dirty, null),
+						null
+					);
 				}
 			}
 		},
@@ -2240,7 +2563,7 @@ function FormInput_svelte_instance($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 
 	$$self.$$set = $$props => {
-		if ("$$scope" in $$props) $$invalidate(0, $$scope = $$props.$$scope);
+		if ('$$scope' in $$props) $$invalidate(0, $$scope = $$props.$$scope);
 	};
 
 	return [$$scope, slots];
@@ -2249,21 +2572,17 @@ function FormInput_svelte_instance($$self, $$props, $$invalidate) {
 class FormInput extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-1fjxhl6-style")) FormInput_svelte_add_css();
-		init(this, options, FormInput_svelte_instance, FormInput_svelte_create_fragment, safe_not_equal, {});
+		init(this, options, FormInput_svelte_instance, FormInput_svelte_create_fragment, safe_not_equal, {}, FormInput_svelte_add_css);
 	}
 }
 
 /* harmony default export */ const FormInput_svelte = (FormInput);
 ;// CONCATENATED MODULE: ./src/components/Form/KeyboardInputButton.svelte
-/* src/components/Form/KeyboardInputButton.svelte generated by Svelte v3.38.2 */
+/* src/components/Form/KeyboardInputButton.svelte generated by Svelte v3.44.2 */
 
 
-function KeyboardInputButton_svelte_add_css() {
-	var style = internal_element("style");
-	style.id = "svelte-nrwd7a-style";
-	style.textContent = "span.svelte-nrwd7a{display:inline-block;color:black;background-color:rgb(239, 239, 239);height:32px;min-width:32px;padding:4px;line-height:24px;font-size:20px;text-align:center;cursor:pointer;margin-left:4px;border-radius:4px;box-sizing:border-box}span.disabled.svelte-nrwd7a{color:rgba(16, 16, 16, 0.3);background-color:rgba(239, 239, 239, 0.3);border-color:rgba(118, 118, 118, 0.3)}span.active.svelte-nrwd7a{color:black;background-color:rgb(255, 125, 125)}";
-	append(document.head, style);
+function KeyboardInputButton_svelte_add_css(target) {
+	append_styles(target, "svelte-nrwd7a", "span.svelte-nrwd7a{display:inline-block;color:black;background-color:rgb(239, 239, 239);height:32px;min-width:32px;padding:4px;line-height:24px;font-size:20px;text-align:center;cursor:pointer;margin-left:4px;border-radius:4px;box-sizing:border-box}span.disabled.svelte-nrwd7a{color:rgba(16, 16, 16, 0.3);background-color:rgba(239, 239, 239, 0.3);border-color:rgba(118, 118, 118, 0.3)}span.active.svelte-nrwd7a{color:black;background-color:rgb(255, 125, 125)}");
 }
 
 function KeyboardInputButton_svelte_create_fragment(ctx) {
@@ -2292,7 +2611,16 @@ function KeyboardInputButton_svelte_create_fragment(ctx) {
 		p(ctx, [dirty]) {
 			if (default_slot) {
 				if (default_slot.p && (!current || dirty & /*$$scope*/ 4)) {
-					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[2], dirty, null, null);
+					update_slot_base(
+						default_slot,
+						default_slot_template,
+						ctx,
+						/*$$scope*/ ctx[2],
+						!current
+						? get_all_dirty_from_scope(/*$$scope*/ ctx[2])
+						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[2], dirty, null),
+						null
+					);
 				}
 			}
 
@@ -2326,9 +2654,9 @@ function KeyboardInputButton_svelte_instance($$self, $$props, $$invalidate) {
 	let { active } = $$props;
 
 	$$self.$$set = $$props => {
-		if ("disabled" in $$props) $$invalidate(0, disabled = $$props.disabled);
-		if ("active" in $$props) $$invalidate(1, active = $$props.active);
-		if ("$$scope" in $$props) $$invalidate(2, $$scope = $$props.$$scope);
+		if ('disabled' in $$props) $$invalidate(0, disabled = $$props.disabled);
+		if ('active' in $$props) $$invalidate(1, active = $$props.active);
+		if ('$$scope' in $$props) $$invalidate(2, $$scope = $$props.$$scope);
 	};
 
 	return [disabled, active, $$scope, slots];
@@ -2337,23 +2665,19 @@ function KeyboardInputButton_svelte_instance($$self, $$props, $$invalidate) {
 class KeyboardInputButton extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-nrwd7a-style")) KeyboardInputButton_svelte_add_css();
-		init(this, options, KeyboardInputButton_svelte_instance, KeyboardInputButton_svelte_create_fragment, safe_not_equal, { disabled: 0, active: 1 });
+		init(this, options, KeyboardInputButton_svelte_instance, KeyboardInputButton_svelte_create_fragment, safe_not_equal, { disabled: 0, active: 1 }, KeyboardInputButton_svelte_add_css);
 	}
 }
 
 /* harmony default export */ const KeyboardInputButton_svelte = (KeyboardInputButton);
 ;// CONCATENATED MODULE: ./src/components/Form/KeyboardInput.svelte
-/* src/components/Form/KeyboardInput.svelte generated by Svelte v3.38.2 */
+/* src/components/Form/KeyboardInput.svelte generated by Svelte v3.44.2 */
 
 
 
 
-function KeyboardInput_svelte_add_css() {
-	var style = internal_element("style");
-	style.id = "svelte-ntlum9-style";
-	style.textContent = ".keyboard-input.svelte-ntlum9{cursor:pointer;width:100%;display:flex;padding:4px;border:none;background:none;font-size:14px}.label-container.svelte-ntlum9{flex-basis:50%;text-align:left}.button-container.svelte-ntlum9{flex-basis:50%;text-align:right}span.svelte-ntlum9{flex-grow:1;line-height:32px}";
-	append(document.head, style);
+function KeyboardInput_svelte_add_css(target) {
+	append_styles(target, "svelte-ntlum9", ".keyboard-input.svelte-ntlum9{cursor:pointer;width:100%;display:flex;padding:4px;border:none;background:none;font-size:14px}.label-container.svelte-ntlum9{flex-basis:50%;text-align:left}.button-container.svelte-ntlum9{flex-basis:50%;text-align:right}span.svelte-ntlum9{flex-grow:1;line-height:32px}");
 }
 
 // (28:4) {#if ctrl}
@@ -2766,15 +3090,15 @@ function KeyboardInput_svelte_instance($$self, $$props, $$invalidate) {
 	};
 
 	$$self.$$set = $$props => {
-		if ("value" in $$props) $$invalidate(0, value = $$props.value);
-		if ("ctrl" in $$props) $$invalidate(1, ctrl = $$props.ctrl);
-		if ("shift" in $$props) $$invalidate(2, shift = $$props.shift);
-		if ("alt" in $$props) $$invalidate(3, alt = $$props.alt);
-		if ("label" in $$props) $$invalidate(4, label = $$props.label);
-		if ("active" in $$props) $$invalidate(5, active = $$props.active);
-		if ("disabled" in $$props) $$invalidate(6, disabled = $$props.disabled);
-		if ("id" in $$props) $$invalidate(7, id = $$props.id);
-		if ("setActiveId" in $$props) $$invalidate(8, setActiveId = $$props.setActiveId);
+		if ('value' in $$props) $$invalidate(0, value = $$props.value);
+		if ('ctrl' in $$props) $$invalidate(1, ctrl = $$props.ctrl);
+		if ('shift' in $$props) $$invalidate(2, shift = $$props.shift);
+		if ('alt' in $$props) $$invalidate(3, alt = $$props.alt);
+		if ('label' in $$props) $$invalidate(4, label = $$props.label);
+		if ('active' in $$props) $$invalidate(5, active = $$props.active);
+		if ('disabled' in $$props) $$invalidate(6, disabled = $$props.disabled);
+		if ('id' in $$props) $$invalidate(7, id = $$props.id);
+		if ('setActiveId' in $$props) $$invalidate(8, setActiveId = $$props.setActiveId);
 	};
 
 	return [
@@ -2794,32 +3118,36 @@ function KeyboardInput_svelte_instance($$self, $$props, $$invalidate) {
 class KeyboardInput extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-ntlum9-style")) KeyboardInput_svelte_add_css();
 
-		init(this, options, KeyboardInput_svelte_instance, KeyboardInput_svelte_create_fragment, safe_not_equal, {
-			value: 0,
-			ctrl: 1,
-			shift: 2,
-			alt: 3,
-			label: 4,
-			active: 5,
-			disabled: 6,
-			id: 7,
-			setActiveId: 8
-		});
+		init(
+			this,
+			options,
+			KeyboardInput_svelte_instance,
+			KeyboardInput_svelte_create_fragment,
+			safe_not_equal,
+			{
+				value: 0,
+				ctrl: 1,
+				shift: 2,
+				alt: 3,
+				label: 4,
+				active: 5,
+				disabled: 6,
+				id: 7,
+				setActiveId: 8
+			},
+			KeyboardInput_svelte_add_css
+		);
 	}
 }
 
 /* harmony default export */ const KeyboardInput_svelte = (KeyboardInput);
 ;// CONCATENATED MODULE: ./src/components/Form/Switch.svelte
-/* src/components/Form/Switch.svelte generated by Svelte v3.38.2 */
+/* src/components/Form/Switch.svelte generated by Svelte v3.44.2 */
 
 
-function Switch_svelte_add_css() {
-	var style = internal_element("style");
-	style.id = "svelte-1ohi108-style";
-	style.textContent = ".switch.svelte-1ohi108.svelte-1ohi108{cursor:pointer;position:relative;display:flex;line-height:24px;padding:8px 4px}.label.svelte-1ohi108.svelte-1ohi108{font-size:14px;flex-grow:1}.switch.svelte-1ohi108 input.svelte-1ohi108{opacity:0;width:0;height:0}.slider.svelte-1ohi108.svelte-1ohi108{width:48px;border-radius:34px;background-color:#b5b5b5;-webkit-transition:background-color 0.4s;transition:background-color 0.4s}.slider.svelte-1ohi108.svelte-1ohi108:before{position:relative;display:block;content:'';height:22px;width:22px;left:1px;top:1px;background-color:white;-webkit-transition:0.4s;transition:0.4s}input.svelte-1ohi108:checked+.slider.svelte-1ohi108{background-color:red}input.svelte-1ohi108:focus+.slider.svelte-1ohi108{box-shadow:0 0 0 1px white}input.svelte-1ohi108:checked+.slider.svelte-1ohi108:before{-webkit-transform:translateX(24px);-ms-transform:translateX(24px);transform:translateX(24px)}.slider.round.svelte-1ohi108.svelte-1ohi108{border-radius:34px}.slider.round.svelte-1ohi108.svelte-1ohi108:before{border-radius:50%}";
-	append(document.head, style);
+function Switch_svelte_add_css(target) {
+	append_styles(target, "svelte-1ohi108", ".switch.svelte-1ohi108.svelte-1ohi108{cursor:pointer;position:relative;display:flex;line-height:24px;padding:8px 4px}.label.svelte-1ohi108.svelte-1ohi108{font-size:14px;flex-grow:1}.switch.svelte-1ohi108 input.svelte-1ohi108{opacity:0;width:0;height:0}.slider.svelte-1ohi108.svelte-1ohi108{width:48px;border-radius:34px;background-color:#b5b5b5;-webkit-transition:background-color 0.4s;transition:background-color 0.4s}.slider.svelte-1ohi108.svelte-1ohi108:before{position:relative;display:block;content:'';height:22px;width:22px;left:1px;top:1px;background-color:white;-webkit-transition:0.4s;transition:0.4s}input.svelte-1ohi108:checked+.slider.svelte-1ohi108{background-color:red}input.svelte-1ohi108:focus+.slider.svelte-1ohi108{box-shadow:0 0 0 1px white}input.svelte-1ohi108:checked+.slider.svelte-1ohi108:before{-webkit-transform:translateX(24px);-ms-transform:translateX(24px);transform:translateX(24px)}.slider.round.svelte-1ohi108.svelte-1ohi108{border-radius:34px}.slider.round.svelte-1ohi108.svelte-1ohi108:before{border-radius:50%}");
 }
 
 function Switch_svelte_create_fragment(ctx) {
@@ -2896,9 +3224,9 @@ function Switch_svelte_instance($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$set = $$props => {
-		if ("label" in $$props) $$invalidate(1, label = $$props.label);
-		if ("checked" in $$props) $$invalidate(0, checked = $$props.checked);
-		if ("disabled" in $$props) $$invalidate(2, disabled = $$props.disabled);
+		if ('label' in $$props) $$invalidate(1, label = $$props.label);
+		if ('checked' in $$props) $$invalidate(0, checked = $$props.checked);
+		if ('disabled' in $$props) $$invalidate(2, disabled = $$props.disabled);
 	};
 
 	return [checked, label, disabled, input_change_handler];
@@ -2907,21 +3235,17 @@ function Switch_svelte_instance($$self, $$props, $$invalidate) {
 class Switch extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-1ohi108-style")) Switch_svelte_add_css();
-		init(this, options, Switch_svelte_instance, Switch_svelte_create_fragment, safe_not_equal, { label: 1, checked: 0, disabled: 2 });
+		init(this, options, Switch_svelte_instance, Switch_svelte_create_fragment, safe_not_equal, { label: 1, checked: 0, disabled: 2 }, Switch_svelte_add_css);
 	}
 }
 
 /* harmony default export */ const Switch_svelte = (Switch);
 ;// CONCATENATED MODULE: ./src/components/UI/About.svelte
-/* src/components/UI/About.svelte generated by Svelte v3.38.2 */
+/* src/components/UI/About.svelte generated by Svelte v3.44.2 */
 
 
-function About_svelte_add_css() {
-	var style = internal_element("style");
-	style.id = "svelte-idgcu2-style";
-	style.textContent = "p.svelte-idgcu2{margin-bottom:16px}ul.svelte-idgcu2{margin-bottom:16px;padding-left:24px}";
-	append(document.head, style);
+function About_svelte_add_css(target) {
+	append_styles(target, "svelte-idgcu2", "p.svelte-idgcu2{margin-bottom:16px}ul.svelte-idgcu2{margin-bottom:16px;padding-left:24px}");
 }
 
 function About_svelte_create_fragment(ctx) {
@@ -2993,21 +3317,17 @@ function About_svelte_create_fragment(ctx) {
 class About extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-idgcu2-style")) About_svelte_add_css();
-		init(this, options, null, About_svelte_create_fragment, safe_not_equal, {});
+		init(this, options, null, About_svelte_create_fragment, safe_not_equal, {}, About_svelte_add_css);
 	}
 }
 
 /* harmony default export */ const About_svelte = (About);
 ;// CONCATENATED MODULE: ./src/components/UI/CategoryTitle.svelte
-/* src/components/UI/CategoryTitle.svelte generated by Svelte v3.38.2 */
+/* src/components/UI/CategoryTitle.svelte generated by Svelte v3.44.2 */
 
 
-function CategoryTitle_svelte_add_css() {
-	var style = internal_element("style");
-	style.id = "svelte-14bu5ei-style";
-	style.textContent = "h2.svelte-14bu5ei{display:flex;justify-content:center;align-items:center;text-align:center;line-height:48px;font-size:18px;height:48px}";
-	append(document.head, style);
+function CategoryTitle_svelte_add_css(target) {
+	append_styles(target, "svelte-14bu5ei", "h2.svelte-14bu5ei{display:flex;justify-content:center;align-items:center;text-align:center;line-height:48px;font-size:18px;height:48px}");
 }
 
 function CategoryTitle_svelte_create_fragment(ctx) {
@@ -3034,7 +3354,16 @@ function CategoryTitle_svelte_create_fragment(ctx) {
 		p(ctx, [dirty]) {
 			if (default_slot) {
 				if (default_slot.p && (!current || dirty & /*$$scope*/ 1)) {
-					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[0], dirty, null, null);
+					update_slot_base(
+						default_slot,
+						default_slot_template,
+						ctx,
+						/*$$scope*/ ctx[0],
+						!current
+						? get_all_dirty_from_scope(/*$$scope*/ ctx[0])
+						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[0], dirty, null),
+						null
+					);
 				}
 			}
 		},
@@ -3058,7 +3387,7 @@ function CategoryTitle_svelte_instance($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 
 	$$self.$$set = $$props => {
-		if ("$$scope" in $$props) $$invalidate(0, $$scope = $$props.$$scope);
+		if ('$$scope' in $$props) $$invalidate(0, $$scope = $$props.$$scope);
 	};
 
 	return [$$scope, slots];
@@ -3067,21 +3396,17 @@ function CategoryTitle_svelte_instance($$self, $$props, $$invalidate) {
 class CategoryTitle extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-14bu5ei-style")) CategoryTitle_svelte_add_css();
-		init(this, options, CategoryTitle_svelte_instance, CategoryTitle_svelte_create_fragment, safe_not_equal, {});
+		init(this, options, CategoryTitle_svelte_instance, CategoryTitle_svelte_create_fragment, safe_not_equal, {}, CategoryTitle_svelte_add_css);
 	}
 }
 
 /* harmony default export */ const CategoryTitle_svelte = (CategoryTitle);
 ;// CONCATENATED MODULE: ./src/components/UI/Header.svelte
-/* src/components/UI/Header.svelte generated by Svelte v3.38.2 */
+/* src/components/UI/Header.svelte generated by Svelte v3.44.2 */
 
 
-function Header_svelte_add_css() {
-	var style = internal_element("style");
-	style.id = "svelte-1m5sor7-style";
-	style.textContent = ".header.svelte-1m5sor7{display:flex;justify-content:center;align-items:center;text-align:center;line-height:48px;font-size:22px;height:48px;margin-bottom:24px}";
-	append(document.head, style);
+function Header_svelte_add_css(target) {
+	append_styles(target, "svelte-1m5sor7", ".header.svelte-1m5sor7{display:flex;justify-content:center;align-items:center;text-align:center;line-height:48px;font-size:22px;height:48px;margin-bottom:24px}");
 }
 
 function Header_svelte_create_fragment(ctx) {
@@ -3111,23 +3436,19 @@ function Header_svelte_create_fragment(ctx) {
 class Header extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-1m5sor7-style")) Header_svelte_add_css();
-		init(this, options, null, Header_svelte_create_fragment, safe_not_equal, {});
+		init(this, options, null, Header_svelte_create_fragment, safe_not_equal, {}, Header_svelte_add_css);
 	}
 }
 
 /* harmony default export */ const Header_svelte = (Header);
 ;// CONCATENATED MODULE: ./src/components/UI/ThemeSwitch.svelte
-/* src/components/UI/ThemeSwitch.svelte generated by Svelte v3.38.2 */
+/* src/components/UI/ThemeSwitch.svelte generated by Svelte v3.44.2 */
 
 
 
 
-function ThemeSwitch_svelte_add_css() {
-	var style = internal_element("style");
-	style.id = "svelte-173b2yu-style";
-	style.textContent = ".dark.svelte-173b2yu{background-color:#292929;color:#b5b5b5}body{margin:0px;font-family:sans-serif}a{color:currentColor}button:focus{outline:solid 1px white}";
-	append(document.head, style);
+function ThemeSwitch_svelte_add_css(target) {
+	append_styles(target, "svelte-173b2yu", ".dark.svelte-173b2yu{background-color:#292929;color:#b5b5b5}body{margin:0px;font-family:sans-serif}a{color:currentColor}button:focus{outline:solid 1px white}");
 }
 
 function ThemeSwitch_svelte_create_fragment(ctx) {
@@ -3141,8 +3462,8 @@ function ThemeSwitch_svelte_create_fragment(ctx) {
 			div = internal_element("div");
 			if (default_slot) default_slot.c();
 			attr(div, "class", "svelte-173b2yu");
-			toggle_class(div, "dark", /*dark*/ ctx[0]);
-			toggle_class(div, "light", /*light*/ ctx[1]);
+			toggle_class(div, "dark", /*dark*/ ctx[1]);
+			toggle_class(div, "light", /*light*/ ctx[0]);
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -3156,16 +3477,25 @@ function ThemeSwitch_svelte_create_fragment(ctx) {
 		p(ctx, [dirty]) {
 			if (default_slot) {
 				if (default_slot.p && (!current || dirty & /*$$scope*/ 8)) {
-					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[3], dirty, null, null);
+					update_slot_base(
+						default_slot,
+						default_slot_template,
+						ctx,
+						/*$$scope*/ ctx[3],
+						!current
+						? get_all_dirty_from_scope(/*$$scope*/ ctx[3])
+						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[3], dirty, null),
+						null
+					);
 				}
 			}
 
-			if (dirty & /*dark*/ 1) {
-				toggle_class(div, "dark", /*dark*/ ctx[0]);
+			if (dirty & /*dark*/ 2) {
+				toggle_class(div, "dark", /*dark*/ ctx[1]);
 			}
 
-			if (dirty & /*light*/ 2) {
-				toggle_class(div, "light", /*light*/ ctx[1]);
+			if (dirty & /*light*/ 1) {
+				toggle_class(div, "light", /*light*/ ctx[0]);
 			}
 		},
 		i(local) {
@@ -3192,36 +3522,32 @@ function ThemeSwitch_svelte_instance($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 
 	$$self.$$set = $$props => {
-		if ("$$scope" in $$props) $$invalidate(3, $$scope = $$props.$$scope);
+		if ('$$scope' in $$props) $$invalidate(3, $$scope = $$props.$$scope);
 	};
 
 	$$self.$$.update = () => {
 		if ($$self.$$.dirty & /*$configStore*/ 4) {
-			$: $$invalidate(0, dark = $configStore.darkTheme);
+			$: $$invalidate(1, dark = $configStore.darkTheme);
 		}
 
 		if ($$self.$$.dirty & /*$configStore*/ 4) {
-			$: $$invalidate(1, light = !$configStore.darkTheme);
+			$: $$invalidate(0, light = !$configStore.darkTheme);
 		}
 	};
 
-	return [dark, light, $configStore, $$scope, slots];
+	return [light, dark, $configStore, $$scope, slots];
 }
 
 class ThemeSwitch extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document.getElementById("svelte-173b2yu-style")) ThemeSwitch_svelte_add_css();
-		init(this, options, ThemeSwitch_svelte_instance, ThemeSwitch_svelte_create_fragment, safe_not_equal, {});
+		init(this, options, ThemeSwitch_svelte_instance, ThemeSwitch_svelte_create_fragment, safe_not_equal, {}, ThemeSwitch_svelte_add_css);
 	}
 }
 
 /* harmony default export */ const ThemeSwitch_svelte = (ThemeSwitch);
 ;// CONCATENATED MODULE: ./src/components/Options.svelte
-/* src/components/Options.svelte generated by Svelte v3.38.2 */
-
-
-const { document: document_1 } = globals;
+/* src/components/Options.svelte generated by Svelte v3.44.2 */
 
 
 
@@ -3234,11 +3560,10 @@ const { document: document_1 } = globals;
 
 
 
-function Options_svelte_add_css() {
-	var style = internal_element("style");
-	style.id = "svelte-110kjy5-style";
-	style.textContent = ".layout.svelte-110kjy5{box-sizing:border-box;padding:8px 8px 64px;min-height:100vh}.form-container.svelte-110kjy5{max-width:500px;font-size:14px;margin:auto}.text-container.svelte-110kjy5{text-align:center;margin-top:12px;margin-bottom:8px}.default-keybinds.svelte-110kjy5{background:transparent;border:none;text-decoration:underline;color:currentColor;cursor:pointer}";
-	append(document_1.head, style);
+
+
+function Options_svelte_add_css(target) {
+	append_styles(target, "svelte-110kjy5", ".layout.svelte-110kjy5{box-sizing:border-box;padding:8px 8px 64px;min-height:100vh}.form-container.svelte-110kjy5{max-width:500px;font-size:14px;margin:auto}.text-container.svelte-110kjy5{text-align:center;margin-top:12px;margin-bottom:8px}.default-keybinds.svelte-110kjy5{background:transparent;border:none;text-decoration:underline;color:currentColor;cursor:pointer}");
 }
 
 function get_each_context(ctx, list, i) {
@@ -3284,7 +3609,7 @@ function create_default_slot_11(ctx) {
 	}
 
 	switch_1 = new Switch_svelte({ props: switch_1_props });
-	binding_callbacks.push(() => bind(switch_1, "checked", switch_1_checked_binding));
+	binding_callbacks.push(() => bind(switch_1, 'checked', switch_1_checked_binding));
 
 	return {
 		c() {
@@ -3384,7 +3709,7 @@ function create_default_slot_9(ctx) {
 	}
 
 	switch_1 = new Switch_svelte({ props: switch_1_props });
-	binding_callbacks.push(() => bind(switch_1, "checked", switch_1_checked_binding_1));
+	binding_callbacks.push(() => bind(switch_1, 'checked', switch_1_checked_binding_1));
 
 	return {
 		c() {
@@ -3484,7 +3809,7 @@ function create_default_slot_7(ctx) {
 	}
 
 	switch_1 = new Switch_svelte({ props: switch_1_props });
-	binding_callbacks.push(() => bind(switch_1, "checked", switch_1_checked_binding_2));
+	binding_callbacks.push(() => bind(switch_1, 'checked', switch_1_checked_binding_2));
 
 	return {
 		c() {
@@ -3584,7 +3909,7 @@ function create_default_slot_5(ctx) {
 	}
 
 	switch_1 = new Switch_svelte({ props: switch_1_props });
-	binding_callbacks.push(() => bind(switch_1, "checked", switch_1_checked_binding_3));
+	binding_callbacks.push(() => bind(switch_1, 'checked', switch_1_checked_binding_3));
 
 	return {
 		c() {
@@ -4161,22 +4486,22 @@ function Options_svelte_instance($$self, $$props, $$invalidate) {
 	component_subscribe($$self, configStore, $$value => $$invalidate(1, $configStore = $$value));
 
 	const ignoredKeys = [
-		"Control",
-		"Alt",
-		"Shift",
-		"Dead",
-		"Unidentified",
-		"AltGraph",
-		"Fn",
-		"FnLock",
-		"Hyper",
-		"Super",
-		"Symbol",
-		"SymbolLock"
+		'Control',
+		'Alt',
+		'Shift',
+		'Dead',
+		'Unidentified',
+		'AltGraph',
+		'Fn',
+		'FnLock',
+		'Hyper',
+		'Super',
+		'Symbol',
+		'SymbolLock'
 	];
 
 	const isIgnoredMeta = key => {
-		return key === "Meta" && !window.navigator.userAgent.includes("Macintosh");
+		return key === 'Meta' && !window.navigator.userAgent.includes('Macintosh');
 	};
 
 	let activeId = null;
@@ -4201,28 +4526,28 @@ function Options_svelte_instance($$self, $$props, $$invalidate) {
 			} else return hotkey;
 		});
 
-		if (e.key !== "Escape") {
+		if (e.key !== 'Escape') {
 			configStore.set({ keySetting: newKeySetting });
 		}
 
 		$$invalidate(0, activeId = null);
-		document.removeEventListener("keydown", handleKeyDown);
-		document.removeEventListener("click", handleClick);
+		document.removeEventListener('keydown', handleKeyDown);
+		document.removeEventListener('click', handleClick);
 	};
 
 	const handleClick = () => {
-		document.removeEventListener("keydown", handleKeyDown);
+		document.removeEventListener('keydown', handleKeyDown);
 		$$invalidate(0, activeId = null);
-		document.removeEventListener("click", handleClick);
+		document.removeEventListener('click', handleClick);
 	};
 
 	const setActiveId = id => {
 		$$invalidate(0, activeId = id);
-		document.addEventListener("keydown", handleKeyDown);
+		document.addEventListener('keydown', handleKeyDown);
 
 		setTimeout(
 			() => {
-				document.addEventListener("click", handleClick);
+				document.addEventListener('click', handleClick);
 			},
 			1
 		);
@@ -4275,8 +4600,7 @@ function Options_svelte_instance($$self, $$props, $$invalidate) {
 class Options extends SvelteComponent {
 	constructor(options) {
 		super();
-		if (!document_1.getElementById("svelte-110kjy5-style")) Options_svelte_add_css();
-		init(this, options, Options_svelte_instance, Options_svelte_create_fragment, safe_not_equal, {});
+		init(this, options, Options_svelte_instance, Options_svelte_create_fragment, safe_not_equal, {}, Options_svelte_add_css);
 	}
 }
 
