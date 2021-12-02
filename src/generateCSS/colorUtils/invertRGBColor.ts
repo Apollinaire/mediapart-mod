@@ -1,11 +1,13 @@
 import convert from 'color-convert';
 import { RGB } from 'color-convert/conversions';
 
+const saturationLimit = 50;
+
 export type ColorType = 'background' | 'text';
 
 export const invertRGBColor = ([r, g, b]: RGB, colorType: ColorType): RGB => {
   const [h, s, l] = convert.rgb.hsl(r, g, b);
-  return convert.hsl.rgb([h, s, invertLightness(l, colorType)]);
+  return convert.hsl.rgb([h, desaturate(s), invertLightness(l, colorType)]);
 };
 
 const invertLightness = (lightness: number, colorType: ColorType) => {
@@ -18,3 +20,5 @@ const invertLightness = (lightness: number, colorType: ColorType) => {
       return lightness;
   }
 };
+
+const desaturate = (saturation: number) => Math.min(saturationLimit, saturation);
