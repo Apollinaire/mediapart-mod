@@ -38,13 +38,6 @@ var options = {
         exclude: /node_modules/,
       },
       {
-        test: /\.json$/,
-        use: {
-          loader: 'file-loader',
-        },
-        exclude: /node_modules/,
-      },
-      {
         test: /\.less$/,
         use: [
           {

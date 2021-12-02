@@ -1,11 +1,8 @@
 import https from 'https';
 
-const MEDIAPART_CSS_URL = 'https://www.mediapart.fr/assets/front/css/main.min.css';
-const MEDIAPART_CSS_URL_NEW = 'https://blogs.mediapart.fr/assets/front/nouvelle_formule/css/main.min.css';
-
-const getCss = async (): Promise<string> => {
+const getCss = async (link: string): Promise<string> => {
   return new Promise((resolve, reject) => {
-    https.get(MEDIAPART_CSS_URL_NEW, res => {
+    https.get(link, res => {
       let data = '';
 
       res.on('data', content => {

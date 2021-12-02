@@ -3,11 +3,7 @@
   "name": "Mediapart Mod",
   "version": "1.1.0",
   "description": "Mediapart modifié pour une meilleure expérience",
-  "permissions": [
-    "https://www.mediapart.fr/",
-    "https://blogs.mediapart.fr/",
-    "storage"
-  ],
+  "permissions": ["https://www.mediapart.fr/", "https://blogs.mediapart.fr/", "storage"],
   "content_security_policy": "script-src 'self'; object-src 'none'",
   "browser_action": {
     "default_icon": {
@@ -24,30 +20,18 @@
   },
   "content_scripts": [
     {
-      "matches": [
-        "https://www.mediapart.fr/*",
-        "https://blogs.mediapart.fr/*"
-      ],
-      "js": [
-        "injectTheme.bundle.js"
-      ],
+      "matches": ["https://www.mediapart.fr/*", "https://blogs.mediapart.fr/*"],
+      "js": ["injectTheme.bundle.js"],
       "run_at": "document_start"
     },
     {
-      "matches": [
-        "https://www.mediapart.fr/*",
-        "https://blogs.mediapart.fr/*"
-      ],
-      "js": [
-        "interactionController.bundle.js"
-      ],
+      "matches": ["https://www.mediapart.fr/*", "https://blogs.mediapart.fr/*"],
+      "js": ["interactionController.bundle.js"],
       "run_at": "document_end"
     }
   ],
   "background": {
-    "scripts": [
-      "background.bundle.js"
-    ],
+    "scripts": ["background.bundle.js"],
     "persistent": true
   },
   "icons": {

@@ -102,4 +102,6 @@ typings/
 build
 
 src/generateCSS/newMediapart.css
+src/generateCSS/styles.json
+src/css/*.css
 *.zip

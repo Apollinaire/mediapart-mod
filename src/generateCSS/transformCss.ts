@@ -144,8 +144,9 @@ const transformCss = (css: string) => {
   walk(tree, {
     visit: 'Atrule',
     enter: (atRule, atRuleItem, atRuleList) => {
-      if (atRuleList && atRuleItem && atRule.block?.children.getSize() === 0) {
+      if (atRuleList && atRuleItem && (atRule.block?.children.getSize() === 0 || atRule.name === 'font-face')) {
         atRuleList.remove(atRuleItem);
+        return
       }
     },
   });
