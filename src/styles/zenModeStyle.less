@@ -11,14 +11,21 @@
 
   .news__body.grid {
     display: block;
+    // the padding seems to avoid a glitch where a space appears between the body and header of the news
+    padding-top: 1px;
 
     .news__body__center__container {
       margin: 0px auto;
     }
 
     .news__body__right {
-      max-width: calc(min(100%, 350px));
+      // max-width: calc(min(100%, 350px));
       margin: 0px auto;
+
+      &>div {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     .news__body__center__article {
