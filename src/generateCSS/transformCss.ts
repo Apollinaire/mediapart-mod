@@ -10,6 +10,7 @@ const config = {
     '.menu-sticky',
     '.menu-wrapper',
     '.cc-cookie-consent-banner-modal',
+    '.mkt-banner--red',
   ]),
   propertyWhiteList: [
     'color',
