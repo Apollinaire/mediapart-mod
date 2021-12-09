@@ -3,6 +3,7 @@ import displayTree from './AstUtils/displayTree';
 import { handleDeclaration } from './AstUtils/invertColorNode';
 import { selectorIncludes, parseSelectorsList } from './AstUtils/selectorUtils';
 
+// TODO: set config per file
 const config = {
   selectorBlackList: parseSelectorsList([
     '.footer',
@@ -41,6 +42,14 @@ const config = {
 
     .home.container.grid, .news__heading.grid, .news__body.grid {
       background-color: var(--main-bg-color);
+    }
+
+    svg.club-logo-title > path {
+      fill: #90c4da;
+    }
+
+    svg.club-logo-subtitle > path {
+      fill: #85BFD6;
     }
 
     html {
