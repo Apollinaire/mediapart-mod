@@ -28,10 +28,14 @@ export const isBlogLink = href => {
     return false;
   }
 
-  return url.host === 'blogs.mediapart.fr' && blogPathnameRegex.test(url.pathname);
+  return (
+    url.host === 'blogs.mediapart.fr' &&
+    (blogPathnameRegex.test(url.pathname) || blogEditionPathnameRegex.test(url.pathname))
+  );
 };
 
 const blogPathnameRegex = /^\/([a-z]|[0-9]|-)+\/blog\/[0-9]{6}\/[^\/]+$/;
+const blogEditionPathnameRegex = /^\/edition\/([a-z]|[0-9]|-)+\/article\/[0-9]{6}\/[^\/]+$/;
 
 export const getFullPageLink = href => {
   const url = new URL(href);
