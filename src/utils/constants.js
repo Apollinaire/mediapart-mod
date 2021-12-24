@@ -10,4 +10,5 @@ export const cssLinks = [
   'https://www.mediapart.fr/assets/front/nouvelle_formule/css/cc.min.css',
   'https://www.mediapart.fr/assets/front/nouvelle_formule/css/old_formula_nav.min.css',
   'https://blogs.mediapart.fr/assets/front/js/tinymce/skins/ui/oxide/skin.min.css',
+  'https://www.mediapart.fr/assets/front/css/account.min.css',
 ];
