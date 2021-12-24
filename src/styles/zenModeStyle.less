@@ -9,32 +9,11 @@
   }
 
   .news__body.grid {
-    display: block;
-    // the padding seems to avoid a glitch where a space appears between the body and header of the news
-    padding-top: 1px;
 
-    .news__body__center__container {
-      margin: 0px auto;
-
-      .news__rich-text-content {
-        .media--image.format-20-pcent,
-        .media--image.format-33-pcent,
-        .media--image.format-50-pcent,
-        .media--image.format-66-pcent {
-          margin-left: auto;
-          margin-right: auto;
-        }
-      }
-    }
-
-    .news__body__right {
-      // max-width: calc(min(100%, 350px));
-      margin: 0px auto;
-
-      & > div {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-      }
+    @media (min-width: 1024px) {
+      grid-template-areas:
+        ". . . body_center body_center body_center body_center body_center body_center ."
+        ". . . body_right body_right body_right body_right body_right body_right .";
     }
 
     .news__body__center__article {
@@ -43,12 +22,18 @@
 
       aside.read-also {
         order: 9999;
-        margin-left: auto;
-        margin-right: auto;
+        margin-left: unset;
+        margin-right: unset;
+
+        @media (min-width: 1024px) {
+          margin-left: auto;
+          margin-right: auto;
+        }
       }
     }
   }
 }
+
 .blogs__body-wrapper {
   .blogs__body.grid {
     @media (min-width: 1024px) {
@@ -58,7 +43,16 @@
         '. . . body_bottom body_bottom body_bottom body_bottom body_bottom body_bottom'
         '. . . body_right body_right body_right body_right body_right body_right';
     }
+
+    .blogs__body__left__sticky-wrapper {
+      opacity: 1;
+      -webkit-transform: translateY(0);
+      -ms-transform: translateY(0);
+      transform: translateY(0);
+    }
+
     .blogs__rich-text-content {
+
       .media--image.format-20-pcent,
       .media--image.format-33-pcent,
       .media--image.format-50-pcent,
@@ -70,12 +64,14 @@
     }
   }
 }
+
 nav.nav__news._sticky {
   &:hover {
     .nav__shortcuts {
       display: block;
     }
   }
+
   .nav__shortcuts {
     display: none;
   }

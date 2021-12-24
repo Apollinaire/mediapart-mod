@@ -1,3 +1,4 @@
+import { isArticleLink, isBlogLink } from '../interactions/fullPage';
 import zenModeCss from './zenModeStyle.less';
 
 const ZEN_MODE_STYLE_ELEMENT_ID = 'mediapart-custom-zen-mode';
@@ -21,6 +22,10 @@ const removeZenMode = () => {
 };
 
 export const applyZenModeConfig = zenMode => {
+  const url = window.location.toString();
+  if (!isArticleLink(url) && !isBlogLink(url)) {
+    return;
+  }
   const existingZenModeStyle = document.getElementById(ZEN_MODE_STYLE_ELEMENT_ID);
   if (zenMode === !!existingZenModeStyle) {
     // zenMode is already set correctly
