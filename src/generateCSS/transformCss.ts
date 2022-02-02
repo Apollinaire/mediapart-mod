@@ -12,15 +12,10 @@ const config = {
     '.menu-wrapper',
     '.cc-cookie-consent-banner-modal',
     '.mkt-banner--red',
+    '.news__black-box',
+    '.is-secondary-invert',
   ]),
-  propertyWhiteList: [
-    'color',
-    /^background/,
-    /^border/,
-    /^--/,
-    'box-shadow',
-    '-webkit-box-shadow',
-  ],
+  propertyWhiteList: ['color', /^background/, /^border/, /^--/, 'box-shadow', '-webkit-box-shadow'],
   customCSS: /* CSS */ `
     .mediapart-logo svg.mediapart-logo-text {
       filter: invert(1);
@@ -156,7 +151,7 @@ const transformCss = (css: string) => {
     enter: (atRule, atRuleItem, atRuleList) => {
       if (atRuleList && atRuleItem && (atRule.block?.children.getSize() === 0 || atRule.name === 'font-face')) {
         atRuleList.remove(atRuleItem);
-        return
+        return;
       }
     },
   });
