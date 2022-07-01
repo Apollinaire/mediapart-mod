@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Mediapart Mod",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Mediapart modifié pour une meilleure expérience",
   "permissions": ["https://www.mediapart.fr/", "https://blogs.mediapart.fr/", "storage"],
   "content_security_policy": "script-src 'self'; object-src 'none'",
