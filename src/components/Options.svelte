@@ -69,7 +69,6 @@
   const resetDefaultKeybinds = () => {
     configStore.set({ keySetting: DEFAULT_CONFIG.keySetting });
   };
-
 </script>
 
 <ThemeSwitch>
@@ -85,11 +84,6 @@
       <FormField>
         <FormInput>
           <Switch disabled={configStore.loading} bind:checked={$configStore.zenMode} label="Lecture zen" />
-        </FormInput>
-      </FormField>
-      <FormField>
-        <FormInput>
-          <Switch disabled={configStore.loading} bind:checked={$configStore.fullPage} label="Lecture sur une page" />
         </FormInput>
       </FormField>
       <FormField>
@@ -153,5 +147,4 @@
     color: currentColor;
     cursor: pointer;
   }
-
 </style>

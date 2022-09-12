@@ -2,56 +2,10 @@
 /******/ 	"use strict";
 var __webpack_exports__ = {};
 
-;// CONCATENATED MODULE: ./src/interactions/fullPage.js
-const articleLinksToFullPage = () => {
-  const links = document.getElementsByTagName('a');
-
-  for (const a of links) {
-    if (a.href && isArticleLink(a.href)) {
-      a.href = getFullPageLink(a.href);
-    }
-  }
-};
-const isArticleLink = href => {
-  let url;
-
-  try {
-    url = new URL(href);
-  } catch (error) {
-    return false;
-  }
-
-  return url.host === 'www.mediapart.fr' && articlePathnameRegex.test(url.pathname);
-};
-const articlePathnameRegex = /^\/journal\/([a-z]|-)+\/[0-9]{6}\/[^\/]+$/;
-const isBlogLink = href => {
-  let url;
-
-  try {
-    url = new URL(href);
-  } catch (error) {
-    return false;
-  }
-
-  return url.host === 'blogs.mediapart.fr' && (blogPathnameRegex.test(url.pathname) || blogEditionPathnameRegex.test(url.pathname));
-};
-const blogPathnameRegex = /^\/([a-z]|[0-9]|-)+\/blog\/[0-9]{6}\/[^\/]+$/;
-const blogEditionPathnameRegex = /^\/edition\/([a-z]|[0-9]|-)+\/article\/[0-9]{6}\/[^\/]+$/;
-const getFullPageLink = href => {
-  const url = new URL(href);
-
-  if (url.searchParams.get('onglet') === 'full' || url.searchParams.has('page_article')) {
-    return href;
-  }
-
-  url.searchParams.append('onglet', 'full');
-  return url.toString();
-};
 ;// CONCATENATED MODULE: ./src/utils/config.js
 const DEFAULT_CONFIG = {
   zenMode: true,
   darkTheme: true,
-  fullPage: true,
   hotkeysActive: true,
   keySetting: [{
     key: 't',
@@ -65,15 +19,6 @@ const DEFAULT_CONFIG = {
   }, {
     key: 'u',
     action: 'une'
-  }, {
-    key: 'o',
-    action: 'nextPage'
-  }, {
-    key: 'i',
-    action: 'previousPage'
-  }, {
-    key: 'p',
-    action: 'fullPage'
   }, {
     key: '+',
     action: 'increaseFontSize'
@@ -120,19 +65,6 @@ const toggleZenMode = async () => {
     zenMode
   } = await getConfig();
   return setZenMode(!zenMode);
-};
-const setFullPage = newFullPage => {
-  return new Promise(resolve => {
-    chrome.storage.local.set({
-      fullPage: newFullPage
-    }, resolve);
-  });
-};
-const toggleFullPage = async () => {
-  const {
-    fullPage
-  } = await getConfig();
-  return setFullPage(!fullPage);
 };
 const setHotkeysActive = newHotkeysActive => {
   return new Promise(resolve => {
@@ -215,30 +147,6 @@ const actions = {
       linkEl === null || linkEl === void 0 ? void 0 : linkEl.click();
     }
   },
-  // next page
-  nextPage: {
-    label: 'Page suivante',
-    run: () => {
-      const linkEl = document.querySelector('ul.mini-pager li.next a');
-      linkEl === null || linkEl === void 0 ? void 0 : linkEl.click();
-    }
-  },
-  // previous page
-  previousPage: {
-    label: 'Page précédente',
-    run: () => {
-      const linkEl = document.querySelector('ul.mini-pager li.previous a');
-      linkEl === null || linkEl === void 0 ? void 0 : linkEl.click();
-    }
-  },
-  // full page read
-  fullPage: {
-    label: 'Lecture sur une page',
-    run: () => {
-      const linkEl = document.querySelector('ul.sub-menu li.content-page-full a');
-      linkEl.click();
-    }
-  },
   // increase font-size
   increaseFontSize: {
     label: 'Augmenter la taille de police',
@@ -266,21 +174,14 @@ const actions = {
 
 
 
-
 const run = async () => {
   const {
     hotkeysActive,
-    fullPage,
     keySetting
   } = await getConfig(); // keyboard shortcuts
 
   if (hotkeysActive) {
     enableHotkeys(keySetting);
-  } // article links to full page
-
-
-  if (fullPage) {
-    articleLinksToFullPage();
   } // react to settings update
 
 
@@ -302,16 +203,6 @@ const run = async () => {
     if (changes.keySetting) {
       disableHotkeys();
       enableHotkeys(changes.keySetting.newValue);
-    }
-
-    if (changes.fullPage) {
-      if (changes.fullPage.newValue === true) {
-        articleLinksToFullPage();
-      }
-
-      if (changes.fullPage.newValue === false) {
-        window.location.reload();
-      }
     }
   });
 };

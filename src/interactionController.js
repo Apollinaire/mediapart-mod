@@ -1,18 +1,12 @@
-import { articleLinksToFullPage } from './interactions/fullPage';
 import { disableHotkeys, enableHotkeys } from './interactions/hotkeys';
 import { getConfig } from './utils/config';
 
 const run = async () => {
-  const { hotkeysActive, fullPage, keySetting } = await getConfig();
+  const { hotkeysActive, keySetting } = await getConfig();
 
   // keyboard shortcuts
   if (hotkeysActive) {
     enableHotkeys(keySetting);
-  }
-
-  // article links to full page
-  if (fullPage) {
-    articleLinksToFullPage();
   }
 
   // react to settings update
@@ -30,14 +24,6 @@ const run = async () => {
     if (changes.keySetting) {
       disableHotkeys();
       enableHotkeys(changes.keySetting.newValue);
-    }
-    if (changes.fullPage) {
-      if (changes.fullPage.newValue === true) {
-        articleLinksToFullPage();
-      }
-      if (changes.fullPage.newValue === false) {
-        window.location.reload();
-      }
     }
   });
 };

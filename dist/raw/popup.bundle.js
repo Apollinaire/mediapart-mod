@@ -2166,7 +2166,6 @@ function derived(stores, fn, initial_value) {
 const DEFAULT_CONFIG = {
   zenMode: true,
   darkTheme: true,
-  fullPage: true,
   hotkeysActive: true,
   keySetting: [{
     key: 't',
@@ -2180,15 +2179,6 @@ const DEFAULT_CONFIG = {
   }, {
     key: 'u',
     action: 'une'
-  }, {
-    key: 'o',
-    action: 'nextPage'
-  }, {
-    key: 'i',
-    action: 'previousPage'
-  }, {
-    key: 'p',
-    action: 'fullPage'
   }, {
     key: '+',
     action: 'increaseFontSize'
@@ -2235,19 +2225,6 @@ const toggleZenMode = async () => {
     zenMode
   } = await getConfig();
   return setZenMode(!zenMode);
-};
-const setFullPage = newFullPage => {
-  return new Promise(resolve => {
-    chrome.storage.local.set({
-      fullPage: newFullPage
-    }, resolve);
-  });
-};
-const toggleFullPage = async () => {
-  const {
-    fullPage
-  } = await getConfig();
-  return setFullPage(!fullPage);
 };
 const setHotkeysActive = newHotkeysActive => {
   return new Promise(resolve => {
@@ -2797,11 +2774,11 @@ class ThemeSwitch extends SvelteComponent {
 
 
 function Popup_svelte_add_css(target) {
-	append_styles(target, "svelte-1aqn85r", ".popup.svelte-1aqn85r{padding:8px;width:300px}button.link-button.svelte-1aqn85r{text-decoration:underline}");
+	append_styles(target, "svelte-5xiftn", ".popup.svelte-5xiftn{padding:8px;width:300px}button.link-button.svelte-5xiftn{text-decoration:underline}");
 }
 
-// (23:6) <FormInput>
-function create_default_slot_9(ctx) {
+// (22:6) <FormInput>
+function create_default_slot_7(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
@@ -2856,14 +2833,14 @@ function create_default_slot_9(ctx) {
 	};
 }
 
-// (22:4) <FormField>
-function create_default_slot_8(ctx) {
+// (21:4) <FormField>
+function create_default_slot_6(ctx) {
 	let forminput;
 	let current;
 
 	forminput = new FormInput_svelte({
 			props: {
-				$$slots: { default: [create_default_slot_9] },
+				$$slots: { default: [create_default_slot_7] },
 				$$scope: { ctx }
 			}
 		});
@@ -2879,7 +2856,7 @@ function create_default_slot_8(ctx) {
 		p(ctx, dirty) {
 			const forminput_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 65) {
+			if (dirty & /*$$scope, $configStore*/ 33) {
 				forminput_changes.$$scope = { dirty, ctx };
 			}
 
@@ -2900,8 +2877,8 @@ function create_default_slot_8(ctx) {
 	};
 }
 
-// (28:6) <FormInput>
-function create_default_slot_7(ctx) {
+// (27:6) <FormInput>
+function create_default_slot_5(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
@@ -2956,107 +2933,7 @@ function create_default_slot_7(ctx) {
 	};
 }
 
-// (27:4) <FormField>
-function create_default_slot_6(ctx) {
-	let forminput;
-	let current;
-
-	forminput = new FormInput_svelte({
-			props: {
-				$$slots: { default: [create_default_slot_7] },
-				$$scope: { ctx }
-			}
-		});
-
-	return {
-		c() {
-			create_component(forminput.$$.fragment);
-		},
-		m(target, anchor) {
-			mount_component(forminput, target, anchor);
-			current = true;
-		},
-		p(ctx, dirty) {
-			const forminput_changes = {};
-
-			if (dirty & /*$$scope, $configStore*/ 65) {
-				forminput_changes.$$scope = { dirty, ctx };
-			}
-
-			forminput.$set(forminput_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(forminput.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(forminput.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			destroy_component(forminput, detaching);
-		}
-	};
-}
-
-// (33:6) <FormInput>
-function create_default_slot_5(ctx) {
-	let switch_1;
-	let updating_checked;
-	let current;
-
-	function switch_1_checked_binding_2(value) {
-		/*switch_1_checked_binding_2*/ ctx[4](value);
-	}
-
-	let switch_1_props = {
-		disabled: configStore.loading,
-		label: "Lecture sur une page"
-	};
-
-	if (/*$configStore*/ ctx[0].fullPage !== void 0) {
-		switch_1_props.checked = /*$configStore*/ ctx[0].fullPage;
-	}
-
-	switch_1 = new Switch_svelte({ props: switch_1_props });
-	binding_callbacks.push(() => bind(switch_1, 'checked', switch_1_checked_binding_2));
-
-	return {
-		c() {
-			create_component(switch_1.$$.fragment);
-		},
-		m(target, anchor) {
-			mount_component(switch_1, target, anchor);
-			current = true;
-		},
-		p(ctx, dirty) {
-			const switch_1_changes = {};
-
-			if (!updating_checked && dirty & /*$configStore*/ 1) {
-				updating_checked = true;
-				switch_1_changes.checked = /*$configStore*/ ctx[0].fullPage;
-				add_flush_callback(() => updating_checked = false);
-			}
-
-			switch_1.$set(switch_1_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(switch_1.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(switch_1.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			destroy_component(switch_1, detaching);
-		}
-	};
-}
-
-// (32:4) <FormField>
+// (26:4) <FormField>
 function create_default_slot_4(ctx) {
 	let forminput;
 	let current;
@@ -3079,7 +2956,7 @@ function create_default_slot_4(ctx) {
 		p(ctx, dirty) {
 			const forminput_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 65) {
+			if (dirty & /*$$scope, $configStore*/ 33) {
 				forminput_changes.$$scope = { dirty, ctx };
 			}
 
@@ -3100,14 +2977,14 @@ function create_default_slot_4(ctx) {
 	};
 }
 
-// (38:6) <FormInput>
+// (32:6) <FormInput>
 function create_default_slot_3(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
 
-	function switch_1_checked_binding_3(value) {
-		/*switch_1_checked_binding_3*/ ctx[5](value);
+	function switch_1_checked_binding_2(value) {
+		/*switch_1_checked_binding_2*/ ctx[4](value);
 	}
 
 	let switch_1_props = {
@@ -3120,7 +2997,7 @@ function create_default_slot_3(ctx) {
 	}
 
 	switch_1 = new Switch_svelte({ props: switch_1_props });
-	binding_callbacks.push(() => bind(switch_1, 'checked', switch_1_checked_binding_3));
+	binding_callbacks.push(() => bind(switch_1, 'checked', switch_1_checked_binding_2));
 
 	return {
 		c() {
@@ -3156,7 +3033,7 @@ function create_default_slot_3(ctx) {
 	};
 }
 
-// (41:6) <FormDescription>
+// (35:6) <FormDescription>
 function create_default_slot_2(ctx) {
 	let t0;
 	let button;
@@ -3168,7 +3045,7 @@ function create_default_slot_2(ctx) {
 			t0 = internal_text("Le détail des raccourcis clavier ainsi qu'un configurateur sont disponibles sur ");
 			button = internal_element("button");
 			button.textContent = "la page d'options";
-			attr(button, "class", "link-button svelte-1aqn85r");
+			attr(button, "class", "link-button svelte-5xiftn");
 			attr(button, "role", "link");
 		},
 		m(target, anchor) {
@@ -3190,7 +3067,7 @@ function create_default_slot_2(ctx) {
 	};
 }
 
-// (37:4) <FormField>
+// (31:4) <FormField>
 function create_default_slot_1(ctx) {
 	let forminput;
 	let t;
@@ -3226,14 +3103,14 @@ function create_default_slot_1(ctx) {
 		p(ctx, dirty) {
 			const forminput_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 65) {
+			if (dirty & /*$$scope, $configStore*/ 33) {
 				forminput_changes.$$scope = { dirty, ctx };
 			}
 
 			forminput.$set(forminput_changes);
 			const formdescription_changes = {};
 
-			if (dirty & /*$$scope*/ 64) {
+			if (dirty & /*$$scope*/ 32) {
 				formdescription_changes.$$scope = { dirty, ctx };
 			}
 
@@ -3258,7 +3135,7 @@ function create_default_slot_1(ctx) {
 	};
 }
 
-// (19:0) <ThemeSwitch>
+// (18:0) <ThemeSwitch>
 function create_default_slot(ctx) {
 	let div;
 	let header;
@@ -3268,33 +3145,24 @@ function create_default_slot(ctx) {
 	let formfield1;
 	let t2;
 	let formfield2;
-	let t3;
-	let formfield3;
 	let current;
 	header = new Header_svelte({});
 
 	formfield0 = new FormField_svelte({
-			props: {
-				$$slots: { default: [create_default_slot_8] },
-				$$scope: { ctx }
-			}
-		});
-
-	formfield1 = new FormField_svelte({
 			props: {
 				$$slots: { default: [create_default_slot_6] },
 				$$scope: { ctx }
 			}
 		});
 
-	formfield2 = new FormField_svelte({
+	formfield1 = new FormField_svelte({
 			props: {
 				$$slots: { default: [create_default_slot_4] },
 				$$scope: { ctx }
 			}
 		});
 
-	formfield3 = new FormField_svelte({
+	formfield2 = new FormField_svelte({
 			props: {
 				$$slots: { default: [create_default_slot_1] },
 				$$scope: { ctx }
@@ -3311,9 +3179,7 @@ function create_default_slot(ctx) {
 			create_component(formfield1.$$.fragment);
 			t2 = space();
 			create_component(formfield2.$$.fragment);
-			t3 = space();
-			create_component(formfield3.$$.fragment);
-			attr(div, "class", "popup svelte-1aqn85r");
+			attr(div, "class", "popup svelte-5xiftn");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -3324,39 +3190,30 @@ function create_default_slot(ctx) {
 			mount_component(formfield1, div, null);
 			append(div, t2);
 			mount_component(formfield2, div, null);
-			append(div, t3);
-			mount_component(formfield3, div, null);
 			current = true;
 		},
 		p(ctx, dirty) {
 			const formfield0_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 65) {
+			if (dirty & /*$$scope, $configStore*/ 33) {
 				formfield0_changes.$$scope = { dirty, ctx };
 			}
 
 			formfield0.$set(formfield0_changes);
 			const formfield1_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 65) {
+			if (dirty & /*$$scope, $configStore*/ 33) {
 				formfield1_changes.$$scope = { dirty, ctx };
 			}
 
 			formfield1.$set(formfield1_changes);
 			const formfield2_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 65) {
+			if (dirty & /*$$scope, $configStore*/ 33) {
 				formfield2_changes.$$scope = { dirty, ctx };
 			}
 
 			formfield2.$set(formfield2_changes);
-			const formfield3_changes = {};
-
-			if (dirty & /*$$scope, $configStore*/ 65) {
-				formfield3_changes.$$scope = { dirty, ctx };
-			}
-
-			formfield3.$set(formfield3_changes);
 		},
 		i(local) {
 			if (current) return;
@@ -3364,7 +3221,6 @@ function create_default_slot(ctx) {
 			transition_in(formfield0.$$.fragment, local);
 			transition_in(formfield1.$$.fragment, local);
 			transition_in(formfield2.$$.fragment, local);
-			transition_in(formfield3.$$.fragment, local);
 			current = true;
 		},
 		o(local) {
@@ -3372,7 +3228,6 @@ function create_default_slot(ctx) {
 			transition_out(formfield0.$$.fragment, local);
 			transition_out(formfield1.$$.fragment, local);
 			transition_out(formfield2.$$.fragment, local);
-			transition_out(formfield3.$$.fragment, local);
 			current = false;
 		},
 		d(detaching) {
@@ -3381,7 +3236,6 @@ function create_default_slot(ctx) {
 			destroy_component(formfield0);
 			destroy_component(formfield1);
 			destroy_component(formfield2);
-			destroy_component(formfield3);
 		}
 	};
 }
@@ -3408,7 +3262,7 @@ function Popup_svelte_create_fragment(ctx) {
 		p(ctx, [dirty]) {
 			const themeswitch_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 65) {
+			if (dirty & /*$$scope, $configStore*/ 33) {
 				themeswitch_changes.$$scope = { dirty, ctx };
 			}
 
@@ -3456,13 +3310,6 @@ function Popup_svelte_instance($$self, $$props, $$invalidate) {
 	}
 
 	function switch_1_checked_binding_2(value) {
-		if ($$self.$$.not_equal($configStore.fullPage, value)) {
-			$configStore.fullPage = value;
-			configStore.set($configStore);
-		}
-	}
-
-	function switch_1_checked_binding_3(value) {
 		if ($$self.$$.not_equal($configStore.hotkeysActive, value)) {
 			$configStore.hotkeysActive = value;
 			configStore.set($configStore);
@@ -3474,8 +3321,7 @@ function Popup_svelte_instance($$self, $$props, $$invalidate) {
 		onOpenOptions,
 		switch_1_checked_binding,
 		switch_1_checked_binding_1,
-		switch_1_checked_binding_2,
-		switch_1_checked_binding_3
+		switch_1_checked_binding_2
 	];
 }
 

@@ -56,30 +56,6 @@ export const actions = {
       linkEl?.click();
     },
   },
-  // next page
-  nextPage: {
-    label: 'Page suivante',
-    run: () => {
-      const linkEl = document.querySelector('ul.mini-pager li.next a');
-      linkEl?.click();
-    },
-  },
-  // previous page
-  previousPage: {
-    label: 'Page précédente',
-    run: () => {
-      const linkEl = document.querySelector('ul.mini-pager li.previous a');
-      linkEl?.click();
-    },
-  },
-  // full page read
-  fullPage: {
-    label: 'Lecture sur une page',
-    run: () => {
-      const linkEl = document.querySelector('ul.sub-menu li.content-page-full a');
-      linkEl.click();
-    },
-  },
   // increase font-size
   increaseFontSize: {
     label: 'Augmenter la taille de police',

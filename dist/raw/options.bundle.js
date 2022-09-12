@@ -2061,7 +2061,6 @@ function loop_guard(timeout) {
 const DEFAULT_CONFIG = {
   zenMode: true,
   darkTheme: true,
-  fullPage: true,
   hotkeysActive: true,
   keySetting: [{
     key: 't',
@@ -2075,15 +2074,6 @@ const DEFAULT_CONFIG = {
   }, {
     key: 'u',
     action: 'une'
-  }, {
-    key: 'o',
-    action: 'nextPage'
-  }, {
-    key: 'i',
-    action: 'previousPage'
-  }, {
-    key: 'p',
-    action: 'fullPage'
   }, {
     key: '+',
     action: 'increaseFontSize'
@@ -2130,19 +2120,6 @@ const toggleZenMode = async () => {
     zenMode
   } = await getConfig();
   return setZenMode(!zenMode);
-};
-const setFullPage = newFullPage => {
-  return new Promise(resolve => {
-    chrome.storage.local.set({
-      fullPage: newFullPage
-    }, resolve);
-  });
-};
-const toggleFullPage = async () => {
-  const {
-    fullPage
-  } = await getConfig();
-  return setFullPage(!fullPage);
 };
 const setHotkeysActive = newHotkeysActive => {
   return new Promise(resolve => {
@@ -2223,30 +2200,6 @@ const actions = {
       const linkEl = document.querySelector('[data-smarttag-name="retour_journal"]') || document.querySelector('[href="/"]');
       console.log(linkEl);
       linkEl === null || linkEl === void 0 ? void 0 : linkEl.click();
-    }
-  },
-  // next page
-  nextPage: {
-    label: 'Page suivante',
-    run: () => {
-      const linkEl = document.querySelector('ul.mini-pager li.next a');
-      linkEl === null || linkEl === void 0 ? void 0 : linkEl.click();
-    }
-  },
-  // previous page
-  previousPage: {
-    label: 'Page précédente',
-    run: () => {
-      const linkEl = document.querySelector('ul.mini-pager li.previous a');
-      linkEl === null || linkEl === void 0 ? void 0 : linkEl.click();
-    }
-  },
-  // full page read
-  fullPage: {
-    label: 'Lecture sur une page',
-    run: () => {
-      const linkEl = document.querySelector('ul.sub-menu li.content-page-full a');
-      linkEl.click();
     }
   },
   // increase font-size
@@ -3563,17 +3516,17 @@ class ThemeSwitch extends SvelteComponent {
 
 
 function Options_svelte_add_css(target) {
-	append_styles(target, "svelte-110kjy5", ".layout.svelte-110kjy5{box-sizing:border-box;padding:8px 8px 64px;min-height:100vh}.form-container.svelte-110kjy5{max-width:500px;font-size:14px;margin:auto}.text-container.svelte-110kjy5{text-align:center;margin-top:12px;margin-bottom:8px}.default-keybinds.svelte-110kjy5{background:transparent;border:none;text-decoration:underline;color:currentColor;cursor:pointer}");
+	append_styles(target, "svelte-1htpe4x", ".layout.svelte-1htpe4x{box-sizing:border-box;padding:8px 8px 64px;min-height:100vh}.form-container.svelte-1htpe4x{max-width:500px;font-size:14px;margin:auto}.text-container.svelte-1htpe4x{text-align:center;margin-top:12px;margin-bottom:8px}.default-keybinds.svelte-1htpe4x{background:transparent;border:none;text-decoration:underline;color:currentColor;cursor:pointer}");
 }
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[12] = list[i];
+	child_ctx[11] = list[i];
 	return child_ctx;
 }
 
-// (78:4) <CategoryTitle>
-function create_default_slot_12(ctx) {
+// (77:4) <CategoryTitle>
+function create_default_slot_10(ctx) {
 	let t;
 
 	return {
@@ -3589,8 +3542,8 @@ function create_default_slot_12(ctx) {
 	};
 }
 
-// (81:8) <FormInput>
-function create_default_slot_11(ctx) {
+// (80:8) <FormInput>
+function create_default_slot_9(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
@@ -3645,14 +3598,14 @@ function create_default_slot_11(ctx) {
 	};
 }
 
-// (80:6) <FormField>
-function create_default_slot_10(ctx) {
+// (79:6) <FormField>
+function create_default_slot_8(ctx) {
 	let forminput;
 	let current;
 
 	forminput = new FormInput_svelte({
 			props: {
-				$$slots: { default: [create_default_slot_11] },
+				$$slots: { default: [create_default_slot_9] },
 				$$scope: { ctx }
 			}
 		});
@@ -3668,7 +3621,7 @@ function create_default_slot_10(ctx) {
 		p(ctx, dirty) {
 			const forminput_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 32770) {
+			if (dirty & /*$$scope, $configStore*/ 16386) {
 				forminput_changes.$$scope = { dirty, ctx };
 			}
 
@@ -3689,8 +3642,8 @@ function create_default_slot_10(ctx) {
 	};
 }
 
-// (86:8) <FormInput>
-function create_default_slot_9(ctx) {
+// (85:8) <FormInput>
+function create_default_slot_7(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
@@ -3745,107 +3698,7 @@ function create_default_slot_9(ctx) {
 	};
 }
 
-// (85:6) <FormField>
-function create_default_slot_8(ctx) {
-	let forminput;
-	let current;
-
-	forminput = new FormInput_svelte({
-			props: {
-				$$slots: { default: [create_default_slot_9] },
-				$$scope: { ctx }
-			}
-		});
-
-	return {
-		c() {
-			create_component(forminput.$$.fragment);
-		},
-		m(target, anchor) {
-			mount_component(forminput, target, anchor);
-			current = true;
-		},
-		p(ctx, dirty) {
-			const forminput_changes = {};
-
-			if (dirty & /*$$scope, $configStore*/ 32770) {
-				forminput_changes.$$scope = { dirty, ctx };
-			}
-
-			forminput.$set(forminput_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(forminput.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(forminput.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			destroy_component(forminput, detaching);
-		}
-	};
-}
-
-// (91:8) <FormInput>
-function create_default_slot_7(ctx) {
-	let switch_1;
-	let updating_checked;
-	let current;
-
-	function switch_1_checked_binding_2(value) {
-		/*switch_1_checked_binding_2*/ ctx[6](value);
-	}
-
-	let switch_1_props = {
-		disabled: configStore.loading,
-		label: "Lecture sur une page"
-	};
-
-	if (/*$configStore*/ ctx[1].fullPage !== void 0) {
-		switch_1_props.checked = /*$configStore*/ ctx[1].fullPage;
-	}
-
-	switch_1 = new Switch_svelte({ props: switch_1_props });
-	binding_callbacks.push(() => bind(switch_1, 'checked', switch_1_checked_binding_2));
-
-	return {
-		c() {
-			create_component(switch_1.$$.fragment);
-		},
-		m(target, anchor) {
-			mount_component(switch_1, target, anchor);
-			current = true;
-		},
-		p(ctx, dirty) {
-			const switch_1_changes = {};
-
-			if (!updating_checked && dirty & /*$configStore*/ 2) {
-				updating_checked = true;
-				switch_1_changes.checked = /*$configStore*/ ctx[1].fullPage;
-				add_flush_callback(() => updating_checked = false);
-			}
-
-			switch_1.$set(switch_1_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(switch_1.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(switch_1.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			destroy_component(switch_1, detaching);
-		}
-	};
-}
-
-// (90:6) <FormField>
+// (84:6) <FormField>
 function create_default_slot_6(ctx) {
 	let forminput;
 	let current;
@@ -3868,7 +3721,7 @@ function create_default_slot_6(ctx) {
 		p(ctx, dirty) {
 			const forminput_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 32770) {
+			if (dirty & /*$$scope, $configStore*/ 16386) {
 				forminput_changes.$$scope = { dirty, ctx };
 			}
 
@@ -3889,14 +3742,14 @@ function create_default_slot_6(ctx) {
 	};
 }
 
-// (96:8) <FormInput>
+// (90:8) <FormInput>
 function create_default_slot_5(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
 
-	function switch_1_checked_binding_3(value) {
-		/*switch_1_checked_binding_3*/ ctx[7](value);
+	function switch_1_checked_binding_2(value) {
+		/*switch_1_checked_binding_2*/ ctx[6](value);
 	}
 
 	let switch_1_props = {
@@ -3909,7 +3762,7 @@ function create_default_slot_5(ctx) {
 	}
 
 	switch_1 = new Switch_svelte({ props: switch_1_props });
-	binding_callbacks.push(() => bind(switch_1, 'checked', switch_1_checked_binding_3));
+	binding_callbacks.push(() => bind(switch_1, 'checked', switch_1_checked_binding_2));
 
 	return {
 		c() {
@@ -3945,7 +3798,7 @@ function create_default_slot_5(ctx) {
 	};
 }
 
-// (95:6) <FormField>
+// (89:6) <FormField>
 function create_default_slot_4(ctx) {
 	let forminput;
 	let current;
@@ -3968,7 +3821,7 @@ function create_default_slot_4(ctx) {
 		p(ctx, dirty) {
 			const forminput_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 32770) {
+			if (dirty & /*$$scope, $configStore*/ 16386) {
 				forminput_changes.$$scope = { dirty, ctx };
 			}
 
@@ -3989,7 +3842,7 @@ function create_default_slot_4(ctx) {
 	};
 }
 
-// (101:4) <CategoryTitle>
+// (95:4) <CategoryTitle>
 function Options_svelte_create_default_slot_3(ctx) {
 	let t;
 
@@ -4006,7 +3859,7 @@ function Options_svelte_create_default_slot_3(ctx) {
 	};
 }
 
-// (104:8) <FormInput>
+// (98:8) <FormInput>
 function Options_svelte_create_default_slot_2(ctx) {
 	let keyboardinput;
 	let t;
@@ -4014,13 +3867,13 @@ function Options_svelte_create_default_slot_2(ctx) {
 
 	keyboardinput = new KeyboardInput_svelte({
 			props: {
-				value: /*keyBind*/ ctx[12].key,
-				ctrl: /*keyBind*/ ctx[12].ctrl,
-				alt: /*keyBind*/ ctx[12].alt,
-				shift: /*keyBind*/ ctx[12].shift,
-				id: /*keyBind*/ ctx[12].action,
-				label: actions[/*keyBind*/ ctx[12].action].label,
-				active: /*keyBind*/ ctx[12].action === /*activeId*/ ctx[0],
+				value: /*keyBind*/ ctx[11].key,
+				ctrl: /*keyBind*/ ctx[11].ctrl,
+				alt: /*keyBind*/ ctx[11].alt,
+				shift: /*keyBind*/ ctx[11].shift,
+				id: /*keyBind*/ ctx[11].action,
+				label: actions[/*keyBind*/ ctx[11].action].label,
+				active: /*keyBind*/ ctx[11].action === /*activeId*/ ctx[0],
 				disabled: !!/*activeId*/ ctx[0] || !/*$configStore*/ ctx[1].hotkeysActive,
 				setActiveId: /*setActiveId*/ ctx[2]
 			}
@@ -4038,13 +3891,13 @@ function Options_svelte_create_default_slot_2(ctx) {
 		},
 		p(ctx, dirty) {
 			const keyboardinput_changes = {};
-			if (dirty & /*$configStore*/ 2) keyboardinput_changes.value = /*keyBind*/ ctx[12].key;
-			if (dirty & /*$configStore*/ 2) keyboardinput_changes.ctrl = /*keyBind*/ ctx[12].ctrl;
-			if (dirty & /*$configStore*/ 2) keyboardinput_changes.alt = /*keyBind*/ ctx[12].alt;
-			if (dirty & /*$configStore*/ 2) keyboardinput_changes.shift = /*keyBind*/ ctx[12].shift;
-			if (dirty & /*$configStore*/ 2) keyboardinput_changes.id = /*keyBind*/ ctx[12].action;
-			if (dirty & /*$configStore*/ 2) keyboardinput_changes.label = actions[/*keyBind*/ ctx[12].action].label;
-			if (dirty & /*$configStore, activeId*/ 3) keyboardinput_changes.active = /*keyBind*/ ctx[12].action === /*activeId*/ ctx[0];
+			if (dirty & /*$configStore*/ 2) keyboardinput_changes.value = /*keyBind*/ ctx[11].key;
+			if (dirty & /*$configStore*/ 2) keyboardinput_changes.ctrl = /*keyBind*/ ctx[11].ctrl;
+			if (dirty & /*$configStore*/ 2) keyboardinput_changes.alt = /*keyBind*/ ctx[11].alt;
+			if (dirty & /*$configStore*/ 2) keyboardinput_changes.shift = /*keyBind*/ ctx[11].shift;
+			if (dirty & /*$configStore*/ 2) keyboardinput_changes.id = /*keyBind*/ ctx[11].action;
+			if (dirty & /*$configStore*/ 2) keyboardinput_changes.label = actions[/*keyBind*/ ctx[11].action].label;
+			if (dirty & /*$configStore, activeId*/ 3) keyboardinput_changes.active = /*keyBind*/ ctx[11].action === /*activeId*/ ctx[0];
 			if (dirty & /*activeId, $configStore*/ 3) keyboardinput_changes.disabled = !!/*activeId*/ ctx[0] || !/*$configStore*/ ctx[1].hotkeysActive;
 			keyboardinput.$set(keyboardinput_changes);
 		},
@@ -4064,7 +3917,7 @@ function Options_svelte_create_default_slot_2(ctx) {
 	};
 }
 
-// (103:6) {#each $configStore.keySetting as keyBind}
+// (97:6) {#each $configStore.keySetting as keyBind}
 function create_each_block(ctx) {
 	let forminput;
 	let current;
@@ -4087,7 +3940,7 @@ function create_each_block(ctx) {
 		p(ctx, dirty) {
 			const forminput_changes = {};
 
-			if (dirty & /*$$scope, $configStore, activeId*/ 32771) {
+			if (dirty & /*$$scope, $configStore, activeId*/ 16387) {
 				forminput_changes.$$scope = { dirty, ctx };
 			}
 
@@ -4108,7 +3961,7 @@ function create_each_block(ctx) {
 	};
 }
 
-// (126:4) <CategoryTitle>
+// (120:4) <CategoryTitle>
 function Options_svelte_create_default_slot_1(ctx) {
 	let t;
 
@@ -4125,7 +3978,7 @@ function Options_svelte_create_default_slot_1(ctx) {
 	};
 }
 
-// (75:0) <ThemeSwitch>
+// (74:0) <ThemeSwitch>
 function Options_svelte_create_default_slot(ctx) {
 	let div4;
 	let header;
@@ -4139,19 +3992,17 @@ function Options_svelte_create_default_slot(ctx) {
 	let t3;
 	let formfield2;
 	let t4;
-	let formfield3;
-	let t5;
 	let categorytitle1;
-	let t6;
+	let t5;
 	let div1;
-	let t7;
+	let t6;
 	let div2;
 	let button;
-	let t8;
+	let t7;
 	let button_disabled_value;
-	let t9;
+	let t8;
 	let categorytitle2;
-	let t10;
+	let t9;
 	let div3;
 	let about;
 	let current;
@@ -4161,33 +4012,26 @@ function Options_svelte_create_default_slot(ctx) {
 
 	categorytitle0 = new CategoryTitle_svelte({
 			props: {
-				$$slots: { default: [create_default_slot_12] },
+				$$slots: { default: [create_default_slot_10] },
 				$$scope: { ctx }
 			}
 		});
 
 	formfield0 = new FormField_svelte({
 			props: {
-				$$slots: { default: [create_default_slot_10] },
+				$$slots: { default: [create_default_slot_8] },
 				$$scope: { ctx }
 			}
 		});
 
 	formfield1 = new FormField_svelte({
 			props: {
-				$$slots: { default: [create_default_slot_8] },
-				$$scope: { ctx }
-			}
-		});
-
-	formfield2 = new FormField_svelte({
-			props: {
 				$$slots: { default: [create_default_slot_6] },
 				$$scope: { ctx }
 			}
 		});
 
-	formfield3 = new FormField_svelte({
+	formfield2 = new FormField_svelte({
 			props: {
 				$$slots: { default: [create_default_slot_4] },
 				$$scope: { ctx }
@@ -4235,32 +4079,30 @@ function Options_svelte_create_default_slot(ctx) {
 			t3 = space();
 			create_component(formfield2.$$.fragment);
 			t4 = space();
-			create_component(formfield3.$$.fragment);
-			t5 = space();
 			create_component(categorytitle1.$$.fragment);
-			t6 = space();
+			t5 = space();
 			div1 = internal_element("div");
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
 				each_blocks[i].c();
 			}
 
-			t7 = space();
+			t6 = space();
 			div2 = internal_element("div");
 			button = internal_element("button");
-			t8 = internal_text("rétablir les valeurs par défaut");
-			t9 = space();
+			t7 = internal_text("rétablir les valeurs par défaut");
+			t8 = space();
 			create_component(categorytitle2.$$.fragment);
-			t10 = space();
+			t9 = space();
 			div3 = internal_element("div");
 			create_component(about.$$.fragment);
-			attr(div0, "class", "form-container svelte-110kjy5");
-			attr(div1, "class", "form-container svelte-110kjy5");
-			attr(button, "class", "default-keybinds svelte-110kjy5");
+			attr(div0, "class", "form-container svelte-1htpe4x");
+			attr(div1, "class", "form-container svelte-1htpe4x");
+			attr(button, "class", "default-keybinds svelte-1htpe4x");
 			button.disabled = button_disabled_value = !!/*activeId*/ ctx[0] || !/*$configStore*/ ctx[1].hotkeysActive;
-			attr(div2, "class", "text-container svelte-110kjy5");
-			attr(div3, "class", "form-container svelte-110kjy5");
-			attr(div4, "class", "layout svelte-110kjy5");
+			attr(div2, "class", "text-container svelte-1htpe4x");
+			attr(div3, "class", "form-container svelte-1htpe4x");
+			attr(div4, "class", "layout svelte-1htpe4x");
 		},
 		m(target, anchor) {
 			insert(target, div4, anchor);
@@ -4274,24 +4116,22 @@ function Options_svelte_create_default_slot(ctx) {
 			mount_component(formfield1, div0, null);
 			append(div0, t3);
 			mount_component(formfield2, div0, null);
-			append(div0, t4);
-			mount_component(formfield3, div0, null);
-			append(div4, t5);
+			append(div4, t4);
 			mount_component(categorytitle1, div4, null);
-			append(div4, t6);
+			append(div4, t5);
 			append(div4, div1);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
 				each_blocks[i].m(div1, null);
 			}
 
-			append(div4, t7);
+			append(div4, t6);
 			append(div4, div2);
 			append(div2, button);
-			append(button, t8);
-			append(div4, t9);
+			append(button, t7);
+			append(div4, t8);
 			mount_component(categorytitle2, div4, null);
-			append(div4, t10);
+			append(div4, t9);
 			append(div4, div3);
 			mount_component(about, div3, null);
 			current = true;
@@ -4304,42 +4144,35 @@ function Options_svelte_create_default_slot(ctx) {
 		p(ctx, dirty) {
 			const categorytitle0_changes = {};
 
-			if (dirty & /*$$scope*/ 32768) {
+			if (dirty & /*$$scope*/ 16384) {
 				categorytitle0_changes.$$scope = { dirty, ctx };
 			}
 
 			categorytitle0.$set(categorytitle0_changes);
 			const formfield0_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 32770) {
+			if (dirty & /*$$scope, $configStore*/ 16386) {
 				formfield0_changes.$$scope = { dirty, ctx };
 			}
 
 			formfield0.$set(formfield0_changes);
 			const formfield1_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 32770) {
+			if (dirty & /*$$scope, $configStore*/ 16386) {
 				formfield1_changes.$$scope = { dirty, ctx };
 			}
 
 			formfield1.$set(formfield1_changes);
 			const formfield2_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 32770) {
+			if (dirty & /*$$scope, $configStore*/ 16386) {
 				formfield2_changes.$$scope = { dirty, ctx };
 			}
 
 			formfield2.$set(formfield2_changes);
-			const formfield3_changes = {};
-
-			if (dirty & /*$$scope, $configStore*/ 32770) {
-				formfield3_changes.$$scope = { dirty, ctx };
-			}
-
-			formfield3.$set(formfield3_changes);
 			const categorytitle1_changes = {};
 
-			if (dirty & /*$$scope*/ 32768) {
+			if (dirty & /*$$scope*/ 16384) {
 				categorytitle1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -4378,7 +4211,7 @@ function Options_svelte_create_default_slot(ctx) {
 
 			const categorytitle2_changes = {};
 
-			if (dirty & /*$$scope*/ 32768) {
+			if (dirty & /*$$scope*/ 16384) {
 				categorytitle2_changes.$$scope = { dirty, ctx };
 			}
 
@@ -4391,7 +4224,6 @@ function Options_svelte_create_default_slot(ctx) {
 			transition_in(formfield0.$$.fragment, local);
 			transition_in(formfield1.$$.fragment, local);
 			transition_in(formfield2.$$.fragment, local);
-			transition_in(formfield3.$$.fragment, local);
 			transition_in(categorytitle1.$$.fragment, local);
 
 			for (let i = 0; i < each_value.length; i += 1) {
@@ -4408,7 +4240,6 @@ function Options_svelte_create_default_slot(ctx) {
 			transition_out(formfield0.$$.fragment, local);
 			transition_out(formfield1.$$.fragment, local);
 			transition_out(formfield2.$$.fragment, local);
-			transition_out(formfield3.$$.fragment, local);
 			transition_out(categorytitle1.$$.fragment, local);
 			each_blocks = each_blocks.filter(Boolean);
 
@@ -4427,7 +4258,6 @@ function Options_svelte_create_default_slot(ctx) {
 			destroy_component(formfield0);
 			destroy_component(formfield1);
 			destroy_component(formfield2);
-			destroy_component(formfield3);
 			destroy_component(categorytitle1);
 			destroy_each(each_blocks, detaching);
 			destroy_component(categorytitle2);
@@ -4460,7 +4290,7 @@ function Options_svelte_create_fragment(ctx) {
 		p(ctx, [dirty]) {
 			const themeswitch_changes = {};
 
-			if (dirty & /*$$scope, activeId, $configStore*/ 32771) {
+			if (dirty & /*$$scope, activeId, $configStore*/ 16387) {
 				themeswitch_changes.$$scope = { dirty, ctx };
 			}
 
@@ -4572,13 +4402,6 @@ function Options_svelte_instance($$self, $$props, $$invalidate) {
 	}
 
 	function switch_1_checked_binding_2(value) {
-		if ($$self.$$.not_equal($configStore.fullPage, value)) {
-			$configStore.fullPage = value;
-			configStore.set($configStore);
-		}
-	}
-
-	function switch_1_checked_binding_3(value) {
 		if ($$self.$$.not_equal($configStore.hotkeysActive, value)) {
 			$configStore.hotkeysActive = value;
 			configStore.set($configStore);
@@ -4592,8 +4415,7 @@ function Options_svelte_instance($$self, $$props, $$invalidate) {
 		resetDefaultKeybinds,
 		switch_1_checked_binding,
 		switch_1_checked_binding_1,
-		switch_1_checked_binding_2,
-		switch_1_checked_binding_3
+		switch_1_checked_binding_2
 	];
 }
 

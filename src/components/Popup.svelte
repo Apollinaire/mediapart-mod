@@ -13,7 +13,6 @@
       window.open(chrome.runtime.getURL('options.html'));
     }
   };
-
 </script>
 
 <ThemeSwitch>
@@ -27,11 +26,6 @@
     <FormField>
       <FormInput>
         <Switch disabled={configStore.loading} bind:checked={$configStore.zenMode} label="Lecture zen" />
-      </FormInput>
-    </FormField>
-    <FormField>
-      <FormInput>
-        <Switch disabled={configStore.loading} bind:checked={$configStore.fullPage} label="Lecture sur une page" />
       </FormInput>
     </FormField>
     <FormField>
@@ -58,5 +52,4 @@
   button.link-button {
     text-decoration: underline;
   }
-
 </style>

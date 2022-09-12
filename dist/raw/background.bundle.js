@@ -6,7 +6,6 @@ var __webpack_exports__ = {};
 const DEFAULT_CONFIG = {
   zenMode: true,
   darkTheme: true,
-  fullPage: true,
   hotkeysActive: true,
   keySetting: [{
     key: 't',
@@ -20,15 +19,6 @@ const DEFAULT_CONFIG = {
   }, {
     key: 'u',
     action: 'une'
-  }, {
-    key: 'o',
-    action: 'nextPage'
-  }, {
-    key: 'i',
-    action: 'previousPage'
-  }, {
-    key: 'p',
-    action: 'fullPage'
   }, {
     key: '+',
     action: 'increaseFontSize'
@@ -75,19 +65,6 @@ const toggleZenMode = async () => {
     zenMode
   } = await getConfig();
   return setZenMode(!zenMode);
-};
-const setFullPage = newFullPage => {
-  return new Promise(resolve => {
-    chrome.storage.local.set({
-      fullPage: newFullPage
-    }, resolve);
-  });
-};
-const toggleFullPage = async () => {
-  const {
-    fullPage
-  } = await getConfig();
-  return setFullPage(!fullPage);
 };
 const setHotkeysActive = newHotkeysActive => {
   return new Promise(resolve => {

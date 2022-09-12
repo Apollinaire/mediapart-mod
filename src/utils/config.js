@@ -1,15 +1,11 @@
 export const DEFAULT_CONFIG = {
   zenMode: true,
   darkTheme: true,
-  fullPage: true,
   hotkeysActive: true,
   keySetting: [
     { key: 't', action: 'toggleDarkTheme', ctrl: false, alt: false, shift: false },
     { key: 'z', action: 'toggleZenMode' },
     { key: 'u', action: 'une' },
-    { key: 'o', action: 'nextPage' },
-    { key: 'i', action: 'previousPage' },
-    { key: 'p', action: 'fullPage' },
     { key: '+', action: 'increaseFontSize' },
     { key: '-', action: 'decreaseFontSize' },
   ],
@@ -49,16 +45,6 @@ export const setZenMode = newZenMode => {
 export const toggleZenMode = async () => {
   const { zenMode } = await getConfig();
   return setZenMode(!zenMode);
-};
-
-export const setFullPage = newFullPage => {
-  return new Promise(resolve => {
-    chrome.storage.local.set({ fullPage: newFullPage }, resolve);
-  });
-};
-export const toggleFullPage = async () => {
-  const { fullPage } = await getConfig();
-  return setFullPage(!fullPage);
 };
 
 export const setHotkeysActive = newHotkeysActive => {

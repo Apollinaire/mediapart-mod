@@ -1,12 +1,3 @@
-export const articleLinksToFullPage = () => {
-  const links = document.getElementsByTagName('a');
-  for (const a of links) {
-    if (a.href && isArticleLink(a.href)) {
-      a.href = getFullPageLink(a.href);
-    }
-  }
-};
-
 export const isArticleLink = href => {
   let url;
   try {
@@ -36,12 +27,3 @@ export const isBlogLink = href => {
 
 const blogPathnameRegex = /^\/([a-z]|[0-9]|-)+\/blog\/[0-9]{6}\/[^\/]+$/;
 const blogEditionPathnameRegex = /^\/edition\/([a-z]|[0-9]|-)+\/article\/[0-9]{6}\/[^\/]+$/;
-
-export const getFullPageLink = href => {
-  const url = new URL(href);
-  if (url.searchParams.get('onglet') === 'full' || url.searchParams.has('page_article')) {
-    return href;
-  }
-  url.searchParams.append('onglet', 'full');
-  return url.toString();
-};
