@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "prebuild": "npm run gen-css",
+    "prebuild": "npm run gen-css && npm run zip:source",
     "build": "NODE_ENV=production PORT=9090 webpack --mode=production",
     "postbuild": "web-ext build --source-dir=\"dist/raw\" --artifacts-dir=\"dist\"",
     "start": "NODE_ENV=development PORT=9090 webpack --mode=development --watch",
