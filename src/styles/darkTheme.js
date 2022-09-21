@@ -1,4 +1,5 @@
 import styles from '../generateCSS/styles.json';
+import { mainCss } from '../utils/constants';
 import { getNameFromLink } from '../utils/helpers';
 
 const DARK_THEME_STYLE_ELEMENT_CLASSNAME = 'mediapart-custom-theme';
@@ -8,15 +9,19 @@ const insertDarkTheme = () => {
   elements.forEach(el => {
     const href = el.href;
     if (typeof href !== 'string') return;
-
-    const name = getNameFromLink(href.split('?')[0]);
+    const cleanHref = href.split('?')[0];
+    const name = getNameFromLink(cleanHref);
     const style = styles[name];
-    if (!style) {
-      if (process.env.NODE_ENV === 'development') {
-        alert(href);
+    if (process.env.NODE_ENV === 'development') {
+      if (/main\.[a-zA-Z0-9]{16}\.css$/.test(href) && href !== mainCss) {
+        alert(`main CSS ID has changed, new url is ${href}`);
       }
-      return;
+      if (!style) {
+        alert(href);
+        return;
+      }
     }
+
     const styleEl = document.createElement('style');
     styleEl.textContent = style;
     document.head.append(styleEl);
