@@ -74,15 +74,12 @@
   }
 }
 
-.nav.nav__news._sticky {
-
-  .nav__shortcuts {
-    display: none;
-  }
+.nav.nav__news._sticky._scroll-bottom {
+  opacity: 0;
+  transition-property: opacity;
+  transition-duration: 150ms;
 
   &:hover {
-    .nav__shortcuts {
-      display: block;
-    }
+    opacity: 1;
   }
 }
