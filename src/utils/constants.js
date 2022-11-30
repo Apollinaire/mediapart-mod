@@ -1,6 +1,6 @@
 export const mainCssRegex = /main\.[a-zA-Z0-9]{16}\.css$/;
 export const mainCss =
-  'https://www.mediapart.fr/assets/build/default/front/nouvelle_formule/css/main.dddd50f25ddc4cc8.css';
+  'https://www.mediapart.fr/assets/build/default/front/nouvelle_formule/css/main.f1bcddab3c2c3337.css';
 export const cssLinks = [
   mainCss,
   'https://www.mediapart.fr/assets/front/css/main.min.css',
@@ -21,4 +21,6 @@ export const cssLinks = [
   'https://www.mediapart.fr/assets/front/css/account.min.css',
   'https://www.mediapart.fr/assets/front/nouvelle_formule/css/backport.min.css',
   'https://www.mediapart.fr/assets/build/default/front/nouvelle_formule/css/backport.min.css',
+  'https://www.mediapart.fr/assets/build/default/front/css/cc.min.css',
+  'https://www.mediapart.fr/assets/build/default/front/css/backport.min.css'
 ];
