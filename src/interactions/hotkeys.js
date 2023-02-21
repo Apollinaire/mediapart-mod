@@ -61,9 +61,10 @@ export const actions = {
     label: 'Augmenter la taille de police',
     run: () => {
       const buttonEl =
+        document.querySelector('[data-js-fontsize-increase]') ||
         document.getElementById('js-fontsize-increase') ||
         document.querySelector('ul.sub-menu li ul li button.increase-fs');
-      if (!buttonEl.disabled) {
+      if (buttonEl && !buttonEl.disabled) {
         buttonEl.click();
       }
     },
@@ -73,9 +74,10 @@ export const actions = {
     label: 'Diminuer la taille de police',
     run: () => {
       const buttonEl =
+        document.querySelector('[data-js-fontsize-decrease]') ||
         document.getElementById('js-fontsize-decrease') ||
         document.querySelector('ul.sub-menu li ul li button.decrease-fs');
-      if (!buttonEl.disabled) {
+      if (buttonEl && !buttonEl.disabled) {
         buttonEl.click();
       }
     },
