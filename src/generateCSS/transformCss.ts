@@ -120,7 +120,7 @@ const transformCss = (css: string) => {
         }
       }
 
-      // remove the properties that don't match the whitelist
+      // modify properties that match the whitelist
       walk(rule.block, {
         visit: 'Declaration',
         enter: (declaration, declarationItem, declarationList) => {
