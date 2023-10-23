@@ -22,6 +22,9 @@ export const generateCss = async () => {
     cssFilesObj[name] = css;
   });
 
+  // save the main link as is to enable the extension to know when it's outdated
+  cssFilesObj['main'] = mainCssLink;
+
   writeToJSON(JSON.stringify(cssFilesObj));
 
   return;

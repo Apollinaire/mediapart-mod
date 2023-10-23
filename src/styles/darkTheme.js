@@ -12,6 +12,15 @@ const insertDarkTheme = () => {
     const cleanHref = href.split('?')[0];
     const name = getNameFromLink(cleanHref);
     const style = styles[name];
+
+    if (process.env.NODE_ENV === 'development') {
+      if (/main\.[a-zA-Z0-9]{16}\.css$/.test(href) && href !== styles.main) {
+        console.log(`main CSS ID has changed, new url is ${href}`);
+      } else {
+        console.log(`CSS ID is up to date`)
+      }
+    }
+
     if (!style) {
       if (process.env.NODE_ENV === 'development') {
         alert(href);
