@@ -8,7 +8,7 @@
     "build": "npm run build:chrome && npm run build:firefox",
     "build:chrome": "NODE_ENV=production BROWSER=chrome PORT=9090 webpack --mode=production",
     "build:firefox": "NODE_ENV=production BROWSER=firefox PORT=9090 webpack --mode=production",
-    "postbuild": "web-ext build --source-dir=\"dist/chrome\" --artifacts-dir=\"dist\" && web-ext build --source-dir=\"dist/firefox\" --artifacts-dir=\"dist\"",
+    "postbuild": "web-ext build --source-dir=\"dist/chrome\" --artifacts-dir=\"dist/chrome\" && web-ext build --source-dir=\"dist/firefox\" --artifacts-dir=\"dist/firefox\"",
     "start": "NODE_ENV=development PORT=9090 webpack --mode=development --watch",
     "gen-css": "ts-node --script-mode ./src/generateCSS",
     "zip:source": "rm source.zip; zip source.zip -r src README.md tsconfig.json babel.config.js LICENSE package.json package-lock.json tsconfig.json webpack.config.js public",
