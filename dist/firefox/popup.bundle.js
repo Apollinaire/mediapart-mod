@@ -13,8 +13,10 @@ function internal_assign(tar, src) {
         tar[k] = src[k];
     return tar;
 }
+// Adapted from https://github.com/then/is-promise/blob/master/index.js
+// Distributed under MIT License https://github.com/then/is-promise/blob/master/LICENSE
 function is_promise(value) {
-    return value && typeof value === 'object' && typeof value.then === 'function';
+    return !!value && (typeof value === 'object' || typeof value === 'function') && typeof value.then === 'function';
 }
 function add_location(element, file, line, column, char) {
     element.__svelte_meta = {
@@ -162,6 +164,11 @@ const has_prop = (obj, prop) => Object.prototype.hasOwnProperty.call(obj, prop);
 function action_destroyer(action_result) {
     return action_result && internal_is_function(action_result.destroy) ? action_result.destroy : internal_noop;
 }
+function split_css_unit(value) {
+    const split = typeof value === 'string' && value.match(/^\s*(-?[\d.]+)([^\s]*)\s*$/);
+    return split ? [parseFloat(split[1]), split[2] || 'px'] : [value, 'px'];
+}
+const contenteditable_truthy_values = (/* unused pure expression or super */ null && (['', true, 1, 'true', 'contenteditable']));
 
 const is_client = typeof window !== 'undefined';
 let now = (/* unused pure expression or super */ null && (is_client
@@ -211,6 +218,44 @@ function loop(callback) {
     };
 }
 
+const globals = (typeof window !== 'undefined'
+    ? window
+    : typeof globalThis !== 'undefined'
+        ? globalThis
+        : global);
+
+/**
+ * Resize observer singleton.
+ * One listener per element only!
+ * https://groups.google.com/a/chromium.org/g/blink-dev/c/z6ienONUb5A/m/F5-VcUZtBAAJ
+ */
+class ResizeObserverSingleton {
+    constructor(options) {
+        this.options = options;
+        this._listeners = 'WeakMap' in globals ? new WeakMap() : undefined;
+    }
+    observe(element, listener) {
+        this._listeners.set(element, listener);
+        this._getObserver().observe(element, this.options);
+        return () => {
+            this._listeners.delete(element);
+            this._observer.unobserve(element); // this line can probably be removed
+        };
+    }
+    _getObserver() {
+        var _a;
+        return (_a = this._observer) !== null && _a !== void 0 ? _a : (this._observer = new ResizeObserver((entries) => {
+            var _a;
+            for (const entry of entries) {
+                ResizeObserverSingleton.entries.set(entry.target, entry);
+                (_a = this._listeners.get(entry.target)) === null || _a === void 0 ? void 0 : _a(entry);
+            }
+        }));
+    }
+}
+// Needs to be written like this to pass the tree-shake-test
+ResizeObserverSingleton.entries = 'WeakMap' in globals ? new WeakMap() : undefined;
+
 // Track which nodes are claimed during hydration. Unclaimed nodes can then be removed from the DOM
 // at the end of hydration without touching the remaining nodes.
 let is_hydrating = false;
@@ -254,7 +299,7 @@ function init_hydrate(target) {
     * Reorder claimed children optimally.
     * We can reorder claimed children optimally by finding the longest subsequence of
     * nodes that are already claimed in order and only moving the rest. The longest
-    * subsequence subsequence of nodes that are claimed in order can be found by
+    * subsequence of nodes that are claimed in order can be found by
     * computing the longest increasing subsequence of .claim_order values.
     *
     * This algorithm is optimal in generating the least amount of reorder operations
@@ -336,15 +381,16 @@ function get_root_for_style(node) {
 function append_empty_stylesheet(node) {
     const style_element = internal_element('style');
     append_stylesheet(get_root_for_style(node), style_element);
-    return style_element;
+    return style_element.sheet;
 }
 function append_stylesheet(node, style) {
     append(node.head || node, style);
+    return style.sheet;
 }
 function append_hydration(target, node) {
     if (is_hydrating) {
         init_hydrate(target);
-        if ((target.actual_end_child === undefined) || ((target.actual_end_child !== null) && (target.actual_end_child.parentElement !== target))) {
+        if ((target.actual_end_child === undefined) || ((target.actual_end_child !== null) && (target.actual_end_child.parentNode !== target))) {
             target.actual_end_child = target.firstChild;
         }
         // Skip nodes of undefined ordering
@@ -377,7 +423,9 @@ function insert_hydration(target, node, anchor) {
     }
 }
 function detach(node) {
-    node.parentNode.removeChild(node);
+    if (node.parentNode) {
+        node.parentNode.removeChild(node);
+    }
 }
 function destroy_each(iterations, detaching) {
     for (let i = 0; i < iterations.length; i += 1) {
@@ -415,6 +463,9 @@ function space() {
 function empty() {
     return internal_text('');
 }
+function comment(content) {
+    return document.createComment(content);
+}
 function listen(node, event, handler, options) {
     node.addEventListener(event, handler, options);
     return () => node.removeEventListener(event, handler, options);
@@ -429,6 +480,13 @@ function prevent_default(fn) {
 function stop_propagation(fn) {
     return function (event) {
         event.stopPropagation();
+        // @ts-ignore
+        return fn.call(this, event);
+    };
+}
+function stop_immediate_propagation(fn) {
+    return function (event) {
+        event.stopImmediatePropagation();
         // @ts-ignore
         return fn.call(this, event);
     };
@@ -453,6 +511,14 @@ function attr(node, attribute, value) {
     else if (node.getAttribute(attribute) !== value)
         node.setAttribute(attribute, value);
 }
+/**
+ * List of attributes that should always be set through the attr method,
+ * because updating them through the property setter doesn't work reliably.
+ * In the example of `width`/`height`, the problem is that the setter only
+ * accepts numeric values, but the attribute can also be set to a string like `50%`.
+ * If this list becomes too big, rethink this approach.
+ */
+const always_set_through_set_attribute = (/* unused pure expression or super */ null && (['width', 'height']));
 function set_attributes(node, attributes) {
     // @ts-ignore
     const descriptors = Object.getOwnPropertyDescriptors(node.__proto__);
@@ -466,7 +532,7 @@ function set_attributes(node, attributes) {
         else if (key === '__value') {
             node.value = node[key] = attributes[key];
         }
-        else if (descriptors[key] && descriptors[key].set) {
+        else if (descriptors[key] && descriptors[key].set && always_set_through_set_attribute.indexOf(key) === -1) {
             node[key] = attributes[key];
         }
         else {
@@ -479,6 +545,11 @@ function set_svg_attributes(node, attributes) {
         attr(node, key, attributes[key]);
     }
 }
+function set_custom_element_data_map(node, data_map) {
+    Object.keys(data_map).forEach((key) => {
+        set_custom_element_data(node, key, data_map[key]);
+    });
+}
 function set_custom_element_data(node, prop, value) {
     if (prop in node) {
         node[prop] = typeof node[prop] === 'boolean' && value === '' ? true : value;
@@ -486,6 +557,9 @@ function set_custom_element_data(node, prop, value) {
     else {
         attr(node, prop, value);
     }
+}
+function set_dynamic_element_data(tag) {
+    return (/-/.test(tag)) ? set_custom_element_data_map : set_attributes;
 }
 function xlink_attr(node, attribute, value) {
     node.setAttributeNS('http://www.w3.org/1999/xlink', attribute, value);
@@ -500,6 +574,50 @@ function get_binding_group_value(group, __value, checked) {
         value.delete(__value);
     }
     return Array.from(value);
+}
+function init_binding_group(group) {
+    let _inputs;
+    return {
+        /* push */ p(...inputs) {
+            _inputs = inputs;
+            _inputs.forEach(input => group.push(input));
+        },
+        /* remove */ r() {
+            _inputs.forEach(input => group.splice(group.indexOf(input), 1));
+        }
+    };
+}
+function init_binding_group_dynamic(group, indexes) {
+    let _group = get_binding_group(group);
+    let _inputs;
+    function get_binding_group(group) {
+        for (let i = 0; i < indexes.length; i++) {
+            group = group[indexes[i]] = group[indexes[i]] || [];
+        }
+        return group;
+    }
+    function push() {
+        _inputs.forEach(input => _group.push(input));
+    }
+    function remove() {
+        _inputs.forEach(input => _group.splice(_group.indexOf(input), 1));
+    }
+    return {
+        /* update */ u(new_indexes) {
+            indexes = new_indexes;
+            const new_group = get_binding_group(group);
+            if (new_group !== _group) {
+                remove();
+                _group = new_group;
+                push();
+            }
+        },
+        /* push */ p(...inputs) {
+            _inputs = inputs;
+            push();
+        },
+        /* remove */ r: remove
+    };
 }
 function to_number(value) {
     return value === '' ? null : +value;
@@ -605,6 +723,12 @@ function claim_text(nodes, data) {
 function claim_space(nodes) {
     return claim_text(nodes, ' ');
 }
+function claim_comment(nodes, data) {
+    return claim_node(nodes, (node) => node.nodeType === 8, (node) => {
+        node.data = '' + data;
+        return undefined;
+    }, () => comment(data), true);
+}
 function find_comment(nodes, text, start) {
     for (let i = start; i < nodes.length; i += 1) {
         const node = nodes[i];
@@ -614,15 +738,15 @@ function find_comment(nodes, text, start) {
     }
     return nodes.length;
 }
-function claim_html_tag(nodes) {
+function claim_html_tag(nodes, is_svg) {
     // find html opening tag
     const start_index = find_comment(nodes, 'HTML_TAG_START', 0);
     const end_index = find_comment(nodes, 'HTML_TAG_END', start_index);
     if (start_index === end_index) {
-        return new HtmlTagHydration();
+        return new HtmlTagHydration(undefined, is_svg);
     }
     init_claim_info(nodes);
-    const html_tag_nodes = nodes.splice(start_index, end_index + 1);
+    const html_tag_nodes = nodes.splice(start_index, end_index - start_index + 1);
     detach(html_tag_nodes[0]);
     detach(html_tag_nodes[html_tag_nodes.length - 1]);
     const claimed_nodes = html_tag_nodes.slice(1, html_tag_nodes.length - 1);
@@ -630,12 +754,27 @@ function claim_html_tag(nodes) {
         n.claim_order = nodes.claim_info.total_claimed;
         nodes.claim_info.total_claimed += 1;
     }
-    return new HtmlTagHydration(claimed_nodes);
+    return new HtmlTagHydration(claimed_nodes, is_svg);
 }
 function set_data(text, data) {
     data = '' + data;
-    if (text.wholeText !== data)
-        text.data = data;
+    if (text.data === data)
+        return;
+    text.data = data;
+}
+function set_data_contenteditable(text, data) {
+    data = '' + data;
+    if (text.wholeText === data)
+        return;
+    text.data = data;
+}
+function set_data_maybe_contenteditable(text, data, attr_value) {
+    if (~contenteditable_truthy_values.indexOf(attr_value)) {
+        set_data_contenteditable(text, data);
+    }
+    else {
+        set_data(text, data);
+    }
 }
 function set_input_value(input, value) {
     input.value = value == null ? '' : value;
@@ -649,9 +788,14 @@ function set_input_type(input, type) {
     }
 }
 function set_style(node, key, value, important) {
-    node.style.setProperty(key, value, important ? 'important' : '');
+    if (value == null) {
+        node.style.removeProperty(key);
+    }
+    else {
+        node.style.setProperty(key, value, important ? 'important' : '');
+    }
 }
-function select_option(select, value) {
+function select_option(select, value, mounting) {
     for (let i = 0; i < select.options.length; i += 1) {
         const option = select.options[i];
         if (option.__value === value) {
@@ -659,7 +803,9 @@ function select_option(select, value) {
             return;
         }
     }
-    select.selectedIndex = -1; // no option should be selected
+    if (!mounting || value !== undefined) {
+        select.selectedIndex = -1; // no option should be selected
+    }
 }
 function select_options(select, value) {
     for (let i = 0; i < select.options.length; i += 1) {
@@ -668,7 +814,7 @@ function select_options(select, value) {
     }
 }
 function select_value(select) {
-    const selected_option = select.querySelector(':checked') || select.options[0];
+    const selected_option = select.querySelector(':checked');
     return selected_option && selected_option.__value;
 }
 function select_multiple_value(select) {
@@ -691,7 +837,7 @@ function is_crossorigin() {
     }
     return crossorigin;
 }
-function add_resize_listener(node, fn) {
+function add_iframe_resize_listener(node, fn) {
     const computed_style = getComputedStyle(node);
     if (computed_style.position === 'static') {
         node.style.position = 'relative';
@@ -714,6 +860,9 @@ function add_resize_listener(node, fn) {
         iframe.src = 'about:blank';
         iframe.onload = () => {
             unsubscribe = listen(iframe.contentWindow, 'resize', fn);
+            // make sure an initial resize event is fired _after_ the iframe is loaded (which is asynchronous)
+            // see https://github.com/sveltejs/svelte/issues/4233
+            fn();
         };
     }
     append(node, iframe);
@@ -727,19 +876,45 @@ function add_resize_listener(node, fn) {
         detach(iframe);
     };
 }
+const resize_observer_content_box = /* @__PURE__ */ new ResizeObserverSingleton({ box: 'content-box' });
+const resize_observer_border_box = /* @__PURE__ */ new ResizeObserverSingleton({ box: 'border-box' });
+const resize_observer_device_pixel_content_box = /* @__PURE__ */ new ResizeObserverSingleton({ box: 'device-pixel-content-box' });
 function toggle_class(element, name, toggle) {
     element.classList[toggle ? 'add' : 'remove'](name);
 }
-function custom_event(type, detail, bubbles = false) {
+function custom_event(type, detail, { bubbles = false, cancelable = false } = {}) {
     const e = document.createEvent('CustomEvent');
-    e.initCustomEvent(type, bubbles, false, detail);
+    e.initCustomEvent(type, bubbles, cancelable, detail);
     return e;
 }
 function query_selector_all(selector, parent = document.body) {
     return Array.from(parent.querySelectorAll(selector));
 }
+function head_selector(nodeId, head) {
+    const result = [];
+    let started = 0;
+    for (const node of head.childNodes) {
+        if (node.nodeType === 8 /* comment node */) {
+            const comment = node.textContent.trim();
+            if (comment === `HEAD_${nodeId}_END`) {
+                started -= 1;
+                result.push(node);
+            }
+            else if (comment === `HEAD_${nodeId}_START`) {
+                started += 1;
+                result.push(node);
+            }
+        }
+        else if (started > 0) {
+            result.push(node);
+        }
+    }
+    return result;
+}
 class HtmlTag {
-    constructor() {
+    constructor(is_svg = false) {
+        this.is_svg = false;
+        this.is_svg = is_svg;
         this.e = this.n = null;
     }
     c(html) {
@@ -747,15 +922,19 @@ class HtmlTag {
     }
     m(html, target, anchor = null) {
         if (!this.e) {
-            this.e = internal_element(target.nodeName);
-            this.t = target;
+            if (this.is_svg)
+                this.e = svg_element(target.nodeName);
+            /** #7364  target for <template> may be provided as #document-fragment(11) */
+            else
+                this.e = internal_element((target.nodeType === 11 ? 'TEMPLATE' : target.nodeName));
+            this.t = target.tagName !== 'TEMPLATE' ? target : target.content;
             this.c(html);
         }
         this.i(anchor);
     }
     h(html) {
         this.e.innerHTML = html;
-        this.n = Array.from(this.e.childNodes);
+        this.n = Array.from(this.e.nodeName === 'TEMPLATE' ? this.e.content.childNodes : this.e.childNodes);
     }
     i(anchor) {
         for (let i = 0; i < this.n.length; i += 1) {
@@ -772,8 +951,8 @@ class HtmlTag {
     }
 }
 class HtmlTagHydration extends (/* unused pure expression or super */ null && (HtmlTag)) {
-    constructor(claimed_nodes) {
-        super();
+    constructor(claimed_nodes, is_svg = false) {
+        super(is_svg);
         this.e = this.n = null;
         this.l = claimed_nodes;
     }
@@ -805,8 +984,13 @@ function get_custom_elements_slots(element) {
     });
     return result;
 }
+function construct_svelte_component(component, props) {
+    return new component(props);
+}
 
-const active_docs = new Set();
+// we need to store the information for multiple documents because a Svelte application could also contain iframes
+// https://github.com/sveltejs/svelte/issues/3624
+const managed_styles = new Map();
 let active = 0;
 // https://github.com/darkskyapp/string-hash/blob/master/index.js
 function hash(str) {
@@ -815,6 +999,11 @@ function hash(str) {
     while (i--)
         hash = ((hash << 5) - hash) ^ str.charCodeAt(i);
     return hash >>> 0;
+}
+function create_style_information(doc, node) {
+    const info = { stylesheet: append_empty_stylesheet(node), rules: {} };
+    managed_styles.set(doc, info);
+    return info;
 }
 function create_rule(node, a, b, duration, delay, ease, fn, uid = 0) {
     const step = 16.666 / duration;
@@ -826,11 +1015,9 @@ function create_rule(node, a, b, duration, delay, ease, fn, uid = 0) {
     const rule = keyframes + `100% {${fn(b, 1 - b)}}\n}`;
     const name = `__svelte_${hash(rule)}_${uid}`;
     const doc = get_root_for_style(node);
-    active_docs.add(doc);
-    const stylesheet = doc.__svelte_stylesheet || (doc.__svelte_stylesheet = append_empty_stylesheet(node).sheet);
-    const current_rules = doc.__svelte_rules || (doc.__svelte_rules = {});
-    if (!current_rules[name]) {
-        current_rules[name] = true;
+    const { stylesheet, rules } = managed_styles.get(doc) || create_style_information(doc, node);
+    if (!rules[name]) {
+        rules[name] = true;
         stylesheet.insertRule(`@keyframes ${name} ${rule}`, stylesheet.cssRules.length);
     }
     const animation = node.style.animation || '';
@@ -856,14 +1043,13 @@ function clear_rules() {
     raf(() => {
         if (active)
             return;
-        active_docs.forEach(doc => {
-            const stylesheet = doc.__svelte_stylesheet;
-            let i = stylesheet.cssRules.length;
-            while (i--)
-                stylesheet.deleteRule(i);
-            doc.__svelte_rules = {};
+        managed_styles.forEach(info => {
+            const { ownerNode } = info.stylesheet;
+            // there is no ownerNode if it runs on jsdom.
+            if (ownerNode)
+                detach(ownerNode);
         });
-        active_docs.clear();
+        managed_styles.clear();
     });
 }
 
@@ -945,41 +1131,113 @@ function get_current_component() {
         throw new Error('Function called outside component initialization');
     return current_component;
 }
+/**
+ * Schedules a callback to run immediately before the component is updated after any state change.
+ *
+ * The first time the callback runs will be before the initial `onMount`
+ *
+ * https://svelte.dev/docs#run-time-svelte-beforeupdate
+ */
 function beforeUpdate(fn) {
     get_current_component().$$.before_update.push(fn);
 }
+/**
+ * The `onMount` function schedules a callback to run as soon as the component has been mounted to the DOM.
+ * It must be called during the component's initialisation (but doesn't need to live *inside* the component;
+ * it can be called from an external module).
+ *
+ * `onMount` does not run inside a [server-side component](/docs#run-time-server-side-component-api).
+ *
+ * https://svelte.dev/docs#run-time-svelte-onmount
+ */
 function onMount(fn) {
     get_current_component().$$.on_mount.push(fn);
 }
+/**
+ * Schedules a callback to run immediately after the component has been updated.
+ *
+ * The first time the callback runs will be after the initial `onMount`
+ */
 function afterUpdate(fn) {
     get_current_component().$$.after_update.push(fn);
 }
+/**
+ * Schedules a callback to run immediately before the component is unmounted.
+ *
+ * Out of `onMount`, `beforeUpdate`, `afterUpdate` and `onDestroy`, this is the
+ * only one that runs inside a server-side component.
+ *
+ * https://svelte.dev/docs#run-time-svelte-ondestroy
+ */
 function onDestroy(fn) {
     get_current_component().$$.on_destroy.push(fn);
 }
+/**
+ * Creates an event dispatcher that can be used to dispatch [component events](/docs#template-syntax-component-directives-on-eventname).
+ * Event dispatchers are functions that can take two arguments: `name` and `detail`.
+ *
+ * Component events created with `createEventDispatcher` create a
+ * [CustomEvent](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent).
+ * These events do not [bubble](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/Events#Event_bubbling_and_capture).
+ * The `detail` argument corresponds to the [CustomEvent.detail](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/detail)
+ * property and can contain any type of data.
+ *
+ * https://svelte.dev/docs#run-time-svelte-createeventdispatcher
+ */
 function createEventDispatcher() {
     const component = get_current_component();
-    return (type, detail) => {
+    return (type, detail, { cancelable = false } = {}) => {
         const callbacks = component.$$.callbacks[type];
         if (callbacks) {
             // TODO are there situations where events could be dispatched
             // in a server (non-DOM) environment?
-            const event = custom_event(type, detail);
+            const event = custom_event(type, detail, { cancelable });
             callbacks.slice().forEach(fn => {
                 fn.call(component, event);
             });
+            return !event.defaultPrevented;
         }
+        return true;
     };
 }
+/**
+ * Associates an arbitrary `context` object with the current component and the specified `key`
+ * and returns that object. The context is then available to children of the component
+ * (including slotted content) with `getContext`.
+ *
+ * Like lifecycle functions, this must be called during component initialisation.
+ *
+ * https://svelte.dev/docs#run-time-svelte-setcontext
+ */
 function setContext(key, context) {
     get_current_component().$$.context.set(key, context);
+    return context;
 }
+/**
+ * Retrieves the context that belongs to the closest parent component with the specified `key`.
+ * Must be called during component initialisation.
+ *
+ * https://svelte.dev/docs#run-time-svelte-getcontext
+ */
 function getContext(key) {
     return get_current_component().$$.context.get(key);
 }
+/**
+ * Retrieves the whole context map that belongs to the closest parent component.
+ * Must be called during component initialisation. Useful, for example, if you
+ * programmatically create a component and want to pass the existing context to it.
+ *
+ * https://svelte.dev/docs#run-time-svelte-getallcontexts
+ */
 function getAllContexts() {
     return get_current_component().$$.context;
 }
+/**
+ * Checks whether a given `key` has been set in the context of a parent component.
+ * Must be called during component initialisation.
+ *
+ * https://svelte.dev/docs#run-time-svelte-hascontext
+ */
 function hasContext(key) {
     return get_current_component().$$.context.has(key);
 }
@@ -997,9 +1255,9 @@ function bubble(component, event) {
 const dirty_components = [];
 const intros = { enabled: false };
 const binding_callbacks = [];
-const render_callbacks = [];
+let render_callbacks = [];
 const flush_callbacks = [];
-const resolved_promise = Promise.resolve();
+const resolved_promise = /* @__PURE__ */ Promise.resolve();
 let update_scheduled = false;
 function schedule_update() {
     if (!update_scheduled) {
@@ -1017,22 +1275,54 @@ function add_render_callback(fn) {
 function add_flush_callback(fn) {
     flush_callbacks.push(fn);
 }
-let flushing = false;
+// flush() calls callbacks in this order:
+// 1. All beforeUpdate callbacks, in order: parents before children
+// 2. All bind:this callbacks, in reverse order: children before parents.
+// 3. All afterUpdate callbacks, in order: parents before children. EXCEPT
+//    for afterUpdates called during the initial onMount, which are called in
+//    reverse order: children before parents.
+// Since callbacks might update component values, which could trigger another
+// call to flush(), the following steps guard against this:
+// 1. During beforeUpdate, any updated components will be added to the
+//    dirty_components array and will cause a reentrant call to flush(). Because
+//    the flush index is kept outside the function, the reentrant call will pick
+//    up where the earlier call left off and go through all dirty components. The
+//    current_component value is saved and restored so that the reentrant call will
+//    not interfere with the "parent" flush() call.
+// 2. bind:this callbacks cannot trigger new flush() calls.
+// 3. During afterUpdate, any updated components will NOT have their afterUpdate
+//    callback called a second time; the seen_callbacks set, outside the flush()
+//    function, guarantees this behavior.
 const seen_callbacks = new Set();
+let flushidx = 0; // Do *not* move this inside the flush() function
 function flush() {
-    if (flushing)
+    // Do not reenter flush while dirty components are updated, as this can
+    // result in an infinite loop. Instead, let the inner flush handle it.
+    // Reentrancy is ok afterwards for bindings etc.
+    if (flushidx !== 0) {
         return;
-    flushing = true;
+    }
+    const saved_component = current_component;
     do {
         // first, call beforeUpdate functions
         // and update components
-        for (let i = 0; i < dirty_components.length; i += 1) {
-            const component = dirty_components[i];
-            set_current_component(component);
-            update(component.$$);
+        try {
+            while (flushidx < dirty_components.length) {
+                const component = dirty_components[flushidx];
+                flushidx++;
+                set_current_component(component);
+                update(component.$$);
+            }
+        }
+        catch (e) {
+            // reset dirty state to not end up in a deadlocked state and then rethrow
+            dirty_components.length = 0;
+            flushidx = 0;
+            throw e;
         }
         set_current_component(null);
         dirty_components.length = 0;
+        flushidx = 0;
         while (binding_callbacks.length)
             binding_callbacks.pop()();
         // then, once components are updated, call
@@ -1052,8 +1342,8 @@ function flush() {
         flush_callbacks.pop()();
     }
     update_scheduled = false;
-    flushing = false;
     seen_callbacks.clear();
+    set_current_component(saved_component);
 }
 function update($$) {
     if ($$.fragment !== null) {
@@ -1064,6 +1354,16 @@ function update($$) {
         $$.fragment && $$.fragment.p($$.ctx, dirty);
         $$.after_update.forEach(add_render_callback);
     }
+}
+/**
+ * Useful for example to execute remaining `afterUpdate` callbacks before executing `destroy`.
+ */
+function flush_render_callbacks(fns) {
+    const filtered = [];
+    const targets = [];
+    render_callbacks.forEach((c) => fns.indexOf(c) === -1 ? filtered.push(c) : targets.push(c));
+    targets.forEach((c) => c());
+    render_callbacks = filtered;
 }
 
 let promise;
@@ -1115,10 +1415,14 @@ function transition_out(block, local, detach, callback) {
         });
         block.o(local);
     }
+    else if (callback) {
+        callback();
+    }
 }
 const null_transition = { duration: 0 };
 function create_in_transition(node, fn, params) {
-    let config = fn(node, params);
+    const options = { direction: 'in' };
+    let config = fn(node, params, options);
     let running = false;
     let animation_name;
     let task;
@@ -1162,7 +1466,7 @@ function create_in_transition(node, fn, params) {
             started = true;
             delete_rule(node);
             if (internal_is_function(config)) {
-                config = config();
+                config = config(options);
                 wait().then(go);
             }
             else {
@@ -1181,7 +1485,8 @@ function create_in_transition(node, fn, params) {
     };
 }
 function create_out_transition(node, fn, params) {
-    let config = fn(node, params);
+    const options = { direction: 'out' };
+    let config = fn(node, params, options);
     let running = true;
     let animation_name;
     const group = outros;
@@ -1216,7 +1521,7 @@ function create_out_transition(node, fn, params) {
     if (internal_is_function(config)) {
         wait().then(() => {
             // @ts-ignore
-            config = config();
+            config = config(options);
             go();
         });
     }
@@ -1237,7 +1542,8 @@ function create_out_transition(node, fn, params) {
     };
 }
 function create_bidirectional_transition(node, fn, params, intro) {
-    let config = fn(node, params);
+    const options = { direction: 'both' };
+    let config = fn(node, params, options);
     let t = intro ? 0 : 1;
     let running_program = null;
     let pending_program = null;
@@ -1327,7 +1633,7 @@ function create_bidirectional_transition(node, fn, params, intro) {
             if (internal_is_function(config)) {
                 wait().then(() => {
                     // @ts-ignore
-                    config = config();
+                    config = config(options);
                     go(b);
                 });
             }
@@ -1424,12 +1730,6 @@ function update_await_block_branch(info, ctx, dirty) {
     info.block.p(child_ctx, dirty);
 }
 
-const globals = (typeof window !== 'undefined'
-    ? window
-    : typeof globalThis !== 'undefined'
-        ? globalThis
-        : global);
-
 function destroy_block(block, lookup) {
     block.d(1);
     lookup.delete(block.key);
@@ -1457,6 +1757,7 @@ function update_keyed_each(old_blocks, dirty, get_key, dynamic, ctx, list, looku
     const new_blocks = [];
     const new_lookup = new Map();
     const deltas = new Map();
+    const updates = [];
     i = n;
     while (i--) {
         const child_ctx = get_context(ctx, list, i);
@@ -1467,7 +1768,8 @@ function update_keyed_each(old_blocks, dirty, get_key, dynamic, ctx, list, looku
             block.c();
         }
         else if (dynamic) {
-            block.p(child_ctx, dirty);
+            // defer updates until all the DOM shuffling is done
+            updates.push(() => block.p(child_ctx, dirty));
         }
         new_lookup.set(key, new_blocks[i] = block);
         if (key in old_indexes)
@@ -1520,6 +1822,7 @@ function update_keyed_each(old_blocks, dirty, get_key, dynamic, ctx, list, looku
     }
     while (n)
         insert(new_blocks[n - 1]);
+    internal_run_all(updates);
     return new_blocks;
 }
 function validate_each_keys(ctx, list, get_context, get_key) {
@@ -1570,8 +1873,7 @@ function get_spread_object(spread_props) {
     return typeof spread_props === 'object' && spread_props !== null ? spread_props : {};
 }
 
-// source: https://html.spec.whatwg.org/multipage/indices.html
-const boolean_attributes = new Set([
+const _boolean_attributes = [
     'allowfullscreen',
     'allowpaymentrequest',
     'async',
@@ -1584,6 +1886,7 @@ const boolean_attributes = new Set([
     'disabled',
     'formnovalidate',
     'hidden',
+    'inert',
     'ismap',
     'loop',
     'multiple',
@@ -1596,19 +1899,42 @@ const boolean_attributes = new Set([
     'required',
     'reversed',
     'selected'
-]);
+];
+/**
+ * List of HTML boolean attributes (e.g. `<input disabled>`).
+ * Source: https://html.spec.whatwg.org/multipage/indices.html
+ */
+const boolean_attributes = new Set([..._boolean_attributes]);
+
+/** regex of all html void element names */
+const void_element_names = /^(?:area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/;
+function is_void(name) {
+    return void_element_names.test(name) || name.toLowerCase() === '!doctype';
+}
 
 const invalid_attribute_name_character = /[\s'">/=\u{FDD0}-\u{FDEF}\u{FFFE}\u{FFFF}\u{1FFFE}\u{1FFFF}\u{2FFFE}\u{2FFFF}\u{3FFFE}\u{3FFFF}\u{4FFFE}\u{4FFFF}\u{5FFFE}\u{5FFFF}\u{6FFFE}\u{6FFFF}\u{7FFFE}\u{7FFFF}\u{8FFFE}\u{8FFFF}\u{9FFFE}\u{9FFFF}\u{AFFFE}\u{AFFFF}\u{BFFFE}\u{BFFFF}\u{CFFFE}\u{CFFFF}\u{DFFFE}\u{DFFFF}\u{EFFFE}\u{EFFFF}\u{FFFFE}\u{FFFFF}\u{10FFFE}\u{10FFFF}]/u;
 // https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
 // https://infra.spec.whatwg.org/#noncharacter
-function spread(args, classes_to_add) {
+function spread(args, attrs_to_add) {
     const attributes = Object.assign({}, ...args);
-    if (classes_to_add) {
-        if (attributes.class == null) {
-            attributes.class = classes_to_add;
+    if (attrs_to_add) {
+        const classes_to_add = attrs_to_add.classes;
+        const styles_to_add = attrs_to_add.styles;
+        if (classes_to_add) {
+            if (attributes.class == null) {
+                attributes.class = classes_to_add;
+            }
+            else {
+                attributes.class += ' ' + classes_to_add;
+            }
         }
-        else {
-            attributes.class += ' ' + classes_to_add;
+        if (styles_to_add) {
+            if (attributes.style == null) {
+                attributes.style = style_object_to_string(styles_to_add);
+            }
+            else {
+                attributes.style = style_object_to_string(merge_ssr_styles(attributes.style, styles_to_add));
+            }
         }
     }
     let str = '';
@@ -1628,18 +1954,51 @@ function spread(args, classes_to_add) {
     });
     return str;
 }
-const escaped = {
-    '"': '&quot;',
-    "'": '&#39;',
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;'
-};
-function internal_escape(html) {
-    return String(html).replace(/["'&<>]/g, match => escaped[match]);
+function merge_ssr_styles(style_attribute, style_directive) {
+    const style_object = {};
+    for (const individual_style of style_attribute.split(';')) {
+        const colon_index = individual_style.indexOf(':');
+        const name = individual_style.slice(0, colon_index).trim();
+        const value = individual_style.slice(colon_index + 1).trim();
+        if (!name)
+            continue;
+        style_object[name] = value;
+    }
+    for (const name in style_directive) {
+        const value = style_directive[name];
+        if (value) {
+            style_object[name] = value;
+        }
+        else {
+            delete style_object[name];
+        }
+    }
+    return style_object;
+}
+const ATTR_REGEX = /[&"]/g;
+const CONTENT_REGEX = /[&<]/g;
+/**
+ * Note: this method is performance sensitive and has been optimized
+ * https://github.com/sveltejs/svelte/pull/5701
+ */
+function internal_escape(value, is_attr = false) {
+    const str = String(value);
+    const pattern = is_attr ? ATTR_REGEX : CONTENT_REGEX;
+    pattern.lastIndex = 0;
+    let escaped = '';
+    let last = 0;
+    while (pattern.test(str)) {
+        const i = pattern.lastIndex - 1;
+        const ch = str[i];
+        escaped += str.substring(last, i) + (ch === '&' ? '&amp;' : (ch === '"' ? '&quot;' : '&lt;'));
+        last = i + 1;
+    }
+    return escaped + str.substring(last);
 }
 function escape_attribute_value(value) {
-    return typeof value === 'string' ? internal_escape(value) : value;
+    // keep booleans, null, and undefined for the sake of `spread`
+    const should_escape = typeof value === 'string' || (value && typeof value === 'object');
+    return should_escape ? internal_escape(value, true) : value;
 }
 function escape_object(obj) {
     const result = {};
@@ -1662,7 +2021,7 @@ function validate_component(component, name) {
     if (!component || !component.$$render) {
         if (name === 'svelte:component')
             name += ' this={...}';
-        throw new Error(`<${name}> is not a valid SSR component. You may need to review your build config to ensure that dependencies are compiled, rather than imported as pre-compiled modules`);
+        throw new Error(`<${name}> is not a valid SSR component. You may need to review your build config to ensure that dependencies are compiled, rather than imported as pre-compiled modules. Otherwise you may need to fix a <${name}>.`);
     }
     return component;
 }
@@ -1710,10 +2069,21 @@ function create_ssr_component(fn) {
 function add_attribute(name, value, boolean) {
     if (value == null || (boolean && !value))
         return '';
-    return ` ${name}${value === true ? '' : `=${typeof value === 'string' ? JSON.stringify(internal_escape(value)) : `"${value}"`}`}`;
+    const assignment = (boolean && value === true) ? '' : `="${internal_escape(value, true)}"`;
+    return ` ${name}${assignment}`;
 }
 function add_classes(classes) {
     return classes ? ` class="${classes}"` : '';
+}
+function style_object_to_string(style_object) {
+    return Object.keys(style_object)
+        .filter(key => style_object[key])
+        .map(key => `${key}: ${escape_attribute_value(style_object[key])};`)
+        .join(' ');
+}
+function add_styles(style_object) {
+    const styles = style_object_to_string(style_object);
+    return styles ? ` style="${styles}"` : '';
 }
 
 function bind(component, name, callback) {
@@ -1730,14 +2100,17 @@ function claim_component(block, parent_nodes) {
     block && block.l(parent_nodes);
 }
 function mount_component(component, target, anchor, customElement) {
-    const { fragment, on_mount, on_destroy, after_update } = component.$$;
+    const { fragment, after_update } = component.$$;
     fragment && fragment.m(target, anchor);
     if (!customElement) {
         // onMount happens before the initial afterUpdate
         add_render_callback(() => {
-            const new_on_destroy = on_mount.map(run).filter(internal_is_function);
-            if (on_destroy) {
-                on_destroy.push(...new_on_destroy);
+            const new_on_destroy = component.$$.on_mount.map(run).filter(internal_is_function);
+            // if the component was destroyed immediately
+            // it will update the `$$.on_destroy` reference to `null`.
+            // the destructured on_destroy may still reference to the old array
+            if (component.$$.on_destroy) {
+                component.$$.on_destroy.push(...new_on_destroy);
             }
             else {
                 // Edge case - component was destroyed immediately,
@@ -1752,6 +2125,7 @@ function mount_component(component, target, anchor, customElement) {
 function destroy_component(component, detaching) {
     const $$ = component.$$;
     if ($$.fragment !== null) {
+        flush_render_callbacks($$.after_update);
         internal_run_all($$.on_destroy);
         $$.fragment && $$.fragment.d(detaching);
         // TODO null out other refs, including component.$$ (but need to
@@ -1773,7 +2147,7 @@ function init(component, options, instance, create_fragment, not_equal, props, a
     set_current_component(component);
     const $$ = component.$$ = {
         fragment: null,
-        ctx: null,
+        ctx: [],
         // state
         props,
         update: internal_noop,
@@ -1859,6 +2233,9 @@ if (typeof HTMLElement === 'function') {
         }
         $on(type, callback) {
             // TODO should this delegate to addEventListener?
+            if (!internal_is_function(callback)) {
+                return internal_noop;
+            }
             const callbacks = (this.$$.callbacks[type] || (this.$$.callbacks[type] = []));
             callbacks.push(callback);
             return () => {
@@ -1885,6 +2262,9 @@ class SvelteComponent {
         this.$destroy = internal_noop;
     }
     $on(type, callback) {
+        if (!internal_is_function(callback)) {
+            return internal_noop;
+        }
         const callbacks = (this.$$.callbacks[type] || (this.$$.callbacks[type] = []));
         callbacks.push(callback);
         return () => {
@@ -1903,7 +2283,7 @@ class SvelteComponent {
 }
 
 function dispatch_dev(type, detail) {
-    document.dispatchEvent(custom_event(type, Object.assign({ version: '3.44.2' }, detail), true));
+    document.dispatchEvent(custom_event(type, Object.assign({ version: '3.59.2' }, detail), { bubbles: true }));
 }
 function append_dev(target, node) {
     dispatch_dev('SvelteDOMInsert', { target, node });
@@ -1940,12 +2320,14 @@ function detach_after_dev(before) {
         detach_dev(before.nextSibling);
     }
 }
-function listen_dev(node, event, handler, options, has_prevent_default, has_stop_propagation) {
+function listen_dev(node, event, handler, options, has_prevent_default, has_stop_propagation, has_stop_immediate_propagation) {
     const modifiers = options === true ? ['capture'] : options ? Array.from(Object.keys(options)) : [];
     if (has_prevent_default)
         modifiers.push('preventDefault');
     if (has_stop_propagation)
         modifiers.push('stopPropagation');
+    if (has_stop_immediate_propagation)
+        modifiers.push('stopImmediatePropagation');
     dispatch_dev('SvelteDOMAddEventListener', { node, event, handler, modifiers });
     const dispose = listen(node, event, handler, options);
     return () => {
@@ -1970,10 +2352,25 @@ function dataset_dev(node, property, value) {
 }
 function set_data_dev(text, data) {
     data = '' + data;
+    if (text.data === data)
+        return;
+    dispatch_dev('SvelteDOMSetData', { node: text, data });
+    text.data = data;
+}
+function set_data_contenteditable_dev(text, data) {
+    data = '' + data;
     if (text.wholeText === data)
         return;
     dispatch_dev('SvelteDOMSetData', { node: text, data });
     text.data = data;
+}
+function set_data_maybe_contenteditable_dev(text, data, attr_value) {
+    if (~contenteditable_truthy_values.indexOf(attr_value)) {
+        set_data_contenteditable_dev(text, data);
+    }
+    else {
+        set_data_dev(text, data);
+    }
 }
 function validate_each_argument(arg) {
     if (typeof arg !== 'string' && !(arg && typeof arg === 'object' && 'length' in arg)) {
@@ -1988,6 +2385,36 @@ function validate_slots(name, slot, keys) {
     for (const slot_key of Object.keys(slot)) {
         if (!~keys.indexOf(slot_key)) {
             console.warn(`<${name}> received an unexpected slot "${slot_key}".`);
+        }
+    }
+}
+function validate_dynamic_element(tag) {
+    const is_string = typeof tag === 'string';
+    if (tag && !is_string) {
+        throw new Error('<svelte:element> expects "this" attribute to be a string.');
+    }
+}
+function validate_void_dynamic_element(tag) {
+    if (tag && is_void(tag)) {
+        console.warn(`<svelte:element this="${tag}"> is self-closing and cannot have content.`);
+    }
+}
+function construct_svelte_component_dev(component, props) {
+    const error_message = 'this={...} of <svelte:component> should specify a Svelte component.';
+    try {
+        const instance = new component(props);
+        if (!instance.$$ || !instance.$set || !instance.$on || !instance.$destroy) {
+            throw new Error(error_message);
+        }
+        return instance;
+    }
+    catch (err) {
+        const { message } = err;
+        if (typeof message === 'string' && message.indexOf('is not a constructor') !== -1) {
+            throw new Error(error_message);
+        }
+        else {
+            throw err;
         }
     }
 }
@@ -2057,6 +2484,125 @@ function loop_guard(timeout) {
 
 
 
+;// CONCATENATED MODULE: ./node_modules/svelte/store/index.mjs
+
+
+
+const subscriber_queue = [];
+/**
+ * Creates a `Readable` store that allows reading by subscription.
+ * @param value initial value
+ * @param {StartStopNotifier} [start]
+ */
+function readable(value, start) {
+    return {
+        subscribe: writable(value, start).subscribe
+    };
+}
+/**
+ * Create a `Writable` store that allows both updating and reading by subscription.
+ * @param {*=}value initial value
+ * @param {StartStopNotifier=} start
+ */
+function writable(value, start = internal_noop) {
+    let stop;
+    const subscribers = new Set();
+    function set(new_value) {
+        if (safe_not_equal(value, new_value)) {
+            value = new_value;
+            if (stop) { // store is ready
+                const run_queue = !subscriber_queue.length;
+                for (const subscriber of subscribers) {
+                    subscriber[1]();
+                    subscriber_queue.push(subscriber, value);
+                }
+                if (run_queue) {
+                    for (let i = 0; i < subscriber_queue.length; i += 2) {
+                        subscriber_queue[i][0](subscriber_queue[i + 1]);
+                    }
+                    subscriber_queue.length = 0;
+                }
+            }
+        }
+    }
+    function update(fn) {
+        set(fn(value));
+    }
+    function subscribe(run, invalidate = internal_noop) {
+        const subscriber = [run, invalidate];
+        subscribers.add(subscriber);
+        if (subscribers.size === 1) {
+            stop = start(set) || internal_noop;
+        }
+        run(value);
+        return () => {
+            subscribers.delete(subscriber);
+            if (subscribers.size === 0 && stop) {
+                stop();
+                stop = null;
+            }
+        };
+    }
+    return { set, update, subscribe };
+}
+function derived(stores, fn, initial_value) {
+    const single = !Array.isArray(stores);
+    const stores_array = single
+        ? [stores]
+        : stores;
+    const auto = fn.length < 2;
+    return readable(initial_value, (set) => {
+        let started = false;
+        const values = [];
+        let pending = 0;
+        let cleanup = noop;
+        const sync = () => {
+            if (pending) {
+                return;
+            }
+            cleanup();
+            const result = fn(single ? values[0] : values, set);
+            if (auto) {
+                set(result);
+            }
+            else {
+                cleanup = is_function(result) ? result : noop;
+            }
+        };
+        const unsubscribers = stores_array.map((store, i) => subscribe(store, (value) => {
+            values[i] = value;
+            pending &= ~(1 << i);
+            if (started) {
+                sync();
+            }
+        }, () => {
+            pending |= (1 << i);
+        }));
+        started = true;
+        sync();
+        return function stop() {
+            run_all(unsubscribers);
+            cleanup();
+            // We need to set this to false because callbacks can still happen despite having unsubscribed:
+            // Callbacks might already be placed in the queue which doesn't know it should no longer
+            // invoke this derived store.
+            started = false;
+        };
+    });
+}
+/**
+ * Takes a store and returns a new one derived from the old one that is readable.
+ *
+ * @param store - store to make readonly
+ */
+function readonly(store) {
+    return {
+        subscribe: store.subscribe.bind(store)
+    };
+}
+
+
+
 ;// CONCATENATED MODULE: ./src/utils/config.js
 const DEFAULT_CONFIG = {
   zenMode: true,
@@ -2086,7 +2632,8 @@ const CONFIG_KEYS = Object.keys(DEFAULT_CONFIG);
 const getConfig = (keys = CONFIG_KEYS) => {
   return new Promise(resolve => {
     chrome.storage.local.get(keys, config => {
-      resolve({ ...DEFAULT_CONFIG,
+      resolve({
+        ...DEFAULT_CONFIG,
         ...config
       });
     });
@@ -2134,204 +2681,7 @@ const toggleHotkeysActive = async () => {
   } = await getConfig();
   return setZenMode(!hotkeysActive);
 };
-;// CONCATENATED MODULE: ./src/interactions/hotkeys.js
-
-let keySetting = (/* unused pure expression or super */ null && ([]));
-const enableHotkeys = newKeySetting => {
-  keySetting = newKeySetting;
-  document.addEventListener('keydown', onKeydown);
-};
-const disableHotkeys = () => {
-  document.removeEventListener('keydown', onKeydown);
-};
-const ignoredTagnames = (/* unused pure expression or super */ null && (['input', 'textarea']));
-
-let onKeydown = e => {
-  // ignore when we are inside an input
-  const tagname = e.target.tagName.toLowerCase();
-
-  if (ignoredTagnames.includes(tagname)) {
-    return;
-  }
-
-  handleKey(e.key, {
-    alt: !!e.altKey,
-    ctrl: !!e.ctrlKey,
-    shift: !!e.shiftKey
-  }, e);
-};
-
-const handleKey = (keyChar, {
-  alt: altMod,
-  ctrl: ctrlMod,
-  shift: shiftMod
-}, e) => {
-  const {
-    action
-  } = keySetting.find(({
-    key,
-    alt,
-    ctrl,
-    shift
-  }) => key.toLowerCase() === keyChar.toLowerCase() && !!alt === altMod && !!ctrl === ctrlMod && !!shift === shiftMod) ?? {};
-
-  if (action) {
-    e.preventDefault();
-    e.stopPropagation();
-    actions[action].run();
-  }
-};
-
-const actions = {
-  // dark/light theme toggle
-  toggleDarkTheme: {
-    label: 'Activer/désactiver le thème sombre',
-    run: toggleDarkTheme
-  },
-  // zen mode toggle
-  toggleZenMode: {
-    label: 'Activer/désactiver le mode zen',
-    run: toggleZenMode
-  },
-  // back to "la une"
-  une: {
-    label: 'Retour à la une',
-    run: () => {
-      const linkEl = document.querySelector('[data-smarttag-name="retour_journal"]') || document.querySelector('[href="/"]');
-      console.log(linkEl);
-      linkEl === null || linkEl === void 0 ? void 0 : linkEl.click();
-    }
-  },
-  // increase font-size
-  increaseFontSize: {
-    label: 'Augmenter la taille de police',
-    run: () => {
-      const buttonEl = document.querySelector('[data-js-fontsize-increase]') || document.getElementById('js-fontsize-increase') || document.querySelector('ul.sub-menu li ul li button.increase-fs');
-
-      if (buttonEl && !buttonEl.disabled) {
-        buttonEl.click();
-      }
-    }
-  },
-  // decrease font-size
-  decreaseFontSize: {
-    label: 'Diminuer la taille de police',
-    run: () => {
-      const buttonEl = document.querySelector('[data-js-fontsize-decrease]') || document.getElementById('js-fontsize-decrease') || document.querySelector('ul.sub-menu li ul li button.decrease-fs');
-
-      if (buttonEl && !buttonEl.disabled) {
-        buttonEl.click();
-      }
-    }
-  }
-};
-;// CONCATENATED MODULE: ./node_modules/svelte/store/index.mjs
-
-
-
-const subscriber_queue = [];
-/**
- * Creates a `Readable` store that allows reading by subscription.
- * @param value initial value
- * @param {StartStopNotifier}start start and stop notifications for subscriptions
- */
-function readable(value, start) {
-    return {
-        subscribe: writable(value, start).subscribe
-    };
-}
-/**
- * Create a `Writable` store that allows both updating and reading by subscription.
- * @param {*=}value initial value
- * @param {StartStopNotifier=}start start and stop notifications for subscriptions
- */
-function writable(value, start = internal_noop) {
-    let stop;
-    const subscribers = new Set();
-    function set(new_value) {
-        if (safe_not_equal(value, new_value)) {
-            value = new_value;
-            if (stop) { // store is ready
-                const run_queue = !subscriber_queue.length;
-                for (const subscriber of subscribers) {
-                    subscriber[1]();
-                    subscriber_queue.push(subscriber, value);
-                }
-                if (run_queue) {
-                    for (let i = 0; i < subscriber_queue.length; i += 2) {
-                        subscriber_queue[i][0](subscriber_queue[i + 1]);
-                    }
-                    subscriber_queue.length = 0;
-                }
-            }
-        }
-    }
-    function update(fn) {
-        set(fn(value));
-    }
-    function subscribe(run, invalidate = internal_noop) {
-        const subscriber = [run, invalidate];
-        subscribers.add(subscriber);
-        if (subscribers.size === 1) {
-            stop = start(set) || internal_noop;
-        }
-        run(value);
-        return () => {
-            subscribers.delete(subscriber);
-            if (subscribers.size === 0) {
-                stop();
-                stop = null;
-            }
-        };
-    }
-    return { set, update, subscribe };
-}
-function derived(stores, fn, initial_value) {
-    const single = !Array.isArray(stores);
-    const stores_array = single
-        ? [stores]
-        : stores;
-    const auto = fn.length < 2;
-    return readable(initial_value, (set) => {
-        let inited = false;
-        const values = [];
-        let pending = 0;
-        let cleanup = noop;
-        const sync = () => {
-            if (pending) {
-                return;
-            }
-            cleanup();
-            const result = fn(single ? values[0] : values, set);
-            if (auto) {
-                set(result);
-            }
-            else {
-                cleanup = is_function(result) ? result : noop;
-            }
-        };
-        const unsubscribers = stores_array.map((store, i) => subscribe(store, (value) => {
-            values[i] = value;
-            pending &= ~(1 << i);
-            if (inited) {
-                sync();
-            }
-        }, () => {
-            pending |= (1 << i);
-        }));
-        inited = true;
-        sync();
-        return function stop() {
-            run_all(unsubscribers);
-            cleanup();
-        };
-    });
-}
-
-
-
 ;// CONCATENATED MODULE: ./src/utils/store.js
-
 
 
 const createConfigStore = () => {
@@ -2339,16 +2689,20 @@ const createConfigStore = () => {
     set,
     subscribe,
     update
-  } = writable({ ...DEFAULT_CONFIG,
+  } = writable({
+    ...DEFAULT_CONFIG,
     loading: true
-  }); // store init
+  });
 
+  // store init
   getConfig().then(config => {
-    set({ ...config,
+    set({
+      ...config,
       loading: false
     });
-  }); // store reaction
+  });
 
+  // store reaction
   chrome.storage.onChanged.addListener(changes => {
     const newStore = {};
     CONFIG_KEYS.forEach(key => {
@@ -2356,7 +2710,8 @@ const createConfigStore = () => {
         newStore[key] = changes[key].newValue;
       }
     });
-    update(prev => ({ ...prev,
+    update(prev => ({
+      ...prev,
       ...newStore,
       loading: false
     }));
@@ -2364,20 +2719,20 @@ const createConfigStore = () => {
   return {
     subscribe,
     set: args => {
-      setConfig({ ...args,
+      setConfig({
+        ...args,
         loading: true
       });
     }
   };
 };
-
 const configStore = createConfigStore();
-;// CONCATENATED MODULE: ./src/components/Form/FormField.svelte
-/* src/components/Form/FormField.svelte generated by Svelte v3.44.2 */
+;// CONCATENATED MODULE: ./src/components/Form/FormDescription.svelte
+/* src/components/Form/FormDescription.svelte generated by Svelte v3.59.2 */
 
 
 function add_css(target) {
-	append_styles(target, "svelte-16v2b5o", ".form-field.svelte-16v2b5o{padding-bottom:8px}");
+	append_styles(target, "svelte-1sxh29", ".form-description.svelte-1sxh29{margin:4px 4px 0px}");
 }
 
 function create_fragment(ctx) {
@@ -2390,7 +2745,7 @@ function create_fragment(ctx) {
 		c() {
 			div = internal_element("div");
 			if (default_slot) default_slot.c();
-			attr(div, "class", "form-field svelte-16v2b5o");
+			attr(div, "class", "form-description svelte-1sxh29");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -2443,16 +2798,95 @@ function instance($$self, $$props, $$invalidate) {
 	return [$$scope, slots];
 }
 
-class FormField extends SvelteComponent {
+class FormDescription extends SvelteComponent {
 	constructor(options) {
 		super();
 		init(this, options, instance, create_fragment, safe_not_equal, {}, add_css);
 	}
 }
 
+/* harmony default export */ const FormDescription_svelte = (FormDescription);
+;// CONCATENATED MODULE: ./src/components/Form/FormField.svelte
+/* src/components/Form/FormField.svelte generated by Svelte v3.59.2 */
+
+
+function FormField_svelte_add_css(target) {
+	append_styles(target, "svelte-16v2b5o", ".form-field.svelte-16v2b5o{padding-bottom:8px}");
+}
+
+function FormField_svelte_create_fragment(ctx) {
+	let div;
+	let current;
+	const default_slot_template = /*#slots*/ ctx[1].default;
+	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[0], null);
+
+	return {
+		c() {
+			div = internal_element("div");
+			if (default_slot) default_slot.c();
+			attr(div, "class", "form-field svelte-16v2b5o");
+		},
+		m(target, anchor) {
+			insert(target, div, anchor);
+
+			if (default_slot) {
+				default_slot.m(div, null);
+			}
+
+			current = true;
+		},
+		p(ctx, [dirty]) {
+			if (default_slot) {
+				if (default_slot.p && (!current || dirty & /*$$scope*/ 1)) {
+					update_slot_base(
+						default_slot,
+						default_slot_template,
+						ctx,
+						/*$$scope*/ ctx[0],
+						!current
+						? get_all_dirty_from_scope(/*$$scope*/ ctx[0])
+						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[0], dirty, null),
+						null
+					);
+				}
+			}
+		},
+		i(local) {
+			if (current) return;
+			transition_in(default_slot, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(default_slot, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(div);
+			if (default_slot) default_slot.d(detaching);
+		}
+	};
+}
+
+function FormField_svelte_instance($$self, $$props, $$invalidate) {
+	let { $$slots: slots = {}, $$scope } = $$props;
+
+	$$self.$$set = $$props => {
+		if ('$$scope' in $$props) $$invalidate(0, $$scope = $$props.$$scope);
+	};
+
+	return [$$scope, slots];
+}
+
+class FormField extends SvelteComponent {
+	constructor(options) {
+		super();
+		init(this, options, FormField_svelte_instance, FormField_svelte_create_fragment, safe_not_equal, {}, FormField_svelte_add_css);
+	}
+}
+
 /* harmony default export */ const FormField_svelte = (FormField);
 ;// CONCATENATED MODULE: ./src/components/Form/FormInput.svelte
-/* src/components/Form/FormInput.svelte generated by Svelte v3.44.2 */
+/* src/components/Form/FormInput.svelte generated by Svelte v3.59.2 */
 
 
 function FormInput_svelte_add_css(target) {
@@ -2530,573 +2964,8 @@ class FormInput extends SvelteComponent {
 }
 
 /* harmony default export */ const FormInput_svelte = (FormInput);
-;// CONCATENATED MODULE: ./src/components/Form/KeyboardInputButton.svelte
-/* src/components/Form/KeyboardInputButton.svelte generated by Svelte v3.44.2 */
-
-
-function KeyboardInputButton_svelte_add_css(target) {
-	append_styles(target, "svelte-nrwd7a", "span.svelte-nrwd7a{display:inline-block;color:black;background-color:rgb(239, 239, 239);height:32px;min-width:32px;padding:4px;line-height:24px;font-size:20px;text-align:center;cursor:pointer;margin-left:4px;border-radius:4px;box-sizing:border-box}span.disabled.svelte-nrwd7a{color:rgba(16, 16, 16, 0.3);background-color:rgba(239, 239, 239, 0.3);border-color:rgba(118, 118, 118, 0.3)}span.active.svelte-nrwd7a{color:black;background-color:rgb(255, 125, 125)}");
-}
-
-function KeyboardInputButton_svelte_create_fragment(ctx) {
-	let span;
-	let current;
-	const default_slot_template = /*#slots*/ ctx[3].default;
-	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[2], null);
-
-	return {
-		c() {
-			span = internal_element("span");
-			if (default_slot) default_slot.c();
-			attr(span, "class", "svelte-nrwd7a");
-			toggle_class(span, "disabled", /*disabled*/ ctx[0]);
-			toggle_class(span, "active", /*active*/ ctx[1]);
-		},
-		m(target, anchor) {
-			insert(target, span, anchor);
-
-			if (default_slot) {
-				default_slot.m(span, null);
-			}
-
-			current = true;
-		},
-		p(ctx, [dirty]) {
-			if (default_slot) {
-				if (default_slot.p && (!current || dirty & /*$$scope*/ 4)) {
-					update_slot_base(
-						default_slot,
-						default_slot_template,
-						ctx,
-						/*$$scope*/ ctx[2],
-						!current
-						? get_all_dirty_from_scope(/*$$scope*/ ctx[2])
-						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[2], dirty, null),
-						null
-					);
-				}
-			}
-
-			if (dirty & /*disabled*/ 1) {
-				toggle_class(span, "disabled", /*disabled*/ ctx[0]);
-			}
-
-			if (dirty & /*active*/ 2) {
-				toggle_class(span, "active", /*active*/ ctx[1]);
-			}
-		},
-		i(local) {
-			if (current) return;
-			transition_in(default_slot, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(default_slot, local);
-			current = false;
-		},
-		d(detaching) {
-			if (detaching) detach(span);
-			if (default_slot) default_slot.d(detaching);
-		}
-	};
-}
-
-function KeyboardInputButton_svelte_instance($$self, $$props, $$invalidate) {
-	let { $$slots: slots = {}, $$scope } = $$props;
-	let { disabled } = $$props;
-	let { active } = $$props;
-
-	$$self.$$set = $$props => {
-		if ('disabled' in $$props) $$invalidate(0, disabled = $$props.disabled);
-		if ('active' in $$props) $$invalidate(1, active = $$props.active);
-		if ('$$scope' in $$props) $$invalidate(2, $$scope = $$props.$$scope);
-	};
-
-	return [disabled, active, $$scope, slots];
-}
-
-class KeyboardInputButton extends SvelteComponent {
-	constructor(options) {
-		super();
-		init(this, options, KeyboardInputButton_svelte_instance, KeyboardInputButton_svelte_create_fragment, safe_not_equal, { disabled: 0, active: 1 }, KeyboardInputButton_svelte_add_css);
-	}
-}
-
-/* harmony default export */ const KeyboardInputButton_svelte = (KeyboardInputButton);
-;// CONCATENATED MODULE: ./src/components/Form/KeyboardInput.svelte
-/* src/components/Form/KeyboardInput.svelte generated by Svelte v3.44.2 */
-
-
-
-
-function KeyboardInput_svelte_add_css(target) {
-	append_styles(target, "svelte-ntlum9", ".keyboard-input.svelte-ntlum9{cursor:pointer;width:100%;display:flex;padding:4px;border:none;background:none;font-size:14px}.label-container.svelte-ntlum9{flex-basis:50%;text-align:left}.button-container.svelte-ntlum9{flex-basis:50%;text-align:right}span.svelte-ntlum9{flex-grow:1;line-height:32px}");
-}
-
-// (28:4) {#if ctrl}
-function create_if_block_2(ctx) {
-	let keyboardinputbutton;
-	let current;
-
-	keyboardinputbutton = new KeyboardInputButton_svelte({
-			props: {
-				active: /*active*/ ctx[5],
-				disabled: /*disabled*/ ctx[6],
-				$$slots: { default: [create_default_slot_3] },
-				$$scope: { ctx }
-			}
-		});
-
-	return {
-		c() {
-			create_component(keyboardinputbutton.$$.fragment);
-		},
-		m(target, anchor) {
-			mount_component(keyboardinputbutton, target, anchor);
-			current = true;
-		},
-		p(ctx, dirty) {
-			const keyboardinputbutton_changes = {};
-			if (dirty & /*active*/ 32) keyboardinputbutton_changes.active = /*active*/ ctx[5];
-			if (dirty & /*disabled*/ 64) keyboardinputbutton_changes.disabled = /*disabled*/ ctx[6];
-
-			if (dirty & /*$$scope*/ 1024) {
-				keyboardinputbutton_changes.$$scope = { dirty, ctx };
-			}
-
-			keyboardinputbutton.$set(keyboardinputbutton_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(keyboardinputbutton.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(keyboardinputbutton.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			destroy_component(keyboardinputbutton, detaching);
-		}
-	};
-}
-
-// (29:6) <KeyboardInputButton {active} {disabled}>
-function create_default_slot_3(ctx) {
-	let t;
-
-	return {
-		c() {
-			t = internal_text("Ctrl");
-		},
-		m(target, anchor) {
-			insert(target, t, anchor);
-		},
-		d(detaching) {
-			if (detaching) detach(t);
-		}
-	};
-}
-
-// (31:4) {#if shift}
-function create_if_block_1(ctx) {
-	let keyboardinputbutton;
-	let current;
-
-	keyboardinputbutton = new KeyboardInputButton_svelte({
-			props: {
-				active: /*active*/ ctx[5],
-				disabled: /*disabled*/ ctx[6],
-				$$slots: { default: [create_default_slot_2] },
-				$$scope: { ctx }
-			}
-		});
-
-	return {
-		c() {
-			create_component(keyboardinputbutton.$$.fragment);
-		},
-		m(target, anchor) {
-			mount_component(keyboardinputbutton, target, anchor);
-			current = true;
-		},
-		p(ctx, dirty) {
-			const keyboardinputbutton_changes = {};
-			if (dirty & /*active*/ 32) keyboardinputbutton_changes.active = /*active*/ ctx[5];
-			if (dirty & /*disabled*/ 64) keyboardinputbutton_changes.disabled = /*disabled*/ ctx[6];
-
-			if (dirty & /*$$scope*/ 1024) {
-				keyboardinputbutton_changes.$$scope = { dirty, ctx };
-			}
-
-			keyboardinputbutton.$set(keyboardinputbutton_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(keyboardinputbutton.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(keyboardinputbutton.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			destroy_component(keyboardinputbutton, detaching);
-		}
-	};
-}
-
-// (32:6) <KeyboardInputButton {active} {disabled}>
-function create_default_slot_2(ctx) {
-	let t;
-
-	return {
-		c() {
-			t = internal_text("Maj");
-		},
-		m(target, anchor) {
-			insert(target, t, anchor);
-		},
-		d(detaching) {
-			if (detaching) detach(t);
-		}
-	};
-}
-
-// (34:4) {#if alt}
-function create_if_block(ctx) {
-	let keyboardinputbutton;
-	let current;
-
-	keyboardinputbutton = new KeyboardInputButton_svelte({
-			props: {
-				active: /*active*/ ctx[5],
-				disabled: /*disabled*/ ctx[6],
-				$$slots: { default: [create_default_slot_1] },
-				$$scope: { ctx }
-			}
-		});
-
-	return {
-		c() {
-			create_component(keyboardinputbutton.$$.fragment);
-		},
-		m(target, anchor) {
-			mount_component(keyboardinputbutton, target, anchor);
-			current = true;
-		},
-		p(ctx, dirty) {
-			const keyboardinputbutton_changes = {};
-			if (dirty & /*active*/ 32) keyboardinputbutton_changes.active = /*active*/ ctx[5];
-			if (dirty & /*disabled*/ 64) keyboardinputbutton_changes.disabled = /*disabled*/ ctx[6];
-
-			if (dirty & /*$$scope*/ 1024) {
-				keyboardinputbutton_changes.$$scope = { dirty, ctx };
-			}
-
-			keyboardinputbutton.$set(keyboardinputbutton_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(keyboardinputbutton.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(keyboardinputbutton.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			destroy_component(keyboardinputbutton, detaching);
-		}
-	};
-}
-
-// (35:6) <KeyboardInputButton {active} {disabled}>
-function create_default_slot_1(ctx) {
-	let t;
-
-	return {
-		c() {
-			t = internal_text("Alt");
-		},
-		m(target, anchor) {
-			insert(target, t, anchor);
-		},
-		d(detaching) {
-			if (detaching) detach(t);
-		}
-	};
-}
-
-// (37:4) <KeyboardInputButton {active} {disabled}>
-function create_default_slot(ctx) {
-	let t;
-
-	return {
-		c() {
-			t = internal_text(/*value*/ ctx[0]);
-		},
-		m(target, anchor) {
-			insert(target, t, anchor);
-		},
-		p(ctx, dirty) {
-			if (dirty & /*value*/ 1) set_data(t, /*value*/ ctx[0]);
-		},
-		d(detaching) {
-			if (detaching) detach(t);
-		}
-	};
-}
-
-function KeyboardInput_svelte_create_fragment(ctx) {
-	let button;
-	let div0;
-	let span;
-	let t0;
-	let t1;
-	let div1;
-	let t2;
-	let t3;
-	let t4;
-	let keyboardinputbutton;
-	let current;
-	let mounted;
-	let dispose;
-	let if_block0 = /*ctrl*/ ctx[1] && create_if_block_2(ctx);
-	let if_block1 = /*shift*/ ctx[2] && create_if_block_1(ctx);
-	let if_block2 = /*alt*/ ctx[3] && create_if_block(ctx);
-
-	keyboardinputbutton = new KeyboardInputButton_svelte({
-			props: {
-				active: /*active*/ ctx[5],
-				disabled: /*disabled*/ ctx[6],
-				$$slots: { default: [create_default_slot] },
-				$$scope: { ctx }
-			}
-		});
-
-	return {
-		c() {
-			button = internal_element("button");
-			div0 = internal_element("div");
-			span = internal_element("span");
-			t0 = internal_text(/*label*/ ctx[4]);
-			t1 = space();
-			div1 = internal_element("div");
-			if (if_block0) if_block0.c();
-			t2 = space();
-			if (if_block1) if_block1.c();
-			t3 = space();
-			if (if_block2) if_block2.c();
-			t4 = space();
-			create_component(keyboardinputbutton.$$.fragment);
-			attr(span, "class", "svelte-ntlum9");
-			attr(div0, "class", "label-container svelte-ntlum9");
-			attr(div1, "class", "button-container svelte-ntlum9");
-			attr(button, "class", "keyboard-input svelte-ntlum9");
-		},
-		m(target, anchor) {
-			insert(target, button, anchor);
-			append(button, div0);
-			append(div0, span);
-			append(span, t0);
-			append(button, t1);
-			append(button, div1);
-			if (if_block0) if_block0.m(div1, null);
-			append(div1, t2);
-			if (if_block1) if_block1.m(div1, null);
-			append(div1, t3);
-			if (if_block2) if_block2.m(div1, null);
-			append(div1, t4);
-			mount_component(keyboardinputbutton, div1, null);
-			current = true;
-
-			if (!mounted) {
-				dispose = listen(button, "click", /*click_handler*/ ctx[9]);
-				mounted = true;
-			}
-		},
-		p(ctx, [dirty]) {
-			if (!current || dirty & /*label*/ 16) set_data(t0, /*label*/ ctx[4]);
-
-			if (/*ctrl*/ ctx[1]) {
-				if (if_block0) {
-					if_block0.p(ctx, dirty);
-
-					if (dirty & /*ctrl*/ 2) {
-						transition_in(if_block0, 1);
-					}
-				} else {
-					if_block0 = create_if_block_2(ctx);
-					if_block0.c();
-					transition_in(if_block0, 1);
-					if_block0.m(div1, t2);
-				}
-			} else if (if_block0) {
-				group_outros();
-
-				transition_out(if_block0, 1, 1, () => {
-					if_block0 = null;
-				});
-
-				check_outros();
-			}
-
-			if (/*shift*/ ctx[2]) {
-				if (if_block1) {
-					if_block1.p(ctx, dirty);
-
-					if (dirty & /*shift*/ 4) {
-						transition_in(if_block1, 1);
-					}
-				} else {
-					if_block1 = create_if_block_1(ctx);
-					if_block1.c();
-					transition_in(if_block1, 1);
-					if_block1.m(div1, t3);
-				}
-			} else if (if_block1) {
-				group_outros();
-
-				transition_out(if_block1, 1, 1, () => {
-					if_block1 = null;
-				});
-
-				check_outros();
-			}
-
-			if (/*alt*/ ctx[3]) {
-				if (if_block2) {
-					if_block2.p(ctx, dirty);
-
-					if (dirty & /*alt*/ 8) {
-						transition_in(if_block2, 1);
-					}
-				} else {
-					if_block2 = create_if_block(ctx);
-					if_block2.c();
-					transition_in(if_block2, 1);
-					if_block2.m(div1, t4);
-				}
-			} else if (if_block2) {
-				group_outros();
-
-				transition_out(if_block2, 1, 1, () => {
-					if_block2 = null;
-				});
-
-				check_outros();
-			}
-
-			const keyboardinputbutton_changes = {};
-			if (dirty & /*active*/ 32) keyboardinputbutton_changes.active = /*active*/ ctx[5];
-			if (dirty & /*disabled*/ 64) keyboardinputbutton_changes.disabled = /*disabled*/ ctx[6];
-
-			if (dirty & /*$$scope, value*/ 1025) {
-				keyboardinputbutton_changes.$$scope = { dirty, ctx };
-			}
-
-			keyboardinputbutton.$set(keyboardinputbutton_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(if_block0);
-			transition_in(if_block1);
-			transition_in(if_block2);
-			transition_in(keyboardinputbutton.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(if_block0);
-			transition_out(if_block1);
-			transition_out(if_block2);
-			transition_out(keyboardinputbutton.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			if (detaching) detach(button);
-			if (if_block0) if_block0.d();
-			if (if_block1) if_block1.d();
-			if (if_block2) if_block2.d();
-			destroy_component(keyboardinputbutton);
-			mounted = false;
-			dispose();
-		}
-	};
-}
-
-function KeyboardInput_svelte_instance($$self, $$props, $$invalidate) {
-	let { value } = $$props;
-	let { ctrl } = $$props;
-	let { shift } = $$props;
-	let { alt } = $$props;
-	let { label } = $$props;
-	let { active = false } = $$props;
-	let { disabled } = $$props;
-	let { id } = $$props;
-	let { setActiveId } = $$props;
-
-	const click_handler = () => {
-		if (!disabled) {
-			setActiveId(id);
-		}
-	};
-
-	$$self.$$set = $$props => {
-		if ('value' in $$props) $$invalidate(0, value = $$props.value);
-		if ('ctrl' in $$props) $$invalidate(1, ctrl = $$props.ctrl);
-		if ('shift' in $$props) $$invalidate(2, shift = $$props.shift);
-		if ('alt' in $$props) $$invalidate(3, alt = $$props.alt);
-		if ('label' in $$props) $$invalidate(4, label = $$props.label);
-		if ('active' in $$props) $$invalidate(5, active = $$props.active);
-		if ('disabled' in $$props) $$invalidate(6, disabled = $$props.disabled);
-		if ('id' in $$props) $$invalidate(7, id = $$props.id);
-		if ('setActiveId' in $$props) $$invalidate(8, setActiveId = $$props.setActiveId);
-	};
-
-	return [
-		value,
-		ctrl,
-		shift,
-		alt,
-		label,
-		active,
-		disabled,
-		id,
-		setActiveId,
-		click_handler
-	];
-}
-
-class KeyboardInput extends SvelteComponent {
-	constructor(options) {
-		super();
-
-		init(
-			this,
-			options,
-			KeyboardInput_svelte_instance,
-			KeyboardInput_svelte_create_fragment,
-			safe_not_equal,
-			{
-				value: 0,
-				ctrl: 1,
-				shift: 2,
-				alt: 3,
-				label: 4,
-				active: 5,
-				disabled: 6,
-				id: 7,
-				setActiveId: 8
-			},
-			KeyboardInput_svelte_add_css
-		);
-	}
-}
-
-/* harmony default export */ const KeyboardInput_svelte = (KeyboardInput);
 ;// CONCATENATED MODULE: ./src/components/Form/Switch.svelte
-/* src/components/Form/Switch.svelte generated by Svelte v3.44.2 */
+/* src/components/Form/Switch.svelte generated by Svelte v3.59.2 */
 
 
 function Switch_svelte_add_css(target) {
@@ -3193,169 +3062,8 @@ class Switch extends SvelteComponent {
 }
 
 /* harmony default export */ const Switch_svelte = (Switch);
-;// CONCATENATED MODULE: ./src/components/UI/About.svelte
-/* src/components/UI/About.svelte generated by Svelte v3.44.2 */
-
-
-function About_svelte_add_css(target) {
-	append_styles(target, "svelte-idgcu2", "p.svelte-idgcu2{margin-bottom:16px}ul.svelte-idgcu2{margin-bottom:16px;padding-left:24px}");
-}
-
-function About_svelte_create_fragment(ctx) {
-	let p0;
-	let t3;
-	let p1;
-	let t8;
-	let p2;
-	let t10;
-	let ul;
-
-	return {
-		c() {
-			p0 = internal_element("p");
-
-			p0.innerHTML = `L&#39;extension Mediapart Mod a été imaginée, créée et programmée par <a href="https://www.apollinai.re">Apollinaire</a>.
-  L&#39;ensembe du code est libre et open-source: il est public, gratuit, toute modification, publication ou vente sont
-  permis sans contreparties.`;
-
-			t3 = space();
-			p1 = internal_element("p");
-
-			p1.innerHTML = `Pour tout retour, toute suggestion ou contribution, postez une <i>issue</i> sur le repo Github du projet:
-  <a href="https://github.com/apollinaire/mediapart-mod">apollinaire/mediapart-mod</a>`;
-
-			t8 = space();
-			p2 = internal_element("p");
-			p2.textContent = "Librairies externes utilisées, mentions notables:";
-			t10 = space();
-			ul = internal_element("ul");
-
-			ul.innerHTML = `<li>babel</li> 
-  <li>color-convert</li> 
-  <li>css-tree</li> 
-  <li>prettier</li> 
-  <li>svelte</li> 
-  <li>typescript</li> 
-  <li>webpack</li>`;
-
-			attr(p0, "class", "svelte-idgcu2");
-			attr(p1, "class", "svelte-idgcu2");
-			attr(p2, "class", "svelte-idgcu2");
-			attr(ul, "class", "svelte-idgcu2");
-		},
-		m(target, anchor) {
-			insert(target, p0, anchor);
-			insert(target, t3, anchor);
-			insert(target, p1, anchor);
-			insert(target, t8, anchor);
-			insert(target, p2, anchor);
-			insert(target, t10, anchor);
-			insert(target, ul, anchor);
-		},
-		p: internal_noop,
-		i: internal_noop,
-		o: internal_noop,
-		d(detaching) {
-			if (detaching) detach(p0);
-			if (detaching) detach(t3);
-			if (detaching) detach(p1);
-			if (detaching) detach(t8);
-			if (detaching) detach(p2);
-			if (detaching) detach(t10);
-			if (detaching) detach(ul);
-		}
-	};
-}
-
-class About extends SvelteComponent {
-	constructor(options) {
-		super();
-		init(this, options, null, About_svelte_create_fragment, safe_not_equal, {}, About_svelte_add_css);
-	}
-}
-
-/* harmony default export */ const About_svelte = (About);
-;// CONCATENATED MODULE: ./src/components/UI/CategoryTitle.svelte
-/* src/components/UI/CategoryTitle.svelte generated by Svelte v3.44.2 */
-
-
-function CategoryTitle_svelte_add_css(target) {
-	append_styles(target, "svelte-14bu5ei", "h2.svelte-14bu5ei{display:flex;justify-content:center;align-items:center;text-align:center;line-height:48px;font-size:18px;height:48px}");
-}
-
-function CategoryTitle_svelte_create_fragment(ctx) {
-	let h2;
-	let current;
-	const default_slot_template = /*#slots*/ ctx[1].default;
-	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[0], null);
-
-	return {
-		c() {
-			h2 = internal_element("h2");
-			if (default_slot) default_slot.c();
-			attr(h2, "class", "svelte-14bu5ei");
-		},
-		m(target, anchor) {
-			insert(target, h2, anchor);
-
-			if (default_slot) {
-				default_slot.m(h2, null);
-			}
-
-			current = true;
-		},
-		p(ctx, [dirty]) {
-			if (default_slot) {
-				if (default_slot.p && (!current || dirty & /*$$scope*/ 1)) {
-					update_slot_base(
-						default_slot,
-						default_slot_template,
-						ctx,
-						/*$$scope*/ ctx[0],
-						!current
-						? get_all_dirty_from_scope(/*$$scope*/ ctx[0])
-						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[0], dirty, null),
-						null
-					);
-				}
-			}
-		},
-		i(local) {
-			if (current) return;
-			transition_in(default_slot, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(default_slot, local);
-			current = false;
-		},
-		d(detaching) {
-			if (detaching) detach(h2);
-			if (default_slot) default_slot.d(detaching);
-		}
-	};
-}
-
-function CategoryTitle_svelte_instance($$self, $$props, $$invalidate) {
-	let { $$slots: slots = {}, $$scope } = $$props;
-
-	$$self.$$set = $$props => {
-		if ('$$scope' in $$props) $$invalidate(0, $$scope = $$props.$$scope);
-	};
-
-	return [$$scope, slots];
-}
-
-class CategoryTitle extends SvelteComponent {
-	constructor(options) {
-		super();
-		init(this, options, CategoryTitle_svelte_instance, CategoryTitle_svelte_create_fragment, safe_not_equal, {}, CategoryTitle_svelte_add_css);
-	}
-}
-
-/* harmony default export */ const CategoryTitle_svelte = (CategoryTitle);
 ;// CONCATENATED MODULE: ./src/components/UI/Header.svelte
-/* src/components/UI/Header.svelte generated by Svelte v3.44.2 */
+/* src/components/UI/Header.svelte generated by Svelte v3.59.2 */
 
 
 function Header_svelte_add_css(target) {
@@ -3395,7 +3103,7 @@ class Header extends SvelteComponent {
 
 /* harmony default export */ const Header_svelte = (Header);
 ;// CONCATENATED MODULE: ./src/components/UI/ThemeSwitch.svelte
-/* src/components/UI/ThemeSwitch.svelte generated by Svelte v3.44.2 */
+/* src/components/UI/ThemeSwitch.svelte generated by Svelte v3.59.2 */
 
 
 
@@ -3443,11 +3151,11 @@ function ThemeSwitch_svelte_create_fragment(ctx) {
 				}
 			}
 
-			if (dirty & /*dark*/ 2) {
+			if (!current || dirty & /*dark*/ 2) {
 				toggle_class(div, "dark", /*dark*/ ctx[1]);
 			}
 
-			if (dirty & /*light*/ 1) {
+			if (!current || dirty & /*light*/ 1) {
 				toggle_class(div, "light", /*light*/ ctx[0]);
 			}
 		},
@@ -3499,8 +3207,8 @@ class ThemeSwitch extends SvelteComponent {
 }
 
 /* harmony default export */ const ThemeSwitch_svelte = (ThemeSwitch);
-;// CONCATENATED MODULE: ./src/components/Options.svelte
-/* src/components/Options.svelte generated by Svelte v3.44.2 */
+;// CONCATENATED MODULE: ./src/components/Popup.svelte
+/* src/components/Popup.svelte generated by Svelte v3.59.2 */
 
 
 
@@ -3511,45 +3219,18 @@ class ThemeSwitch extends SvelteComponent {
 
 
 
-
-
-
-
-function Options_svelte_add_css(target) {
-	append_styles(target, "svelte-1htpe4x", ".layout.svelte-1htpe4x{box-sizing:border-box;padding:8px 8px 64px;min-height:100vh}.form-container.svelte-1htpe4x{max-width:500px;font-size:14px;margin:auto}.text-container.svelte-1htpe4x{text-align:center;margin-top:12px;margin-bottom:8px}.default-keybinds.svelte-1htpe4x{background:transparent;border:none;text-decoration:underline;color:currentColor;cursor:pointer}");
+function Popup_svelte_add_css(target) {
+	append_styles(target, "svelte-5xiftn", ".popup.svelte-5xiftn{padding:8px;width:300px}button.link-button.svelte-5xiftn{text-decoration:underline}");
 }
 
-function get_each_context(ctx, list, i) {
-	const child_ctx = ctx.slice();
-	child_ctx[11] = list[i];
-	return child_ctx;
-}
-
-// (77:4) <CategoryTitle>
-function create_default_slot_10(ctx) {
-	let t;
-
-	return {
-		c() {
-			t = internal_text("Paramètres généraux");
-		},
-		m(target, anchor) {
-			insert(target, t, anchor);
-		},
-		d(detaching) {
-			if (detaching) detach(t);
-		}
-	};
-}
-
-// (80:8) <FormInput>
-function create_default_slot_9(ctx) {
+// (22:6) <FormInput>
+function create_default_slot_7(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
 
 	function switch_1_checked_binding(value) {
-		/*switch_1_checked_binding*/ ctx[4](value);
+		/*switch_1_checked_binding*/ ctx[2](value);
 	}
 
 	let switch_1_props = {
@@ -3557,8 +3238,8 @@ function create_default_slot_9(ctx) {
 		label: "Thème sombre"
 	};
 
-	if (/*$configStore*/ ctx[1].darkTheme !== void 0) {
-		switch_1_props.checked = /*$configStore*/ ctx[1].darkTheme;
+	if (/*$configStore*/ ctx[0].darkTheme !== void 0) {
+		switch_1_props.checked = /*$configStore*/ ctx[0].darkTheme;
 	}
 
 	switch_1 = new Switch_svelte({ props: switch_1_props });
@@ -3575,9 +3256,9 @@ function create_default_slot_9(ctx) {
 		p(ctx, dirty) {
 			const switch_1_changes = {};
 
-			if (!updating_checked && dirty & /*$configStore*/ 2) {
+			if (!updating_checked && dirty & /*$configStore*/ 1) {
 				updating_checked = true;
-				switch_1_changes.checked = /*$configStore*/ ctx[1].darkTheme;
+				switch_1_changes.checked = /*$configStore*/ ctx[0].darkTheme;
 				add_flush_callback(() => updating_checked = false);
 			}
 
@@ -3598,107 +3279,7 @@ function create_default_slot_9(ctx) {
 	};
 }
 
-// (79:6) <FormField>
-function create_default_slot_8(ctx) {
-	let forminput;
-	let current;
-
-	forminput = new FormInput_svelte({
-			props: {
-				$$slots: { default: [create_default_slot_9] },
-				$$scope: { ctx }
-			}
-		});
-
-	return {
-		c() {
-			create_component(forminput.$$.fragment);
-		},
-		m(target, anchor) {
-			mount_component(forminput, target, anchor);
-			current = true;
-		},
-		p(ctx, dirty) {
-			const forminput_changes = {};
-
-			if (dirty & /*$$scope, $configStore*/ 16386) {
-				forminput_changes.$$scope = { dirty, ctx };
-			}
-
-			forminput.$set(forminput_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(forminput.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(forminput.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			destroy_component(forminput, detaching);
-		}
-	};
-}
-
-// (85:8) <FormInput>
-function create_default_slot_7(ctx) {
-	let switch_1;
-	let updating_checked;
-	let current;
-
-	function switch_1_checked_binding_1(value) {
-		/*switch_1_checked_binding_1*/ ctx[5](value);
-	}
-
-	let switch_1_props = {
-		disabled: configStore.loading,
-		label: "Lecture zen"
-	};
-
-	if (/*$configStore*/ ctx[1].zenMode !== void 0) {
-		switch_1_props.checked = /*$configStore*/ ctx[1].zenMode;
-	}
-
-	switch_1 = new Switch_svelte({ props: switch_1_props });
-	binding_callbacks.push(() => bind(switch_1, 'checked', switch_1_checked_binding_1));
-
-	return {
-		c() {
-			create_component(switch_1.$$.fragment);
-		},
-		m(target, anchor) {
-			mount_component(switch_1, target, anchor);
-			current = true;
-		},
-		p(ctx, dirty) {
-			const switch_1_changes = {};
-
-			if (!updating_checked && dirty & /*$configStore*/ 2) {
-				updating_checked = true;
-				switch_1_changes.checked = /*$configStore*/ ctx[1].zenMode;
-				add_flush_callback(() => updating_checked = false);
-			}
-
-			switch_1.$set(switch_1_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(switch_1.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(switch_1.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			destroy_component(switch_1, detaching);
-		}
-	};
-}
-
-// (84:6) <FormField>
+// (21:4) <FormField>
 function create_default_slot_6(ctx) {
 	let forminput;
 	let current;
@@ -3721,7 +3302,7 @@ function create_default_slot_6(ctx) {
 		p(ctx, dirty) {
 			const forminput_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 16386) {
+			if (dirty & /*$$scope, $configStore*/ 33) {
 				forminput_changes.$$scope = { dirty, ctx };
 			}
 
@@ -3742,27 +3323,27 @@ function create_default_slot_6(ctx) {
 	};
 }
 
-// (90:8) <FormInput>
+// (27:6) <FormInput>
 function create_default_slot_5(ctx) {
 	let switch_1;
 	let updating_checked;
 	let current;
 
-	function switch_1_checked_binding_2(value) {
-		/*switch_1_checked_binding_2*/ ctx[6](value);
+	function switch_1_checked_binding_1(value) {
+		/*switch_1_checked_binding_1*/ ctx[3](value);
 	}
 
 	let switch_1_props = {
 		disabled: configStore.loading,
-		label: "Raccourcis clavier"
+		label: "Lecture zen"
 	};
 
-	if (/*$configStore*/ ctx[1].hotkeysActive !== void 0) {
-		switch_1_props.checked = /*$configStore*/ ctx[1].hotkeysActive;
+	if (/*$configStore*/ ctx[0].zenMode !== void 0) {
+		switch_1_props.checked = /*$configStore*/ ctx[0].zenMode;
 	}
 
 	switch_1 = new Switch_svelte({ props: switch_1_props });
-	binding_callbacks.push(() => bind(switch_1, 'checked', switch_1_checked_binding_2));
+	binding_callbacks.push(() => bind(switch_1, 'checked', switch_1_checked_binding_1));
 
 	return {
 		c() {
@@ -3775,9 +3356,9 @@ function create_default_slot_5(ctx) {
 		p(ctx, dirty) {
 			const switch_1_changes = {};
 
-			if (!updating_checked && dirty & /*$configStore*/ 2) {
+			if (!updating_checked && dirty & /*$configStore*/ 1) {
 				updating_checked = true;
-				switch_1_changes.checked = /*$configStore*/ ctx[1].hotkeysActive;
+				switch_1_changes.checked = /*$configStore*/ ctx[0].zenMode;
 				add_flush_callback(() => updating_checked = false);
 			}
 
@@ -3798,7 +3379,7 @@ function create_default_slot_5(ctx) {
 	};
 }
 
-// (89:6) <FormField>
+// (26:4) <FormField>
 function create_default_slot_4(ctx) {
 	let forminput;
 	let current;
@@ -3821,7 +3402,7 @@ function create_default_slot_4(ctx) {
 		p(ctx, dirty) {
 			const forminput_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 16386) {
+			if (dirty & /*$$scope, $configStore*/ 33) {
 				forminput_changes.$$scope = { dirty, ctx };
 			}
 
@@ -3842,89 +3423,113 @@ function create_default_slot_4(ctx) {
 	};
 }
 
-// (95:4) <CategoryTitle>
-function Options_svelte_create_default_slot_3(ctx) {
-	let t;
-
-	return {
-		c() {
-			t = internal_text("Raccourcis clavier");
-		},
-		m(target, anchor) {
-			insert(target, t, anchor);
-		},
-		d(detaching) {
-			if (detaching) detach(t);
-		}
-	};
-}
-
-// (98:8) <FormInput>
-function Options_svelte_create_default_slot_2(ctx) {
-	let keyboardinput;
-	let t;
+// (32:6) <FormInput>
+function create_default_slot_3(ctx) {
+	let switch_1;
+	let updating_checked;
 	let current;
 
-	keyboardinput = new KeyboardInput_svelte({
-			props: {
-				value: /*keyBind*/ ctx[11].key,
-				ctrl: /*keyBind*/ ctx[11].ctrl,
-				alt: /*keyBind*/ ctx[11].alt,
-				shift: /*keyBind*/ ctx[11].shift,
-				id: /*keyBind*/ ctx[11].action,
-				label: actions[/*keyBind*/ ctx[11].action].label,
-				active: /*keyBind*/ ctx[11].action === /*activeId*/ ctx[0],
-				disabled: !!/*activeId*/ ctx[0] || !/*$configStore*/ ctx[1].hotkeysActive,
-				setActiveId: /*setActiveId*/ ctx[2]
-			}
-		});
+	function switch_1_checked_binding_2(value) {
+		/*switch_1_checked_binding_2*/ ctx[4](value);
+	}
+
+	let switch_1_props = {
+		disabled: configStore.loading,
+		label: "Raccourcis clavier"
+	};
+
+	if (/*$configStore*/ ctx[0].hotkeysActive !== void 0) {
+		switch_1_props.checked = /*$configStore*/ ctx[0].hotkeysActive;
+	}
+
+	switch_1 = new Switch_svelte({ props: switch_1_props });
+	binding_callbacks.push(() => bind(switch_1, 'checked', switch_1_checked_binding_2));
 
 	return {
 		c() {
-			create_component(keyboardinput.$$.fragment);
-			t = space();
+			create_component(switch_1.$$.fragment);
 		},
 		m(target, anchor) {
-			mount_component(keyboardinput, target, anchor);
-			insert(target, t, anchor);
+			mount_component(switch_1, target, anchor);
 			current = true;
 		},
 		p(ctx, dirty) {
-			const keyboardinput_changes = {};
-			if (dirty & /*$configStore*/ 2) keyboardinput_changes.value = /*keyBind*/ ctx[11].key;
-			if (dirty & /*$configStore*/ 2) keyboardinput_changes.ctrl = /*keyBind*/ ctx[11].ctrl;
-			if (dirty & /*$configStore*/ 2) keyboardinput_changes.alt = /*keyBind*/ ctx[11].alt;
-			if (dirty & /*$configStore*/ 2) keyboardinput_changes.shift = /*keyBind*/ ctx[11].shift;
-			if (dirty & /*$configStore*/ 2) keyboardinput_changes.id = /*keyBind*/ ctx[11].action;
-			if (dirty & /*$configStore*/ 2) keyboardinput_changes.label = actions[/*keyBind*/ ctx[11].action].label;
-			if (dirty & /*$configStore, activeId*/ 3) keyboardinput_changes.active = /*keyBind*/ ctx[11].action === /*activeId*/ ctx[0];
-			if (dirty & /*activeId, $configStore*/ 3) keyboardinput_changes.disabled = !!/*activeId*/ ctx[0] || !/*$configStore*/ ctx[1].hotkeysActive;
-			keyboardinput.$set(keyboardinput_changes);
+			const switch_1_changes = {};
+
+			if (!updating_checked && dirty & /*$configStore*/ 1) {
+				updating_checked = true;
+				switch_1_changes.checked = /*$configStore*/ ctx[0].hotkeysActive;
+				add_flush_callback(() => updating_checked = false);
+			}
+
+			switch_1.$set(switch_1_changes);
 		},
 		i(local) {
 			if (current) return;
-			transition_in(keyboardinput.$$.fragment, local);
+			transition_in(switch_1.$$.fragment, local);
 			current = true;
 		},
 		o(local) {
-			transition_out(keyboardinput.$$.fragment, local);
+			transition_out(switch_1.$$.fragment, local);
 			current = false;
 		},
 		d(detaching) {
-			destroy_component(keyboardinput, detaching);
-			if (detaching) detach(t);
+			destroy_component(switch_1, detaching);
 		}
 	};
 }
 
-// (97:6) {#each $configStore.keySetting as keyBind}
-function create_each_block(ctx) {
+// (35:6) <FormDescription>
+function create_default_slot_2(ctx) {
+	let t0;
+	let button;
+	let mounted;
+	let dispose;
+
+	return {
+		c() {
+			t0 = internal_text("Le détail des raccourcis clavier ainsi qu'un configurateur sont disponibles sur ");
+			button = internal_element("button");
+			button.textContent = "la page d'options";
+			attr(button, "class", "link-button svelte-5xiftn");
+			attr(button, "role", "link");
+		},
+		m(target, anchor) {
+			insert(target, t0, anchor);
+			insert(target, button, anchor);
+
+			if (!mounted) {
+				dispose = listen(button, "click", /*onOpenOptions*/ ctx[1]);
+				mounted = true;
+			}
+		},
+		p: internal_noop,
+		d(detaching) {
+			if (detaching) detach(t0);
+			if (detaching) detach(button);
+			mounted = false;
+			dispose();
+		}
+	};
+}
+
+// (31:4) <FormField>
+function create_default_slot_1(ctx) {
 	let forminput;
+	let t;
+	let formdescription;
 	let current;
 
 	forminput = new FormInput_svelte({
 			props: {
-				$$slots: { default: [Options_svelte_create_default_slot_2] },
+				$$slots: { default: [create_default_slot_3] },
+				$$scope: { ctx }
+			}
+		});
+
+	formdescription = new FormDescription_svelte({
+			props: {
+				$$slots: { default: [create_default_slot_2] },
 				$$scope: { ctx }
 			}
 		});
@@ -3932,349 +3537,162 @@ function create_each_block(ctx) {
 	return {
 		c() {
 			create_component(forminput.$$.fragment);
+			t = space();
+			create_component(formdescription.$$.fragment);
 		},
 		m(target, anchor) {
 			mount_component(forminput, target, anchor);
+			insert(target, t, anchor);
+			mount_component(formdescription, target, anchor);
 			current = true;
 		},
 		p(ctx, dirty) {
 			const forminput_changes = {};
 
-			if (dirty & /*$$scope, $configStore, activeId*/ 16387) {
+			if (dirty & /*$$scope, $configStore*/ 33) {
 				forminput_changes.$$scope = { dirty, ctx };
 			}
 
 			forminput.$set(forminput_changes);
+			const formdescription_changes = {};
+
+			if (dirty & /*$$scope*/ 32) {
+				formdescription_changes.$$scope = { dirty, ctx };
+			}
+
+			formdescription.$set(formdescription_changes);
 		},
 		i(local) {
 			if (current) return;
 			transition_in(forminput.$$.fragment, local);
+			transition_in(formdescription.$$.fragment, local);
 			current = true;
 		},
 		o(local) {
 			transition_out(forminput.$$.fragment, local);
+			transition_out(formdescription.$$.fragment, local);
 			current = false;
 		},
 		d(detaching) {
 			destroy_component(forminput, detaching);
-		}
-	};
-}
-
-// (120:4) <CategoryTitle>
-function Options_svelte_create_default_slot_1(ctx) {
-	let t;
-
-	return {
-		c() {
-			t = internal_text("À propos");
-		},
-		m(target, anchor) {
-			insert(target, t, anchor);
-		},
-		d(detaching) {
 			if (detaching) detach(t);
+			destroy_component(formdescription, detaching);
 		}
 	};
 }
 
-// (74:0) <ThemeSwitch>
-function Options_svelte_create_default_slot(ctx) {
-	let div4;
+// (18:0) <ThemeSwitch>
+function create_default_slot(ctx) {
+	let div;
 	let header;
 	let t0;
-	let categorytitle0;
-	let t1;
-	let div0;
 	let formfield0;
-	let t2;
+	let t1;
 	let formfield1;
-	let t3;
+	let t2;
 	let formfield2;
-	let t4;
-	let categorytitle1;
-	let t5;
-	let div1;
-	let t6;
-	let div2;
-	let button;
-	let t7;
-	let button_disabled_value;
-	let t8;
-	let categorytitle2;
-	let t9;
-	let div3;
-	let about;
 	let current;
-	let mounted;
-	let dispose;
 	header = new Header_svelte({});
 
-	categorytitle0 = new CategoryTitle_svelte({
-			props: {
-				$$slots: { default: [create_default_slot_10] },
-				$$scope: { ctx }
-			}
-		});
-
 	formfield0 = new FormField_svelte({
-			props: {
-				$$slots: { default: [create_default_slot_8] },
-				$$scope: { ctx }
-			}
-		});
-
-	formfield1 = new FormField_svelte({
 			props: {
 				$$slots: { default: [create_default_slot_6] },
 				$$scope: { ctx }
 			}
 		});
 
-	formfield2 = new FormField_svelte({
+	formfield1 = new FormField_svelte({
 			props: {
 				$$slots: { default: [create_default_slot_4] },
 				$$scope: { ctx }
 			}
 		});
 
-	categorytitle1 = new CategoryTitle_svelte({
+	formfield2 = new FormField_svelte({
 			props: {
-				$$slots: { default: [Options_svelte_create_default_slot_3] },
+				$$slots: { default: [create_default_slot_1] },
 				$$scope: { ctx }
 			}
 		});
-
-	let each_value = /*$configStore*/ ctx[1].keySetting;
-	let each_blocks = [];
-
-	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
-	}
-
-	const out = i => transition_out(each_blocks[i], 1, 1, () => {
-		each_blocks[i] = null;
-	});
-
-	categorytitle2 = new CategoryTitle_svelte({
-			props: {
-				$$slots: { default: [Options_svelte_create_default_slot_1] },
-				$$scope: { ctx }
-			}
-		});
-
-	about = new About_svelte({});
 
 	return {
 		c() {
-			div4 = internal_element("div");
+			div = internal_element("div");
 			create_component(header.$$.fragment);
 			t0 = space();
-			create_component(categorytitle0.$$.fragment);
-			t1 = space();
-			div0 = internal_element("div");
 			create_component(formfield0.$$.fragment);
-			t2 = space();
+			t1 = space();
 			create_component(formfield1.$$.fragment);
-			t3 = space();
+			t2 = space();
 			create_component(formfield2.$$.fragment);
-			t4 = space();
-			create_component(categorytitle1.$$.fragment);
-			t5 = space();
-			div1 = internal_element("div");
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].c();
-			}
-
-			t6 = space();
-			div2 = internal_element("div");
-			button = internal_element("button");
-			t7 = internal_text("rétablir les valeurs par défaut");
-			t8 = space();
-			create_component(categorytitle2.$$.fragment);
-			t9 = space();
-			div3 = internal_element("div");
-			create_component(about.$$.fragment);
-			attr(div0, "class", "form-container svelte-1htpe4x");
-			attr(div1, "class", "form-container svelte-1htpe4x");
-			attr(button, "class", "default-keybinds svelte-1htpe4x");
-			button.disabled = button_disabled_value = !!/*activeId*/ ctx[0] || !/*$configStore*/ ctx[1].hotkeysActive;
-			attr(div2, "class", "text-container svelte-1htpe4x");
-			attr(div3, "class", "form-container svelte-1htpe4x");
-			attr(div4, "class", "layout svelte-1htpe4x");
+			attr(div, "class", "popup svelte-5xiftn");
 		},
 		m(target, anchor) {
-			insert(target, div4, anchor);
-			mount_component(header, div4, null);
-			append(div4, t0);
-			mount_component(categorytitle0, div4, null);
-			append(div4, t1);
-			append(div4, div0);
-			mount_component(formfield0, div0, null);
-			append(div0, t2);
-			mount_component(formfield1, div0, null);
-			append(div0, t3);
-			mount_component(formfield2, div0, null);
-			append(div4, t4);
-			mount_component(categorytitle1, div4, null);
-			append(div4, t5);
-			append(div4, div1);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(div1, null);
-			}
-
-			append(div4, t6);
-			append(div4, div2);
-			append(div2, button);
-			append(button, t7);
-			append(div4, t8);
-			mount_component(categorytitle2, div4, null);
-			append(div4, t9);
-			append(div4, div3);
-			mount_component(about, div3, null);
+			insert(target, div, anchor);
+			mount_component(header, div, null);
+			append(div, t0);
+			mount_component(formfield0, div, null);
+			append(div, t1);
+			mount_component(formfield1, div, null);
+			append(div, t2);
+			mount_component(formfield2, div, null);
 			current = true;
-
-			if (!mounted) {
-				dispose = listen(button, "click", /*resetDefaultKeybinds*/ ctx[3]);
-				mounted = true;
-			}
 		},
 		p(ctx, dirty) {
-			const categorytitle0_changes = {};
-
-			if (dirty & /*$$scope*/ 16384) {
-				categorytitle0_changes.$$scope = { dirty, ctx };
-			}
-
-			categorytitle0.$set(categorytitle0_changes);
 			const formfield0_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 16386) {
+			if (dirty & /*$$scope, $configStore*/ 33) {
 				formfield0_changes.$$scope = { dirty, ctx };
 			}
 
 			formfield0.$set(formfield0_changes);
 			const formfield1_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 16386) {
+			if (dirty & /*$$scope, $configStore*/ 33) {
 				formfield1_changes.$$scope = { dirty, ctx };
 			}
 
 			formfield1.$set(formfield1_changes);
 			const formfield2_changes = {};
 
-			if (dirty & /*$$scope, $configStore*/ 16386) {
+			if (dirty & /*$$scope, $configStore*/ 33) {
 				formfield2_changes.$$scope = { dirty, ctx };
 			}
 
 			formfield2.$set(formfield2_changes);
-			const categorytitle1_changes = {};
-
-			if (dirty & /*$$scope*/ 16384) {
-				categorytitle1_changes.$$scope = { dirty, ctx };
-			}
-
-			categorytitle1.$set(categorytitle1_changes);
-
-			if (dirty & /*$configStore, actions, activeId, setActiveId*/ 7) {
-				each_value = /*$configStore*/ ctx[1].keySetting;
-				let i;
-
-				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context(ctx, each_value, i);
-
-					if (each_blocks[i]) {
-						each_blocks[i].p(child_ctx, dirty);
-						transition_in(each_blocks[i], 1);
-					} else {
-						each_blocks[i] = create_each_block(child_ctx);
-						each_blocks[i].c();
-						transition_in(each_blocks[i], 1);
-						each_blocks[i].m(div1, null);
-					}
-				}
-
-				group_outros();
-
-				for (i = each_value.length; i < each_blocks.length; i += 1) {
-					out(i);
-				}
-
-				check_outros();
-			}
-
-			if (!current || dirty & /*activeId, $configStore*/ 3 && button_disabled_value !== (button_disabled_value = !!/*activeId*/ ctx[0] || !/*$configStore*/ ctx[1].hotkeysActive)) {
-				button.disabled = button_disabled_value;
-			}
-
-			const categorytitle2_changes = {};
-
-			if (dirty & /*$$scope*/ 16384) {
-				categorytitle2_changes.$$scope = { dirty, ctx };
-			}
-
-			categorytitle2.$set(categorytitle2_changes);
 		},
 		i(local) {
 			if (current) return;
 			transition_in(header.$$.fragment, local);
-			transition_in(categorytitle0.$$.fragment, local);
 			transition_in(formfield0.$$.fragment, local);
 			transition_in(formfield1.$$.fragment, local);
 			transition_in(formfield2.$$.fragment, local);
-			transition_in(categorytitle1.$$.fragment, local);
-
-			for (let i = 0; i < each_value.length; i += 1) {
-				transition_in(each_blocks[i]);
-			}
-
-			transition_in(categorytitle2.$$.fragment, local);
-			transition_in(about.$$.fragment, local);
 			current = true;
 		},
 		o(local) {
 			transition_out(header.$$.fragment, local);
-			transition_out(categorytitle0.$$.fragment, local);
 			transition_out(formfield0.$$.fragment, local);
 			transition_out(formfield1.$$.fragment, local);
 			transition_out(formfield2.$$.fragment, local);
-			transition_out(categorytitle1.$$.fragment, local);
-			each_blocks = each_blocks.filter(Boolean);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				transition_out(each_blocks[i]);
-			}
-
-			transition_out(categorytitle2.$$.fragment, local);
-			transition_out(about.$$.fragment, local);
 			current = false;
 		},
 		d(detaching) {
-			if (detaching) detach(div4);
+			if (detaching) detach(div);
 			destroy_component(header);
-			destroy_component(categorytitle0);
 			destroy_component(formfield0);
 			destroy_component(formfield1);
 			destroy_component(formfield2);
-			destroy_component(categorytitle1);
-			destroy_each(each_blocks, detaching);
-			destroy_component(categorytitle2);
-			destroy_component(about);
-			mounted = false;
-			dispose();
 		}
 	};
 }
 
-function Options_svelte_create_fragment(ctx) {
+function Popup_svelte_create_fragment(ctx) {
 	let themeswitch;
 	let current;
 
 	themeswitch = new ThemeSwitch_svelte({
 			props: {
-				$$slots: { default: [Options_svelte_create_default_slot] },
+				$$slots: { default: [create_default_slot] },
 				$$scope: { ctx }
 			}
 		});
@@ -4290,7 +3708,7 @@ function Options_svelte_create_fragment(ctx) {
 		p(ctx, [dirty]) {
 			const themeswitch_changes = {};
 
-			if (dirty & /*$$scope, activeId, $configStore*/ 16387) {
+			if (dirty & /*$$scope, $configStore*/ 33) {
 				themeswitch_changes.$$scope = { dirty, ctx };
 			}
 
@@ -4311,80 +3729,16 @@ function Options_svelte_create_fragment(ctx) {
 	};
 }
 
-function Options_svelte_instance($$self, $$props, $$invalidate) {
+function Popup_svelte_instance($$self, $$props, $$invalidate) {
 	let $configStore;
-	component_subscribe($$self, configStore, $$value => $$invalidate(1, $configStore = $$value));
+	component_subscribe($$self, configStore, $$value => $$invalidate(0, $configStore = $$value));
 
-	const ignoredKeys = [
-		'Control',
-		'Alt',
-		'Shift',
-		'Dead',
-		'Unidentified',
-		'AltGraph',
-		'Fn',
-		'FnLock',
-		'Hyper',
-		'Super',
-		'Symbol',
-		'SymbolLock'
-	];
-
-	const isIgnoredMeta = key => {
-		return key === 'Meta' && !window.navigator.userAgent.includes('Macintosh');
-	};
-
-	let activeId = null;
-
-	const handleKeyDown = e => {
-		e.preventDefault();
-		e.stopPropagation();
-
-		if (!e.key || ignoredKeys.includes(e.key) || isIgnoredMeta(e.key)) {
-			return;
+	const onOpenOptions = () => {
+		if (chrome.runtime.openOptionsPage) {
+			chrome.runtime.openOptionsPage();
+		} else {
+			window.open(chrome.runtime.getURL('options.html'));
 		}
-
-		const newKeySetting = $configStore.keySetting.map(hotkey => {
-			if (hotkey.action === activeId) {
-				return {
-					action: hotkey.action,
-					key: e.key.toLowerCase(),
-					alt: e.altKey,
-					ctrl: e.ctrlKey,
-					shift: e.shiftKey
-				};
-			} else return hotkey;
-		});
-
-		if (e.key !== 'Escape') {
-			configStore.set({ keySetting: newKeySetting });
-		}
-
-		$$invalidate(0, activeId = null);
-		document.removeEventListener('keydown', handleKeyDown);
-		document.removeEventListener('click', handleClick);
-	};
-
-	const handleClick = () => {
-		document.removeEventListener('keydown', handleKeyDown);
-		$$invalidate(0, activeId = null);
-		document.removeEventListener('click', handleClick);
-	};
-
-	const setActiveId = id => {
-		$$invalidate(0, activeId = id);
-		document.addEventListener('keydown', handleKeyDown);
-
-		setTimeout(
-			() => {
-				document.addEventListener('click', handleClick);
-			},
-			1
-		);
-	};
-
-	const resetDefaultKeybinds = () => {
-		configStore.set({ keySetting: DEFAULT_CONFIG.keySetting });
 	};
 
 	function switch_1_checked_binding(value) {
@@ -4409,29 +3763,27 @@ function Options_svelte_instance($$self, $$props, $$invalidate) {
 	}
 
 	return [
-		activeId,
 		$configStore,
-		setActiveId,
-		resetDefaultKeybinds,
+		onOpenOptions,
 		switch_1_checked_binding,
 		switch_1_checked_binding_1,
 		switch_1_checked_binding_2
 	];
 }
 
-class Options extends SvelteComponent {
+class Popup extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, Options_svelte_instance, Options_svelte_create_fragment, safe_not_equal, {}, Options_svelte_add_css);
+		init(this, options, Popup_svelte_instance, Popup_svelte_create_fragment, safe_not_equal, {}, Popup_svelte_add_css);
 	}
 }
 
-/* harmony default export */ const Options_svelte = (Options);
-;// CONCATENATED MODULE: ./src/options.js
+/* harmony default export */ const Popup_svelte = (Popup);
+;// CONCATENATED MODULE: ./src/popup.js
 
-const app = new Options_svelte({
+const app = new Popup_svelte({
   target: document.getElementById('svelte-root')
 });
-/* harmony default export */ const options = ((/* unused pure expression or super */ null && (app)));
+/* harmony default export */ const popup = ((/* unused pure expression or super */ null && (app)));
 /******/ })()
 ;

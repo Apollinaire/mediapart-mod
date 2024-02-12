@@ -1,11 +1,11 @@
 var webpack = require('webpack'),
   path = require('path'),
-  ExtensionReloader = require('webpack-extension-reloader'),
   CopyWebpackPlugin = require('copy-webpack-plugin'),
   WriteFilePlugin = require('write-file-webpack-plugin'),
   { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 var isProduction = process.env.NODE_ENV === 'production';
+var browser = process.env.BROWSER || 'chrome'
 
 var options = {
   mode: process.env.NODE_ENV || 'development',
@@ -17,7 +17,7 @@ var options = {
     options: path.join(__dirname, 'src', 'options.js'),
   },
   output: {
-    path: path.join(__dirname, isProduction ? 'dist/raw' : 'build'),
+    path: path.join(__dirname, isProduction ? `dist/${browser}` : 'build'),
     filename: '[name].bundle.js',
   },
   module: {
@@ -84,16 +84,7 @@ var options = {
     // in dev mode cleaning the folder conflicts with the extension reload
     new CleanWebpackPlugin({
       dry: !isProduction,
-      cleanOnceBeforeBuildPatterns: ['**/*', path.join(process.cwd(), 'dist', '*.zip')],
-    }),
-    new ExtensionReloader({
-      PORT: 9090,
-      entries: {
-        contentScript: ['injectTheme', 'interactionController'],
-        background: 'background',
-        extensionPage: ['popup', 'options'],
-      },
-      reloadPage: true,
+      cleanOnceBeforeBuildPatterns: ['**/*', path.join(process.cwd(), 'dist', browser, '*.zip')],
     }),
     // expose and write the allowed env vars on the compiled bundle
     new webpack.EnvironmentPlugin(['NODE_ENV']),
@@ -108,9 +99,11 @@ var options = {
               ...JSON.parse(content.toString()),
             };
 
-            if (!isProduction) {
-              // we need unsafe-eval for autoreload, but not in prod
-              manifest.content_security_policy = "script-src 'self' 'unsafe-eval'; object-src 'none'";
+            if (browser === 'firefox') {
+              // firefox does not support service_worker
+              manifest.background = {
+                scripts: [manifest.background.service_worker]
+              }
             }
 
             return Buffer.from(JSON.stringify(manifest));
@@ -127,15 +120,5 @@ var options = {
     new WriteFilePlugin(),
   ],
 };
-
-// add zip file
-if (isProduction) {
-  // options.plugins.push(
-  //   new ZipPlugin({
-  //     path: '..',
-  //     filename: 'mediapart-mod.zip',
-  //   })
-  // );
-}
 
 module.exports = options;

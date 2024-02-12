@@ -31,7 +31,8 @@ const CONFIG_KEYS = Object.keys(DEFAULT_CONFIG);
 const getConfig = (keys = CONFIG_KEYS) => {
   return new Promise(resolve => {
     chrome.storage.local.get(keys, config => {
-      resolve({ ...DEFAULT_CONFIG,
+      resolve({
+        ...DEFAULT_CONFIG,
         ...config
       });
     });
@@ -94,14 +95,12 @@ chrome.commands.onCommand.addListener(async command => {
       });
       await setDarkTheme(!darkTheme);
       break;
-
     case 'toggle-zen':
       const {
         zenMode
       } = await getConfig();
       await setZenMode(!zenMode);
       break;
-
     default:
       break;
   }
