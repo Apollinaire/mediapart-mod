@@ -22,4 +22,5 @@ export const cssLinks = [
   'https://www.mediapart.fr/assets/build/default/front/css/cc.min.css',
   'https://www.mediapart.fr/assets/build/default/front/css/backport.min.css',
   'https://www.mediapart.fr/assets/build/default/front/css/account.min.css',
+  'https://www.mediapart.fr/assets/build/default/front/css/landing_mobile.min.css'
 ];
