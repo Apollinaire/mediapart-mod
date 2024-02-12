@@ -71,5 +71,10 @@
       },
       "description": "Activer/Désactiver le mode zen"
     }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{7a408999-c95d-48a1-9b76-eb7189616efe}"
+    }
   }
 }
