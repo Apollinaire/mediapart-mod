@@ -26,7 +26,10 @@ const handleKey = (keyChar, { alt: altMod, ctrl: ctrlMod, shift: shiftMod }, e) 
   const { action } =
     keySetting.find(
       ({ key, alt, ctrl, shift }) =>
-        key.toLowerCase() === keyChar.toLowerCase() && !!alt === altMod && !!ctrl === ctrlMod && !!shift === shiftMod
+        key.toLowerCase() === keyChar.toLowerCase() &&
+        !!alt === altMod &&
+        !!ctrl === ctrlMod &&
+        !!shift === shiftMod
     ) ?? {};
   if (action) {
     e.preventDefault();
@@ -51,7 +54,8 @@ export const actions = {
     label: 'Retour à la une',
     run: () => {
       const linkEl =
-        document.querySelector('[data-smarttag-name="retour_journal"]') || document.querySelector('[href="/"]');
+        document.querySelector('[data-smarttag-name="retour_journal"]') ||
+        document.querySelector('[href="/"]');
       console.log(linkEl);
       linkEl?.click();
     },

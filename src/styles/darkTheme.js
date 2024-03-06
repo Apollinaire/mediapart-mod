@@ -17,7 +17,7 @@ const insertDarkTheme = () => {
       if (/main\.[a-zA-Z0-9]{16}\.css$/.test(href) && href !== styles.main) {
         console.log(`main CSS ID has changed, new url is ${href}`);
       } else {
-        console.log(`CSS ID is up to date`)
+        console.log(`CSS ID is up to date`);
       }
     }
 
@@ -46,7 +46,7 @@ const removeDarkTheme = () => {
   });
 };
 
-export const applyDarkThemeConfig = darkTheme => {
+export const applyColorThemeConfig = darkTheme => {
   const existingDarkThemeStyle = document.head.getElementsByClassName(DARK_THEME_STYLE_ELEMENT_CLASSNAME);
   if (darkTheme === !!existingDarkThemeStyle.length) {
     // darkTheme is already set correctly

@@ -24,16 +24,18 @@ const removeZenMode = () => {
 export const applyZenModeConfig = zenMode => {
   const url = window.location.toString();
   if (!isArticleLink(url) && !isBlogLink(url)) {
-    return;
+    return true;
   }
+
   const existingZenModeStyle = document.getElementById(ZEN_MODE_STYLE_ELEMENT_ID);
   if (zenMode === !!existingZenModeStyle) {
     // zenMode is already set correctly
-    return;
+    return true;
   }
   if (zenMode) {
     insertZenMode();
   } else {
     removeZenMode();
   }
+  return true;
 };
