@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Mediapart Mod",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Mediapart modifié pour une meilleure expérience",
   "permissions": [
     "storage"
@@ -70,11 +70,6 @@
         "default": "Alt+Shift+Z"
       },
       "description": "Activer/Désactiver le mode zen"
-    }
-  },
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "{7a408999-c95d-48a1-9b76-eb7189616efe}"
     }
   }
 }

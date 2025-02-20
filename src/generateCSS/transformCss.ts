@@ -32,7 +32,7 @@ const config = {
     }
 
     .news__body-wrapper {
-      background-color: #000000;
+      background-color: var(--main-bg-color);
     }
 
     .home.container.grid, .news__heading.grid, .news__body.grid {
@@ -149,7 +149,11 @@ const transformCss = (css: string) => {
   walk(tree, {
     visit: 'Atrule',
     enter: (atRule, atRuleItem, atRuleList) => {
-      if (atRuleList && atRuleItem && (atRule.block?.children.getSize() === 0 || atRule.name === 'font-face')) {
+      if (
+        atRuleList &&
+        atRuleItem &&
+        (atRule.block?.children.getSize() === 0 || atRule.name === 'font-face')
+      ) {
         atRuleList.remove(atRuleItem);
         return;
       }

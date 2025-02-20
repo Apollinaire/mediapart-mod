@@ -5,7 +5,7 @@ var webpack = require('webpack'),
   { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 var isProduction = process.env.NODE_ENV === 'production';
-var browser = process.env.BROWSER || 'chrome'
+var browser = process.env.BROWSER || 'chrome';
 
 var options = {
   mode: process.env.NODE_ENV || 'development',
@@ -75,6 +75,7 @@ var options = {
       svelte: path.resolve('node_modules', 'svelte'),
     },
     mainFields: ['svelte', 'browser', 'module', 'main'],
+    conditionNames: ['svelte'],
   },
   optimization: {
     minimize: false,
@@ -102,8 +103,13 @@ var options = {
             if (browser === 'firefox') {
               // firefox does not support service_worker
               manifest.background = {
-                scripts: [manifest.background.service_worker]
-              }
+                scripts: [manifest.background.service_worker],
+              };
+              manifest.browser_specific_settings = {
+                gecko: {
+                  id: '{7a408999-c95d-48a1-9b76-eb7189616efe}',
+                },
+              };
             }
 
             return Buffer.from(JSON.stringify(manifest));
