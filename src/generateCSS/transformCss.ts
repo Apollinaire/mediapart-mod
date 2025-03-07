@@ -13,12 +13,22 @@ const config = {
     '.cc-cookie-consent-banner-modal',
     '.mkt-banner--red',
     '.news__black-box',
+    '.box._black',
+    '.button._secondary-invert',
     '.is-secondary-invert',
+    '.nav__shortcuts',
+    '.nav__burger .nav__title, .nav__burger .nav__icon, .nav__search .nav__title, .nav__search .nav__icon, .nav__primary .nav__title, .nav__primary .nav__icon',
+    '.nav__blog a',
+    '.nav__blog .nav__title:last-child',
   ]),
   propertyWhiteList: ['color', /^background/, /^border/, /^--/, 'box-shadow', '-webkit-box-shadow'],
   customCSS: /* CSS */ `
     .mediapart-logo svg.mediapart-logo-text {
       filter: invert(1);
+    }
+
+    .club-logo svg .club-logo-title {
+    filter: brightness(3);
     }
 
     :root {

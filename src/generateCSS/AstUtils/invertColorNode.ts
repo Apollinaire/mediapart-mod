@@ -59,11 +59,15 @@ const getRGBFunctionNode = (rgb: RGB, alpha?: number): FunctionNode => {
 export const handleDeclaration = (declaration: Declaration): boolean => {
   if (declaration.value.type === 'Value') {
     if (declaration.property === 'color') {
-      declaration.value.children = declaration.value.children.map(value => invertColorNode(value, 'text'));
+      declaration.value.children = declaration.value.children.map(value =>
+        invertColorNode(value, 'text')
+      );
     } else {
-      declaration.value.children = declaration.value.children.map(value => invertColorNode(value, 'background'));
+      declaration.value.children = declaration.value.children.map(value =>
+        invertColorNode(value, 'background')
+      );
     }
-    return false
+    return false;
   } else {
     return handleRawValue(declaration.value);
   }
@@ -76,10 +80,10 @@ export const handleRawValue = (rawValue: Raw): boolean => {
       hexRegex,
       color => '#' + convert.rgb.hex(invertRGBColor(convert.hex.rgb(color), 'background'))
     );
-    return false
+    return false;
   } else {
     // remove raw values that are not hex colors
-    return true
+    return true;
   }
 };
 
@@ -138,7 +142,7 @@ export function invertColorNode(node: CssNode, colorType: ColorType): CssNode {
           return getHexNode(convert.rgb.hex(newRGB));
         }
       } else {
-        // other function, could be linear-gradient so go deeper
+        // other function, could be linear-gradient, var, calc so go deeper
         node.children = node.children.map(childNode => invertColorNode(childNode, colorType));
       }
       return node;
