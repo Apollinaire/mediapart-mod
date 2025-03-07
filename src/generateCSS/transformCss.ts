@@ -14,6 +14,7 @@ const config = {
     '.mkt-banner--red',
     '.news__black-box',
     '.box._black',
+    '.button._primary',
     '.button._secondary-invert',
     '.is-secondary-invert',
     '.nav__shortcuts',

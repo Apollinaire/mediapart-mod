@@ -131,7 +131,17 @@ export function invertColorNode(node: CssNode, colorType: ColorType): CssNode {
         return getHexNode(convert.rgb.hex(invertRGBColor(rgb, colorType)));
       }
     case 'Hash':
-      return getHexNode(convert.rgb.hex(invertRGBColor(convert.hex.rgb(node.value), colorType)));
+      let alpha = '';
+      if (node.value.length === 8) {
+        // value is like #ffffff16
+        alpha = node.value.slice(6, 8);
+      } else if (node.value.length === 4) {
+        // value is like #fff2
+        alpha = scaleSingleDigitHex(node.value[3]);
+      }
+      return getHexNode(
+        `${convert.rgb.hex(invertRGBColor(convert.hex.rgb(node.value), colorType))}${alpha}`
+      );
     case 'Function':
       const [maybeRGB, maybeAlpha] = convertFunctionToRGB(node);
       if (maybeRGB) {
@@ -150,3 +160,13 @@ export function invertColorNode(node: CssNode, colorType: ColorType): CssNode {
       return node;
   }
 }
+
+export const scaleSingleDigitHex = (hex: string): string => {
+  if (hex.length !== 1) {
+    throw new Error(`value "${hex}" is not single digit`);
+  }
+  if (isNaN(parseInt(hex, 16))) {
+    throw new Error(`value "${hex}" is not a hex value`);
+  }
+  return `${hex}0`;
+};
