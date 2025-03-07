@@ -21,6 +21,7 @@ const config = {
     '.button._secondary-invert',
     '.is-secondary-invert',
     '.nav__menu-background',
+    '.nav__search, .nav__primary, .nav__secondary, .nav__blog',
     '.nav__shortcuts',
     '.nav__burger .nav__title, .nav__burger .nav__icon, .nav__search .nav__title, .nav__search .nav__icon, .nav__primary .nav__title, .nav__primary .nav__icon',
     '.nav__blog a',
@@ -36,7 +37,7 @@ const config = {
     '-webkit-box-shadow',
   ],
   customCSS: /* CSS */ `
-    .mediapart-logo svg.mediapart-logo-text {
+    .nav__main .mediapart-logo svg.mediapart-logo-text {
       filter: invert(1);
     }
 
