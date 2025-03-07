@@ -6,6 +6,7 @@ import { selectorIncludes, parseSelectorsList } from './AstUtils/selectorUtils';
 // TODO: set config per file
 const config = {
   selectorBlackList: parseSelectorsList([
+    '._inverse',
     '.footer',
     '.main-menu',
     '.menu-sticky',
@@ -15,14 +16,25 @@ const config = {
     '.news__black-box',
     '.box._black',
     '.button._primary',
+    '.button._club-primary',
+    '.bt-specific',
     '.button._secondary-invert',
     '.is-secondary-invert',
+    '.nav__menu-background',
     '.nav__shortcuts',
     '.nav__burger .nav__title, .nav__burger .nav__icon, .nav__search .nav__title, .nav__search .nav__icon, .nav__primary .nav__title, .nav__primary .nav__icon',
     '.nav__blog a',
     '.nav__blog .nav__title:last-child',
+    '.blogs-disclaimer-message__toggle',
   ]),
-  propertyWhiteList: ['color', /^background/, /^border/, /^--/, 'box-shadow', '-webkit-box-shadow'],
+  propertyWhiteList: [
+    'color',
+    /^background/,
+    /^border/,
+    /^--/,
+    'box-shadow',
+    '-webkit-box-shadow',
+  ],
   customCSS: /* CSS */ `
     .mediapart-logo svg.mediapart-logo-text {
       filter: invert(1);
@@ -84,6 +96,12 @@ const config = {
     iframe {
       background-color: white;
     }
+
+    input {
+      background-color: var(--main-bg-color);
+      color: var(--main-text-color);
+      border-color: var(--main-text-color);
+    }
     
   `,
 };
@@ -111,7 +129,11 @@ const transformCss = (css: string) => {
           visit: 'Selector',
           enter: (selector, selectorItem, selectorList) => {
             for (const blackListedSelector of config.selectorBlackList) {
-              if (selectorList && selectorItem && selectorIncludes(selector, blackListedSelector)) {
+              if (
+                selectorList &&
+                selectorItem &&
+                selectorIncludes(selector, blackListedSelector)
+              ) {
                 try {
                   selectorList.remove(selectorItem);
                   break;
