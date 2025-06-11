@@ -10,7 +10,8 @@
     "build:firefox": "NODE_ENV=production BROWSER=firefox PORT=9090 webpack --mode=production",
     "postbuild": "web-ext build --source-dir=\"dist/chrome\" --artifacts-dir=\"dist/chrome\" && web-ext build --source-dir=\"dist/firefox\" --artifacts-dir=\"dist/firefox\"",
     "start": "NODE_ENV=development PORT=9090 webpack --mode=development --watch",
-    "gen-css": "ts-node --script-mode ./src/generateCSS",
+    "start:firefox": "web-ext run --source-dir build",
+    "gen-css": "ts-node --script-mode ./src/generateCSS/index.ts",
     "zip:source": "rm source.zip; zip source.zip -r src README.md tsconfig.json babel.config.js LICENSE package.json package-lock.json tsconfig.json webpack.config.js public",
     "test": "jest",
     "pretty": "prettier --write ./src"
@@ -64,7 +65,7 @@
     "jest": "^26.6.3",
     "prettier": "^2.3.0",
     "ts-jest": "^26.4.4",
-    "web-ext": "^7.11.0",
+    "web-ext": "^8.6.0",
     "webpack-dev-server": "^3.11.0"
   }
 }
