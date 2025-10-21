@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Mediapart Mod",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "description": "Mediapart modifié pour une meilleure expérience",
   "permissions": [
     "storage"

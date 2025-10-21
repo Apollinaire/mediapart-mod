@@ -27,6 +27,8 @@ const config = {
     '.nav__blog a',
     '.nav__blog .nav__title:last-child',
     '.blogs-disclaimer-message__toggle',
+    'a.follow span',
+    '.footer__top ul a',
   ]),
   propertyWhiteList: [
     'color',
@@ -104,6 +106,9 @@ const config = {
       border-color: var(--main-text-color);
     }
     
+    #LB24 {
+    color: #1a1a1a;
+    }
   `,
 };
 
