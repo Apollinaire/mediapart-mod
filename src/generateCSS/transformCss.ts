@@ -29,6 +29,11 @@ const config = {
     '.blogs-disclaimer-message__toggle',
     'a.follow span',
     '.footer__top ul a',
+    '.engagement-bar__block._revert',
+    '.engagement-bar__block button:hover',
+    '.engagement-bar__block a:hover',
+    'sharing-tools[variant=engagement-bar] [type=button] svg',
+    'sharing-tools[variant=engagement-bar] [type=button]:hover svg',
   ]),
   propertyWhiteList: [
     'color',
