@@ -55,6 +55,7 @@ const config = {
     :root {
       --main-bg-color: #292929;
       --main-text-color: #b5b5b5;
+      color-scheme: dark;
     }
     
     body {
